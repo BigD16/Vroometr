@@ -1,10 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["libs"]
+
 [project]
 name = "vroometr"
 version = "0.1.0"
 description = "Motorcycle and dirt-bike ownership platform"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "alembic>=1.14",
+    "fastapi>=0.115",
+    "httpx>=0.28",
+    "psycopg[binary]>=3.2",
+    "pydantic-settings>=2.4",
+    "redis>=5.2",
+    "sqlalchemy>=2.0",
+    "uvicorn>=0.34",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -21,5 +37,5 @@ src = ["libs", "services", "pipelines", "workers", "tests"]
 select = ["E", "F", "I", "UP"]
 
 [tool.pytest.ini_options]
-pythonpath = ["libs"]
+pythonpath = ["libs", "services/api"]
 testpaths = ["tests"]

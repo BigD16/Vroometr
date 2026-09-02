@@ -10,7 +10,7 @@ Durable bike facts live in Postgres, not in AI memory. The website look comes fr
 | --- | --- |
 | Product / architecture decisions | local `docs/design/` (not in git) |
 | Website UI | `apps/web/` |
-| API rules and endpoints | `services/api/` (not built yet — task 0.3) |
+| API rules and endpoints | `services/api/` |
 | Background jobs | `workers/` + `pipelines/` |
 | Shared Python helpers | `libs/` |
 | AI quality checks | `evals/` |
@@ -34,7 +34,7 @@ docs/adr          Architecture decision records
 
 ## How to run (right now)
 
-API and garage UI are not here yet. You can run the website starter and the local data stores.
+Garage UI is not here yet. You can run local data stores, the API, and the website starter.
 
 ### Local data stores (Postgres, Redis, S3)
 
@@ -45,6 +45,22 @@ Requires Docker.
 ```
 
 Ports and passwords live in `.env` (see [`.env.example`](.env.example)). Details in [`infra/README.md`](infra/README.md).
+
+### API
+
+```bash
+source .venv/bin/activate
+cd services/api
+alembic upgrade head
+cd ../..
+./scripts/api-dev.sh
+```
+
+- http://localhost:8000/health/live
+- http://localhost:8000/health/ready
+- http://localhost:8000/health/deps
+
+See [`services/api/README.md`](services/api/README.md).
 
 ### Website (starter page)
 
