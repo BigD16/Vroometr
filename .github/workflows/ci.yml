@@ -12,6 +12,10 @@
 #
 # This workflow does the same checks you run locally, plus Docker image builds.
 # It does not start Postgres/Unleash and it does not deploy.
+#
+# Action tags (@v7) are the Node.js runtime *inside* GitHub's helper actions
+# (checkout, setup-python, setup-node). That is separate from node-version: "22"
+# which is the Node we install to build the website.
 
 name: CI
 
@@ -61,10 +65,10 @@ jobs:
       RERANKER_MODEL: ""
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -86,10 +90,10 @@ jobs:
         working-directory: apps/web
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: npm
@@ -109,7 +113,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Build the Python API/worker image
         run: docker build -f infra/docker/python.Dockerfile -t vroometr-python .
