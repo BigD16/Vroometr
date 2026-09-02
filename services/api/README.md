@@ -28,7 +28,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 | Change | File |
 | --- | --- |
 | Ports / DB password | repo-root `.env` |
-| How env is read | `app/config.py` |
+| How env is read | `app/config.py` (values themselves are in `.env`) |
 | Health checks | `app/health_checks.py` and `app/routes/health.py` |
 | Error JSON shape | `app/errors.py` |
 | Tables | new SQLAlchemy models + a new Alembic revision |

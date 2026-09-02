@@ -6,31 +6,40 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
+def _env_files() -> tuple[Path, ...]:
+    """`.env.example` holds documented defaults; `.env` overrides them."""
+    files = [REPO_ROOT / ".env.example"]
+    local = REPO_ROOT / ".env"
+    if local.exists():
+        files.append(local)
+    return tuple(files)
+
+
 class Settings(BaseSettings):
-    """Runtime config. Values come from the repo-root `.env` file."""
+    """Runtime config. Values come from `.env` / `.env.example`, not from this file."""
 
     model_config = SettingsConfigDict(
-        env_file=REPO_ROOT / ".env",
+        env_file=_env_files(),
         env_file_encoding="utf-8",
         extra="ignore",
     )
 
-    postgres_host: str = "localhost"
-    postgres_port: int = 5432
-    postgres_user: str = "vroometr"
-    postgres_password: str = "vroometr"
-    postgres_db: str = "vroometr"
+    postgres_host: str
+    postgres_port: int
+    postgres_user: str
+    postgres_password: str
+    postgres_db: str
 
-    redis_url: str = "redis://localhost:6379/0"
+    redis_url: str
 
-    aws_endpoint_url: str = "http://localhost:4566"
-    aws_access_key_id: str = "test"
-    aws_secret_access_key: str = "test"
-    aws_default_region: str = "us-east-1"
-    s3_bucket: str = "vroometr-dev"
+    aws_endpoint_url: str
+    aws_access_key_id: str
+    aws_secret_access_key: str
+    aws_default_region: str
+    s3_bucket: str
 
-    api_host: str = "0.0.0.0"
-    api_port: int = 8000
+    api_host: str
+    api_port: int
 
     @property
     def database_url(self) -> str:
