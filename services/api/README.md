@@ -16,7 +16,8 @@ From the repo root, with Compose already up:
 source .venv/bin/activate
 cd services/api
 alembic upgrade head
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+cd ../..
+./scripts/api-dev.sh
 ```
 
 - Liveness: http://localhost:8000/health/live
@@ -28,7 +29,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 | Change | File |
 | --- | --- |
 | Ports / DB password | repo-root `.env` |
-| How env is read | `app/config.py` (values themselves are in `.env`) |
+| How env is read | `libs/vroometr/settings.py` (values in `.env`) |
 | Health checks | `app/health_checks.py` and `app/routes/health.py` |
 | Error JSON shape | `app/errors.py` |
 | Tables | new SQLAlchemy models + a new Alembic revision |

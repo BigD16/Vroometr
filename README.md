@@ -34,7 +34,7 @@ docs/adr          Architecture decision records
 
 ## How to run (right now)
 
-Garage UI is not here yet. You can run local data stores, the API, and the website starter.
+Garage UI is not here yet. You can run local data stores, the API, the worker, and the website starter.
 
 ### Local data stores (Postgres, Redis, S3)
 
@@ -61,6 +61,15 @@ cd ../..
 - http://localhost:8000/health/deps
 
 See [`services/api/README.md`](services/api/README.md).
+
+### Worker
+
+```bash
+source .venv/bin/activate
+./scripts/worker-dev.sh
+```
+
+See [`workers/README.md`](workers/README.md).
 
 ### Website (starter page)
 
