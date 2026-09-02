@@ -35,7 +35,7 @@ docs/adr          Architecture decision records
 
 ## How to run (right now)
 
-Garage UI is not here yet. You can run local data stores, the API, the worker, and the website starter.
+Garage HUD is a static visual shell over the default scene. Copy is placeholder until bikes are real.
 
 ### Local data stores (Postgres, Redis, S3)
 
@@ -72,7 +72,7 @@ source .venv/bin/activate
 
 See [`workers/README.md`](workers/README.md).
 
-### Website (starter page)
+### Website
 
 ```bash
 cd apps/web
@@ -80,7 +80,7 @@ npm install
 npm run dev
 ```
 
-Then open http://localhost:3000
+Then open http://localhost:3000 — dashboard HUD with locked nav. See [`apps/web/README.md`](apps/web/README.md).
 
 ### Python tests and lint
 

@@ -1,17 +1,25 @@
 # Website (`apps/web`)
 
-Next.js App Router UI.
+Next.js App Router UI. The garage HUD is a static visual shell (placeholder bike copy).
 
 Scene stills live in `public/`:
 
 - `default-garage.jpg` — garage / dashboard backdrop
 - `rides-track.jpg` — rides backdrop
 
-The Vroometr garage HUD is task **0.7**. These files are not shown on the starter page yet.
-
 ```bash
 npm install
 npm run dev
 ```
 
-If you want to change **layout or copy**, start in `app/`. If you want to change **data or permissions**, that belongs in `services/api`, not here.
+Then open http://localhost:3000
+
+| If you want to change… | Open |
+| --- | --- |
+| Nav items / scene per route | `lib/nav.ts` |
+| Placeholder bike copy | `lib/mock-machine.ts` |
+| Top bar, left rail, scene, FAB | `components/` |
+| Dashboard cards | `components/dashboard/` |
+| Look (glass, type, spacing) | `app/globals.css` |
+| A screen | `app/(shell)/…/page.tsx` |
+| Data or permissions | `services/api`, not here |
