@@ -40,5 +40,7 @@ Requires a filled-in `.env` (copy [`.env.example`](../.env.example) and set ever
 | Unleash database on first Postgres boot | [`postgres/create-unleash-db.sh`](postgres/create-unleash-db.sh) |
 | How the S3 bucket is created | [`localstack/ready.d/create-s3-bucket.sh`](localstack/ready.d/create-s3-bucket.sh) |
 | Unleash database on an old volume | [`../scripts/ensure-unleash-db.sh`](../scripts/ensure-unleash-db.sh) |
+| API / worker image | [`docker/python.Dockerfile`](docker/python.Dockerfile) |
+| Website image | [`docker/web.Dockerfile`](docker/web.Dockerfile) |
 
 Postgres `init.sql` only runs on an empty volume. If you already started Compose once, either `docker compose -f infra/docker-compose.yml down -v` (wipes local data) or enable the extension by hand.

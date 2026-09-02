@@ -1,0 +1,118 @@
+# GitHub Actions CI
+#
+# A workflow is a YAML file GitHub runs on a virtual machine when something
+# happens in this repo (here: every push and pull request).
+#
+# Vocabulary:
+#   workflow  — this whole file
+#   event     — what starts it (`on:`)
+#   job       — a machine that runs a list of steps (jobs run in parallel)
+#   step      — one action or shell command
+#   runner    — the VM (`ubuntu-latest`)
+#
+# This workflow does the same checks you run locally, plus Docker image builds.
+# It does not start Postgres/Unleash and it does not deploy.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Least privilege: this workflow only needs to read the repo.
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python lint and tests
+    runs-on: ubuntu-latest
+    # GitHub runners have no `.env` file. Pydantic Settings reads these names
+    # from the process environment instead. They are CI placeholders, not
+    # production secrets. Real values stay in local `.env` / host env.
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ci
+      POSTGRES_PASSWORD: ci
+      POSTGRES_DB: ci
+      REDIS_URL: redis://localhost:6379/0
+      AWS_ENDPOINT_URL: http://localhost:4566
+      AWS_ACCESS_KEY_ID: ci
+      AWS_SECRET_ACCESS_KEY: ci
+      AWS_DEFAULT_REGION: us-east-1
+      S3_BUCKET: ci
+      API_HOST: 0.0.0.0
+      API_PORT: "8000"
+      CELERY_LOG_LEVEL: info
+      FLAGS_PROVIDER: inmemory
+      UNLEASH_URL: http://localhost:4242/api
+      UNLEASH_API_TOKEN: ci
+      UNLEASH_APP_NAME: vroometr
+      AGENT_MODEL: ""
+      ESCALATION_MODEL: ""
+      SUMMARY_MODEL: ""
+      VISION_MODEL: ""
+      EMBEDDING_MODEL: ""
+      STT_MODEL: ""
+      TTS_MODEL: ""
+      IMAGE_MODEL: ""
+      RERANKER_MODEL: ""
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install the package and test tools
+        run: pip install -e ".[dev]"
+
+      - name: Lint
+        run: ruff check libs tests services/api workers pipelines
+
+      - name: Tests
+        run: pytest
+
+  web:
+    name: Website lint and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install npm packages
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Production build
+        run: npm run build
+
+  images:
+    name: Docker image builds
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Build the Python API/worker image
+        run: docker build -f infra/docker/python.Dockerfile -t vroometr-python .
+
+      - name: Build the website image
+        run: docker build -f infra/docker/web.Dockerfile -t vroometr-web .

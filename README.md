@@ -17,6 +17,7 @@ Durable bike facts live in Postgres, not in AI memory. The website look comes fr
 | AI quality checks | `evals/` |
 | Schema change records | `docs/adr/` |
 | Local Postgres / Redis / S3 | `.env` (values) and `infra/` (Compose) |
+| CI (lint, tests, image build) | `.github/workflows/ci.yml` |
 
 Layout:
 
@@ -91,6 +92,10 @@ pip install -e ".[dev]"
 pytest
 ruff check .
 ```
+
+### GitHub Actions
+
+Every push to `main` and every pull request runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml): Python lint/tests, Next.js lint/build, and Docker image builds. Open the **Actions** tab on GitHub to see a run.
 
 ## Design
 

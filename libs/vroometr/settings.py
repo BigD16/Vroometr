@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from pydantic import ValidationError
@@ -69,7 +70,7 @@ class Settings(BaseSettings):
 try:
     settings = Settings()
 except ValidationError as exc:
-    if not (REPO_ROOT / ".env").exists():
+    if not (REPO_ROOT / ".env").exists() and not os.environ.get("CI"):
         raise RuntimeError(
             "Missing .env. Copy .env.example to .env and fill in every value."
         ) from exc

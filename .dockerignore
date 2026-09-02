@@ -1,0 +1,15 @@
+# Keep image builds small. Do not copy secrets or local junk.
+.git
+.github
+.venv
+.env
+**/.env
+**/.next
+**/node_modules
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.ruff_cache
+*.zip
+docs/design
+apps/web/.next

@@ -8,4 +8,4 @@ source .venv/bin/activate
 pytest
 ```
 
-Pytest needs a filled-in `.env` at the repo root.
+Pytest needs a filled-in `.env` at the repo root locally. GitHub Actions sets `CI=true` and supplies the same keys as job environment variables instead.
