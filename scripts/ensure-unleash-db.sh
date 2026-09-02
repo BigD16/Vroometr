@@ -4,14 +4,8 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
-set -a
 # shellcheck disable=SC1091
-source .env.example
-if [[ -f .env ]]; then
-  # shellcheck disable=SC1091
-  source .env
-fi
-set +a
+source ./scripts/load-env.sh
 
 if ! docker exec vroometr-postgres pg_isready -U "${POSTGRES_USER}" >/dev/null 2>&1; then
   echo "Postgres is not running; skip Unleash database check."

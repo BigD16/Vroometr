@@ -4,13 +4,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
-set -a
 # shellcheck disable=SC1091
-source .env.example
-if [[ -f .env ]]; then
-  # shellcheck disable=SC1091
-  source .env
-fi
-set +a
+source ./scripts/load-env.sh
 cd services/api
 exec uvicorn app.main:app --reload --host "${API_HOST}" --port "${API_PORT}"

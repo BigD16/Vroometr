@@ -9,7 +9,7 @@ Local data stores. No API or website containers yet.
 | LocalStack | Fake AWS — S3 only      |
 | Unleash    | Feature flags (OpenFeature provider) |
 
-Ports and passwords: `.env` / `.env.example`.
+Ports and passwords: `.env` only. [`.env.example`](../.env.example) lists the key names.
 
 S3 bucket created on first start: `S3_BUCKET`. Unleash database: `UNLEASH_DATABASE_NAME` (created on first Postgres boot, or by `scripts/ensure-unleash-db.sh` after `./scripts/dev-up.sh`).
 
@@ -24,7 +24,7 @@ From the repo root:
 ./scripts/dev-down.sh
 ```
 
-That copies `.env.example` → `.env` if you do not have a `.env` yet, then runs Compose with `.env.example` then `.env` (so new keys in the example still apply if your `.env` is older).
+Requires a filled-in `.env` (copy [`.env.example`](../.env.example) and set every value). Compose reads `.env` only.
 
 ```bash
 ./scripts/compose.sh ps

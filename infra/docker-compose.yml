@@ -1,4 +1,4 @@
-# Local data stores only. Values come from `.env.example` then `.env`.
+# Local data stores only. Values come from repo-root `.env`.
 # Do not put secrets or ports in this file.
 #
 #   ./scripts/dev-up.sh

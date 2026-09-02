@@ -9,7 +9,7 @@ Anything that can change between machines or environments belongs in `.env`, not
 
 That includes: passwords, keys, tokens, hosts, ports, bucket names, regions, model names, feature-flag URLs, and third-party endpoints.
 
-Documented defaults live in `.env.example`. Real local/staging/prod values live in `.env` (never commit `.env`).
+`.env.example` lists key names with empty values and comments. Real values live in `.env` (never commit `.env`). Do not put actual values in `.env.example`.
 
 Code and Compose should **name** the variable and read it. They must not duplicate the value as a default.
 
@@ -18,7 +18,7 @@ Code and Compose should **name** the variable and read it. They must not duplica
 postgres_host: str = "localhost"
 postgres_password: str = "vroometr"
 
-# ✅ GOOD — required; loaded from .env.example then .env
+# ✅ GOOD — required; loaded from .env
 postgres_host: str
 postgres_password: str
 ```
@@ -34,8 +34,9 @@ ports: ["${POSTGRES_PORT}:5432"]
 ```
 
 When you add a new setting:
-1. add it to `.env.example` with a comment
-2. read it from env in code/Compose/scripts
-3. do not put the value in Python, TypeScript, YAML, or shell except as `${VAR}` / `os.environ` / `settings.x`
+1. add the key to `.env.example` with a comment and an empty value
+2. put the real value only in `.env`
+3. read it from env in code/Compose/scripts
+4. do not put the value in Python, TypeScript, YAML, `.env.example`, or shell except as `${VAR}` / `os.environ` / `settings.x`
 
 True constants (HTTP status 503, SQL `SELECT 1`, product taxonomy enums) can stay in code.

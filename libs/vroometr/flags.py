@@ -6,8 +6,6 @@ from openfeature.flag_evaluation import FlagResolutionDetails, Reason
 from openfeature.provider import AbstractProvider
 from openfeature.provider.metadata import Metadata
 
-from vroometr.settings import settings
-
 FLAG_WEB_RESEARCH = "web_research"
 FLAG_VISION = "vision"
 FLAG_VOICE = "voice"
@@ -94,6 +92,8 @@ def _use_unleash() -> None:
     global _configured
     from unleash_openfeature_python_provider import UnleashFlagProvider
 
+    from vroometr.settings import settings
+
     provider = UnleashFlagProvider(
         url=settings.unleash_url,
         app_name=settings.unleash_app_name,
@@ -106,6 +106,8 @@ def _use_unleash() -> None:
 def configure_flags() -> None:
     if _configured:
         return
+    from vroometr.settings import settings
+
     if settings.flags_provider == "unleash":
         _use_unleash()
         return

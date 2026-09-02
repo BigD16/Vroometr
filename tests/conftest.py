@@ -1,6 +1,15 @@
+from pathlib import Path
+
 import pytest
 
 from vroometr.flags import use_in_memory_flags
+
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def pytest_configure() -> None:
+    if not (_REPO_ROOT / ".env").exists():
+        pytest.exit("Missing .env. Copy .env.example to .env and fill in every value.")
 
 
 @pytest.fixture(autouse=True)

@@ -7,3 +7,5 @@
 source .venv/bin/activate
 pytest
 ```
+
+Pytest needs a filled-in `.env` at the repo root.

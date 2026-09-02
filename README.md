@@ -38,13 +38,13 @@ Garage UI is not here yet. You can run local data stores, the API, the worker, a
 
 ### Local data stores (Postgres, Redis, S3)
 
-Requires Docker.
+Requires Docker and a filled-in `.env` (copy `.env.example` and set every value).
 
 ```bash
 ./scripts/dev-up.sh
 ```
 
-Ports and passwords live in `.env` (see [`.env.example`](.env.example)). Details in [`infra/README.md`](infra/README.md).
+Copy [`.env.example`](.env.example) to `.env` and fill in every value. Details in [`infra/README.md`](infra/README.md).
 
 ### API
 

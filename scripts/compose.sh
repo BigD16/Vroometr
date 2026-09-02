@@ -3,13 +3,11 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
-if [[ ! -f .env ]]; then
-  cp .env.example .env
-  echo "Created .env from .env.example"
-fi
+# shellcheck disable=SC1091
+source ./scripts/load-env.sh
 
 compose() {
-  docker compose --env-file .env.example --env-file .env -f infra/docker-compose.yml "$@"
+  docker compose --env-file .env -f infra/docker-compose.yml "$@"
 }
 
 # Create Unleash's database before that container starts. init.sql only runs

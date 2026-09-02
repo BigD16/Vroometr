@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from pydantic import ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # libs/vroometr/settings.py → repo root
@@ -7,16 +8,15 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _env_files() -> tuple[Path, ...]:
-    """`.env.example` holds documented defaults; `.env` overrides them."""
-    files = [REPO_ROOT / ".env.example"]
+    """Values come from `.env` only. `.env.example` is a key catalog, not a source."""
     local = REPO_ROOT / ".env"
     if local.exists():
-        files.append(local)
-    return tuple(files)
+        return (local,)
+    return ()
 
 
 class Settings(BaseSettings):
-    """Runtime config. Values come from `.env` / `.env.example`, not from this file."""
+    """Runtime config. Values come from `.env`, not from this file."""
 
     model_config = SettingsConfigDict(
         env_file=_env_files(),
@@ -66,4 +66,11 @@ class Settings(BaseSettings):
         )
 
 
-settings = Settings()
+try:
+    settings = Settings()
+except ValidationError as exc:
+    if not (REPO_ROOT / ".env").exists():
+        raise RuntimeError(
+            "Missing .env. Copy .env.example to .env and fill in every value."
+        ) from exc
+    raise

@@ -18,6 +18,6 @@ Do not bypass backend authorization.
 
 Do not introduce new infrastructure or replace locked architecture without explicit approval.
 
-Important config (passwords, keys, hosts, ports, buckets, model names) lives in `.env`, not hardcoded. Defaults go in `.env.example` only.
+Important config (passwords, keys, hosts, ports, buckets, model names) lives in `.env`, not hardcoded. `.env.example` lists key names only — no values.
 
 Keep changes small, tested, and focused.
