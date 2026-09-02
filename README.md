@@ -10,6 +10,7 @@ Durable bike facts live in Postgres, not in AI memory. The website look comes fr
 | --- | --- |
 | Product / architecture decisions | local `docs/design/` (not in git) |
 | Website UI | `apps/web/` |
+| Default garage / rides scenes | `apps/web/public/default-garage.jpg`, `rides-track.jpg` |
 | API rules and endpoints | `services/api/` |
 | Background jobs | `workers/` + `pipelines/` |
 | Feature flags / AI ports | `libs/vroometr/flags.py`, `libs/vroometr/ai/` |

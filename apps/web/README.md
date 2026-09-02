@@ -2,7 +2,12 @@
 
 Next.js App Router UI.
 
-Right now this is the default Next.js starter. The Vroometr garage HUD is task **0.7**.
+Scene stills live in `public/`:
+
+- `default-garage.jpg` — garage / dashboard backdrop
+- `rides-track.jpg` — rides backdrop
+
+The Vroometr garage HUD is task **0.7**. These files are not shown on the starter page yet.
 
 ```bash
 npm install
