@@ -1,5 +1,5 @@
-# Local data stores only. Values come from the repo-root `.env` file
-# (copy `.env.example`). Do not put secrets or ports in this file.
+# Local data stores only. Values come from `.env.example` then `.env`.
+# Do not put secrets or ports in this file.
 #
 #   ./scripts/dev-up.sh
 
@@ -11,6 +11,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+      UNLEASH_DATABASE_NAME: ${UNLEASH_DATABASE_NAME}
     ports:
       - "${POSTGRES_PORT}:5432"
     volumes:
@@ -51,6 +52,35 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
+
+  unleash:
+    image: unleashorg/unleash-server:6
+    container_name: vroometr-unleash
+    environment:
+      DATABASE_HOST: ${UNLEASH_DATABASE_HOST}
+      DATABASE_PORT: ${UNLEASH_DATABASE_PORT}
+      DATABASE_NAME: ${UNLEASH_DATABASE_NAME}
+      DATABASE_USERNAME: ${POSTGRES_USER}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_SSL: "false"
+      INIT_CLIENT_API_TOKENS: ${UNLEASH_API_TOKEN}
+      UNLEASH_DEFAULT_ADMIN_PASSWORD: ${UNLEASH_ADMIN_PASSWORD}
+    ports:
+      - "${UNLEASH_PORT}:4242"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:4242/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
 
 volumes:
   postgres_data:

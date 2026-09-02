@@ -7,4 +7,17 @@ if [[ ! -f .env ]]; then
   cp .env.example .env
   echo "Created .env from .env.example"
 fi
-exec docker compose --env-file .env -f infra/docker-compose.yml "$@"
+
+compose() {
+  docker compose --env-file .env.example --env-file .env -f infra/docker-compose.yml "$@"
+}
+
+# Create Unleash's database before that container starts. init.sql only runs
+# on a brand-new Postgres volume; existing volumes need this extra step.
+if [[ "${1:-}" == "up" ]]; then
+  compose up -d --wait postgres
+  ./scripts/ensure-unleash-db.sh
+fi
+
+compose "$@"
+

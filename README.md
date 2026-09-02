@@ -12,7 +12,7 @@ Durable bike facts live in Postgres, not in AI memory. The website look comes fr
 | Website UI | `apps/web/` |
 | API rules and endpoints | `services/api/` |
 | Background jobs | `workers/` + `pipelines/` |
-| Shared Python helpers | `libs/` |
+| Feature flags / AI ports | `libs/vroometr/flags.py`, `libs/vroometr/ai/` |
 | AI quality checks | `evals/` |
 | Schema change records | `docs/adr/` |
 | Local Postgres / Redis / S3 | `.env` (values) and `infra/` (Compose) |
@@ -25,7 +25,7 @@ services/api      FastAPI backend
 libs              Shared Python
 pipelines         Multi-step processing
 workers           Celery tasks (thin wrappers)
-infra             Docker Compose: Postgres, Redis, LocalStack
+infra             Docker Compose: Postgres, Redis, LocalStack, Unleash
 deploy            Production deploy config
 evals             AI / RAG evals
 tests             Unit and integration tests

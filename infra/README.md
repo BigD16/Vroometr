@@ -2,13 +2,18 @@
 
 Local data stores. No API or website containers yet.
 
-| Service    | Port | What it is              |
-| ---------- | ---- | ----------------------- |
-| Postgres   | 5432 | Database + pgvector     |
-| Redis      | 6379 | Celery broker (later)   |
-| LocalStack | 4566 | Fake AWS — S3 only      |
+| Service    | What it is              |
+| ---------- | ----------------------- |
+| Postgres   | Database + pgvector     |
+| Redis      | Celery broker           |
+| LocalStack | Fake AWS — S3 only      |
+| Unleash    | Feature flags (OpenFeature provider) |
 
-S3 bucket created on first start: whatever `S3_BUCKET` is in `.env` (default `vroometr-dev`)
+Ports and passwords: `.env` / `.env.example`.
+
+S3 bucket created on first start: `S3_BUCKET`. Unleash database: `UNLEASH_DATABASE_NAME` (created on first Postgres boot, or by `scripts/ensure-unleash-db.sh` after `./scripts/dev-up.sh`).
+
+Unleash UI: `http://localhost:${UNLEASH_PORT}` (admin password is `UNLEASH_ADMIN_PASSWORD`). The API uses OpenFeature; it does not call Unleash APIs directly.
 
 ## Commands
 
@@ -19,7 +24,7 @@ From the repo root:
 ./scripts/dev-down.sh
 ```
 
-That copies `.env.example` → `.env` if you do not have a `.env` yet, then runs Compose with `--env-file .env`.
+That copies `.env.example` → `.env` if you do not have a `.env` yet, then runs Compose with `.env.example` then `.env` (so new keys in the example still apply if your `.env` is older).
 
 ```bash
 ./scripts/compose.sh ps
@@ -32,6 +37,8 @@ That copies `.env.example` → `.env` if you do not have a `.env` yet, then runs
 | Ports, passwords, bucket name, region | [`.env`](../.env) (start from [`.env.example`](../.env.example)) |
 | Which services / images | [`docker-compose.yml`](docker-compose.yml) |
 | Postgres extensions | [`postgres/init.sql`](postgres/init.sql) |
+| Unleash database on first Postgres boot | [`postgres/create-unleash-db.sh`](postgres/create-unleash-db.sh) |
 | How the S3 bucket is created | [`localstack/ready.d/create-s3-bucket.sh`](localstack/ready.d/create-s3-bucket.sh) |
+| Unleash database on an old volume | [`../scripts/ensure-unleash-db.sh`](../scripts/ensure-unleash-db.sh) |
 
 Postgres `init.sql` only runs on an empty volume. If you already started Compose once, either `docker compose -f infra/docker-compose.yml down -v` (wipes local data) or enable the extension by hand.

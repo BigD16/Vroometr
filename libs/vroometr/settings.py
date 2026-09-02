@@ -43,6 +43,21 @@ class Settings(BaseSettings):
 
     celery_log_level: str
 
+    flags_provider: str
+    unleash_url: str
+    unleash_api_token: str
+    unleash_app_name: str
+
+    agent_model: str
+    escalation_model: str
+    summary_model: str
+    vision_model: str
+    embedding_model: str
+    stt_model: str
+    tts_model: str
+    image_model: str
+    reranker_model: str
+
     @property
     def database_url(self) -> str:
         return (
