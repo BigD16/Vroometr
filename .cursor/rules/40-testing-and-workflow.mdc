@@ -1,0 +1,131 @@
+---
+description: Implementation workflow, testing expectations, and safe change discipline
+alwaysApply: true
+---
+
+# Implementation Workflow
+
+For non-trivial tasks:
+
+1. inspect relevant existing code
+2. inspect relevant design documentation
+3. identify files likely to change
+4. implement the smallest coherent change
+5. add/update tests
+6. run relevant tests
+7. run lint/type checks where applicable
+8. fix failures caused by the change
+9. summarize changes and remaining issues
+
+Do not claim tests passed unless they were actually run.
+
+# Planning
+
+For large or architectural tasks, plan before editing.
+
+The plan should identify:
+- files/modules affected
+- schema changes
+- API changes
+- migration requirements
+- new environment variables
+- test strategy
+- risks
+
+Do not begin a major architecture rewrite without first explaining the intended change.
+
+# Testing
+
+Every meaningful feature should have appropriate tests.
+
+Use:
+- unit tests for domain logic
+- integration tests for repositories/database/storage
+- API tests for route behavior
+- evals for AI/RAG behavior
+
+Do not use ordinary unit tests as a substitute for Vroometr AI evaluations.
+
+# Vroometr AI Evals
+
+Before significant changes to:
+- system prompts
+- reasoning models
+- retrieval
+- rerankers
+- tool definitions
+- mechanical safety behavior
+
+run or update relevant Vroometr evals.
+
+Important eval categories include:
+- exact specs
+- maintenance intervals
+- manual retrieval
+- tables
+- diagrams
+- troubleshooting
+- modified-bike behavior
+- conflicting sources
+- missing-source behavior
+- prompt injection
+- unsafe advice
+
+# Dependencies
+
+Before adding a dependency:
+1. determine whether the project already has equivalent functionality
+2. determine whether the standard library/framework can solve the problem
+3. ensure the dependency is actively maintained
+4. explain why it is necessary if it materially affects architecture
+
+Do not install packages casually.
+
+# Scope Discipline
+
+Do not:
+- refactor unrelated modules
+- rename unrelated files
+- reformat large unrelated sections
+- rewrite working code solely to match personal preference
+- change architecture while implementing a small feature
+
+Keep diffs focused.
+
+# Migrations
+
+Never modify an old production migration after it has been applied.
+
+Create a new migration.
+
+For destructive migrations, prefer staged migration strategies where practical.
+
+# Error Handling
+
+Do not silently swallow exceptions.
+
+Use structured error handling and preserve enough context for observability without leaking sensitive user data.
+
+# Logging
+
+Do not log:
+- authentication tokens
+- secrets
+- entire raw uploaded documents
+- raw payment information
+- unnecessary full conversation content
+
+Prefer structured metadata and identifiers.
+
+# Completion Summary
+
+After a significant implementation, report:
+
+- files changed
+- behavior added/changed
+- database migrations
+- environment variables
+- tests added
+- tests actually run
+- unresolved TODOs
+- architectural deviations, if any

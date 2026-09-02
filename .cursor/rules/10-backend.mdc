@@ -1,0 +1,138 @@
+---
+description: FastAPI backend, domain services, persistence, auth, and API conventions
+globs: ["services/api/**/*.py", "libs/**/*.py", "workers/**/*.py", "pipelines/**/*.py"]
+alwaysApply: false
+---
+
+# Backend Rules
+
+Vroometr uses FastAPI.
+
+Keep layers separate:
+
+- routes: HTTP concerns only
+- domain services: business logic
+- repositories: persistence operations
+- pipelines: multi-stage processing logic
+- Celery tasks: orchestration/execution of pipeline functions
+- AI tools: controlled adapters into domain services
+
+# Routes
+
+Routes should primarily:
+1. validate request structure
+2. establish authenticated identity
+3. call domain services
+4. translate domain errors into HTTP responses
+5. return schemas
+
+Do not place substantial business logic in route handlers.
+
+# Domain Services
+
+Domain services own business rules.
+
+Examples:
+- maintenance logging
+- bike updates
+- issue transitions
+- ride completion
+- modification installation/removal
+- attachment linking
+
+If both an API route and an AI tool need the same behavior, both must call the same domain service.
+
+# Repositories
+
+Repositories own persistence details.
+
+Do not spread ad hoc SQLAlchemy queries throughout:
+- routes
+- tools
+- Celery tasks
+- unrelated service modules
+
+# Database Changes
+
+Before modifying an existing schema:
+1. inspect current models and migrations
+2. determine whether existing data can be affected
+3. create an explicit migration
+4. avoid destructive changes when a staged migration is safer
+5. add/update tests
+
+Never silently rewrite historical records when introducing a new schema.
+
+# Derived Values
+
+Do not persist derived values as authoritative when the architecture specifies they should be computed.
+
+Important example:
+
+Do NOT store `next_due` as the authoritative maintenance state.
+
+Maintenance due state must derive from:
+- maintenance rules
+- maintenance history
+- current hours/date
+- condition-specific rules
+- confirmed overrides
+
+Caching may be introduced later if necessary, but cached values must remain regenerable.
+
+# Auth & Authorization
+
+Clerk proves identity.
+
+Vroometr's database is authoritative for:
+- roles
+- entitlements
+- bike ownership
+- domain permissions
+
+Never trust:
+- frontend-provided user IDs
+- frontend-provided role values
+- frontend-provided subscription status
+- hidden UI elements as authorization
+
+Every protected backend operation must enforce authorization server-side.
+
+# Billing
+
+Stripe webhook state is authoritative for billing.
+
+Do not grant Pro access solely because:
+- checkout redirected successfully
+- the frontend says payment succeeded
+- a query parameter indicates success
+
+Keep billing status separate from entitlement.
+
+# AI Writes
+
+Persistent user-owned state requires appropriate confirmation according to the Vroometr write policy.
+
+An explicit command such as:
+
+"Log an oil change at 54.6 hours"
+
+counts as confirmation.
+
+A casual statement such as:
+
+"I changed the oil yesterday"
+
+does not automatically authorize the write.
+
+# Async Processing
+
+Celery tasks should be thin.
+
+Preferred:
+
+task -> pipeline.process(...)
+
+Avoid embedding entire ingestion, garage-generation, or classification pipelines directly inside Celery task functions.
+
+PostgreSQL is authoritative for processing state.

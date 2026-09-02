@@ -1,0 +1,21 @@
+# Vroometr Agent Instructions
+
+Read the relevant files in `docs/design/` before making product or architectural decisions.
+
+Decisions marked LOCKED are the source of truth.
+
+Core backend architecture:
+
+`route -> domain service -> repository -> database`
+
+AI architecture:
+
+`agent -> tool -> same domain service -> repository -> database`
+
+Do not invent mechanical specifications.
+
+Do not bypass backend authorization.
+
+Do not introduce new infrastructure or replace locked architecture without explicit approval.
+
+Keep changes small, tested, and focused.

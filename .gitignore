@@ -1,0 +1,40 @@
+# Secrets — never commit real env files
+.env
+.env.*
+!.env.example
+**/.env
+!**/.env.example
+
+# Local-only product / mock docs (not for GitHub)
+docs/design/
+*.zip
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Local runtime
+.sites-runtime/
+.wrangler/
+*.log

@@ -1,0 +1,101 @@
+---
+description: Next.js frontend architecture and Vroometr UI implementation conventions
+globs: ["apps/web/**/*.ts", "apps/web/**/*.tsx", "apps/web/**/*.css"]
+alwaysApply: false
+---
+
+# Frontend Rules
+
+Vroometr uses Next.js.
+
+Follow the existing project structure before creating new frontend conventions.
+
+# Product Structure
+
+Maintain the V1 navigation model:
+
+- Dashboard
+- Garage
+- Assistant
+- Maintenance
+- Rides
+- Documents
+- Modifications
+- Issues
+- Settings
+- Suspension — Coming Soon
+
+Maintain a persistent active-bike context where appropriate.
+
+# Server Authority
+
+The frontend is not authoritative for:
+- ownership
+- roles
+- entitlements
+- billing state
+- maintenance completion
+- modification state
+- destructive actions
+
+Client-side hiding/disabling improves UX but never replaces backend enforcement.
+
+# UI Components
+
+Prefer reusable components when they represent genuinely repeated patterns.
+
+Do not create abstractions merely because two components currently look somewhat similar.
+
+Keep product/domain naming explicit.
+
+Prefer:
+
+`MaintenanceStatusCard`
+
+over overly generic abstractions such as:
+
+`GenericInfoCardV2`
+
+# Async States
+
+Every network-driven feature should deliberately handle:
+- loading
+- success
+- empty
+- recoverable error
+- fatal error
+- unauthorized/forbidden where applicable
+
+Do not leave uncaught loading states that cause blank or flickering pages.
+
+# Long-running Jobs
+
+For document processing, garage generation, and similar jobs:
+- show persistent job state from backend data
+- do not infer job completion from arbitrary client timers
+- support partial/warning states where backend exposes them
+
+# Personalized Garage
+
+Generated garage images are backgrounds/assets.
+
+Do not bake interactive UI, text, nav, buttons, or application state into generated images.
+
+Actual interface elements must remain real web UI.
+
+# Accessibility
+
+Use:
+- semantic HTML
+- keyboard-accessible controls
+- appropriate labels
+- meaningful focus states
+- sufficient text/background contrast
+
+Do not sacrifice basic usability solely for the garage aesthetic.
+
+# Responsive Behavior
+
+Do not assume desktop-only layout unless the feature is explicitly designated desktop-only.
+
+V1 is web-first, not desktop-only.

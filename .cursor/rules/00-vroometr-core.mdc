@@ -1,0 +1,78 @@
+---
+description: Core Vroometr project rules and source-of-truth architecture
+alwaysApply: true
+---
+
+# Vroometr Core Rules
+
+Vroometr is a web-first motorcycle and dirt-bike ownership platform centered around each user's actual machine.
+
+Before making architectural or product-level changes, consult:
+
+- `docs/design/DESIGN.md`
+- `docs/design/ARCHITECTURE.md`
+- `docs/design/DATA_MODEL.md`
+- `docs/design/OPERATIONS_AND_POLICY.md`
+
+Decisions marked LOCKED in these documents are authoritative.
+
+Do not silently replace a locked decision with a different architecture because another approach appears simpler or more familiar.
+
+If a locked decision appears technically infeasible:
+1. stop,
+2. explain the conflict,
+3. propose the smallest viable alternative,
+4. wait for approval before changing the architecture.
+
+If a requirement is genuinely unspecified, prefer:
+- following an existing project pattern,
+- leaving a clear TODO,
+- or asking for clarification
+
+rather than inventing a new architectural convention.
+
+# General Engineering Principles
+
+- Prefer simple V1 implementations over premature abstraction.
+- Avoid unnecessary microservices.
+- Avoid introducing infrastructure that is not already part of the design.
+- Do not add dependencies when existing libraries or standard-library features are sufficient.
+- Reuse existing abstractions before creating new ones.
+- Keep modules focused and testable.
+- Prefer explicit code over clever code.
+- Preserve backwards compatibility unless a breaking change is explicitly requested.
+- Do not perform unrelated refactors while implementing a bounded feature.
+
+# Architecture Boundaries
+
+The normal backend path is:
+
+route -> domain service -> repository -> database
+
+The AI path is:
+
+agent -> tool -> same domain service -> repository -> database
+
+Never create a second implementation of domain logic specifically for the AI.
+
+Do not:
+- put SQL directly in agent tools
+- put substantial business logic in API routes
+- let frontend code directly determine authorization
+- let AI tools bypass domain services
+- duplicate business rules between API routes and AI tools
+
+# Product Integrity
+
+Durable machine facts must live in structured Vroometr data.
+
+Do not use opaque AI memory as the authoritative source for:
+- engine hours
+- bike specs
+- maintenance records
+- modifications
+- issue state
+- ride history
+- confirmed machine configuration
+
+Conversation memory may help retrieval, but it is not the source of truth for structured machine state.
