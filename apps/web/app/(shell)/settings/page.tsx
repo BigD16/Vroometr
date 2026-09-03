@@ -11,7 +11,7 @@ export default function SettingsAccountPage() {
       <ul className="settings-list">
         <li>Profile and email — Clerk</li>
         <li>Role / plan — Vroometr (read-only here until billing)</li>
-        <li>Age eligibility — next slice</li>
+        <li>Age eligibility — API hooks exist; Settings UI later</li>
         <li>Assistant memory controls — later; they will live in Settings</li>
       </ul>
     </article>

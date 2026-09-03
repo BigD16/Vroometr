@@ -1,5 +1,6 @@
 from uuid import UUID, uuid4
 
+from app.models.parental_consent import ParentalConsent
 from app.models.user import User
 from app.repositories.users import UserAlreadyExists
 
@@ -25,3 +26,25 @@ class InMemoryUserRepository:
         self._by_id[user.id] = user
         self._by_clerk[user.clerk_user_id] = user
         return user
+
+    def save(self, user: User) -> User:
+        self._by_id[user.id] = user
+        self._by_clerk[user.clerk_user_id] = user
+        return user
+
+
+class InMemoryParentalConsentRepository:
+    def __init__(self) -> None:
+        self._items: list[ParentalConsent] = []
+
+    def add(self, consent: ParentalConsent) -> ParentalConsent:
+        if consent.id is None:
+            consent.id = uuid4()
+        self._items.append(consent)
+        return consent
+
+    def latest_for_minor(self, minor_user_id: UUID) -> ParentalConsent | None:
+        matches = [item for item in self._items if item.minor_user_id == minor_user_id]
+        if not matches:
+            return None
+        return max(matches, key=lambda item: item.created_at)

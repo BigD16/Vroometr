@@ -14,6 +14,8 @@ class UserStore(Protocol):
 
     def add(self, user: User) -> User: ...
 
+    def save(self, user: User) -> User: ...
+
 
 class UserAlreadyExists(Exception):
     """A users row already exists for this Clerk id."""
@@ -36,4 +38,9 @@ class UserRepository:
             self._session.flush()
         except IntegrityError as exc:
             raise UserAlreadyExists from exc
+        return user
+
+    def save(self, user: User) -> User:
+        self._session.add(user)
+        self._session.flush()
         return user

@@ -25,6 +25,7 @@ cd ../..
 - Readiness: http://localhost:8000/health/ready (needs Postgres)
 - Dependencies: http://localhost:8000/health/deps (Postgres, Redis, LocalStack)
 - Current user (Clerk session): http://localhost:8000/v1/me
+- Age eligibility: `GET /v1/me/eligibility`, `POST /v1/me/date-of-birth`, `POST /v1/parental-consents`
 - Clerk webhook: `POST /v1/webhooks/clerk`
 
 ## If you want to change…
@@ -39,4 +40,5 @@ cd ../..
 | Users / roles / entitlements | `app/models/user.py`, `app/services/users.py` |
 | Clerk session / `/v1/me` | `app/auth/tokens.py`, `app/deps.py`, `app/routes/me.py` |
 | Clerk webhook | `app/auth/webhooks.py`, `app/routes/clerk_webhooks.py` |
+| Age gate / parental consent | `app/services/age_gate.py`, `app/routes/age_gate.py` |
 | A new HTTP endpoint | `app/routes/` (keep logic out of the route) |
