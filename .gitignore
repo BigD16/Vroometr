@@ -34,6 +34,11 @@ out/
 .vscode/
 *.swp
 
+# Clerk CLI link metadata (not for GitHub)
+.clerk/
+.agents/
+skills-lock.json
+
 # Local runtime
 .sites-runtime/
 .wrangler/

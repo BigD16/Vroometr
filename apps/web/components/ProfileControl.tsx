@@ -1,44 +1,39 @@
 "use client";
 
-import { Show, UserButton } from "@clerk/nextjs";
-import Link from "next/link";
-
-import { mockUser } from "@/lib/mock-machine";
-
-function MockProfile({ href }: { href?: string }) {
-  const inner = (
-    <>
-      <span>{mockUser.initials}</span>
-      <div>
-        <b>{mockUser.displayName}</b>
-        <small>{mockUser.planLabel}</small>
-      </div>
-      <em>⌄</em>
-    </>
-  );
-  if (href) {
-    return (
-      <Link href={href} className="profile">
-        {inner}
-      </Link>
-    );
-  }
-  return (
-    <button type="button" className="profile">
-      {inner}
-    </button>
-  );
-}
+import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 
 export function ProfileControl() {
   const clerkEnabled = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
   if (!clerkEnabled) {
-    return <MockProfile />;
+    return (
+      <button type="button" className="profile" disabled>
+        <span>?</span>
+        <div>
+          <b>Sign in</b>
+          <small>Add Clerk keys</small>
+        </div>
+      </button>
+    );
   }
   return (
     <>
       <Show when="signed-out">
-        <MockProfile href="/sign-in" />
+        <div className="auth-controls">
+          <SignInButton>
+            <button type="button" className="profile">
+              <span>IN</span>
+              <div>
+                <b>Sign in</b>
+                <small>Clerk</small>
+              </div>
+            </button>
+          </SignInButton>
+          <SignUpButton>
+            <button type="button" className="auth-text-btn">
+              Sign up
+            </button>
+          </SignUpButton>
+        </div>
       </Show>
       <Show when="signed-in">
         <div className="profile profile-signed-in">

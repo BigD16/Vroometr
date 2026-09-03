@@ -7,8 +7,8 @@ export default function SignUpPage() {
         <h1>Sign up</h1>
         <p>
           Add <code>NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY</code> and{" "}
-          <code>CLERK_SECRET_KEY</code> to the repo-root <code>.env</code>, then restart{" "}
-          <code>npm run dev</code>.
+          <code>CLERK_SECRET_KEY</code> to <code>apps/web/.env.local</code> (Clerk CLI)
+          or the repo-root <code>.env</code>, then restart <code>npm run dev</code>.
         </p>
       </main>
     );
