@@ -12,6 +12,7 @@ def test_settings_has_account_notifications_and_privacy_stubs() -> None:
 
     assert "Clerk" in account
     assert "Vroometr" in account
+    assert "/v1/bikes" in account
     assert "Payment failure" in notifications
     assert "cannot disable" in notifications
     assert "Delete account" in privacy

@@ -1,6 +1,6 @@
 # Website (`apps/web`)
 
-Next.js App Router UI. The garage HUD is a static visual shell (placeholder bike copy).
+Next.js App Router UI. The garage HUD is a static visual shell (placeholder bike copy). Bike rows live in FastAPI `GET/POST /v1/bikes`; garage pages are not wired yet.
 
 Scene stills live in `public/`:
 

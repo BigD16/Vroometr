@@ -61,6 +61,7 @@ cd ../..
 - http://localhost:8000/health/live
 - http://localhost:8000/health/ready
 - http://localhost:8000/health/deps
+- http://localhost:8000/v1/bikes (Clerk JWT; current user's machines)
 
 See [`services/api/README.md`](services/api/README.md).
 

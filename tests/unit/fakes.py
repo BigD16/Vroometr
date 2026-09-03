@@ -1,5 +1,6 @@
 from uuid import UUID, uuid4
 
+from app.models.bike import Bike
 from app.models.parental_consent import ParentalConsent
 from app.models.user import User
 from app.repositories.users import UserAlreadyExists
@@ -48,3 +49,30 @@ class InMemoryParentalConsentRepository:
         if not matches:
             return None
         return max(matches, key=lambda item: item.created_at)
+
+
+class InMemoryBikeRepository:
+    """Test double. get/list never return another user's bike."""
+
+    def __init__(self) -> None:
+        self._by_id: dict[UUID, Bike] = {}
+
+    def get(self, bike_id: UUID, user_id: UUID) -> Bike | None:
+        bike = self._by_id.get(bike_id)
+        if bike is None or bike.user_id != user_id:
+            return None
+        return bike
+
+    def list_for_user(self, user_id: UUID) -> list[Bike]:
+        owned = [bike for bike in self._by_id.values() if bike.user_id == user_id]
+        return sorted(owned, key=lambda bike: bike.created_at)
+
+    def add(self, bike: Bike) -> Bike:
+        if bike.id is None:
+            bike.id = uuid4()
+        self._by_id[bike.id] = bike
+        return bike
+
+    def save(self, bike: Bike) -> Bike:
+        self._by_id[bike.id] = bike
+        return bike

@@ -11,9 +11,11 @@ from app.config import settings
 from app.db import SessionLocal
 from app.errors import AppError
 from app.models.user import User
+from app.repositories.bikes import BikeRepository
 from app.repositories.parental_consents import ParentalConsentRepository
 from app.repositories.users import UserRepository
 from app.services.age_gate import AgeGateService
+from app.services.bikes import BikeService
 from app.services.users import UserService
 
 
@@ -45,6 +47,10 @@ def get_user_service(session: Session = Depends(get_db)) -> UserService:
 
 def get_age_gate_service(session: Session = Depends(get_db)) -> AgeGateService:
     return AgeGateService(UserRepository(session), ParentalConsentRepository(session))
+
+
+def get_bike_service(session: Session = Depends(get_db)) -> BikeService:
+    return BikeService(BikeRepository(session))
 
 
 def require_clerk_user_id(
