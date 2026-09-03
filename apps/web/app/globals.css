@@ -674,6 +674,63 @@ a.profile {
   margin: 0;
 }
 
+.settings-stack {
+  display: grid;
+  gap: 10px;
+  max-height: calc(100% - 8px);
+  overflow: auto;
+}
+
+.settings-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.settings-subnav a {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #ffffff0b;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 8px 10px;
+}
+
+.settings-subnav a:hover,
+.settings-subnav a.active {
+  color: var(--white);
+  background: #ffffff14;
+}
+
+.settings-subnav a.active {
+  border-color: #ffffff33;
+}
+
+.settings-list {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.settings-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--white);
+}
+
+.settings-list small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
 .assistant-screen {
   position: absolute;
   right: 0;

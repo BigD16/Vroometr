@@ -25,5 +25,6 @@ Sign-in is `/sign-in` (needs Clerk keys in the repo-root `.env`). After sign-in,
 | Top bar, left rail, scene, FAB | `components/` |
 | Dashboard cards | `components/dashboard/` |
 | Look (glass, type, spacing) | `app/globals.css` |
+| Settings stubs | `app/(shell)/settings/` |
 | A screen | `app/(shell)/…/page.tsx` |
 | Data or permissions | `services/api`, not here |
