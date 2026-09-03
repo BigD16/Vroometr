@@ -10,7 +10,7 @@ class InvalidUserAccess(ValueError):
 
 
 class UserService:
-    """Access rules for users. Clerk identity is attached later; this owns the row."""
+    """Access rules for users. Clerk proves identity; this row owns role and entitlement."""
 
     def __init__(self, repository: UserStore) -> None:
         self._repository = repository
@@ -20,6 +20,21 @@ class UserService:
 
     def get_by_clerk_user_id(self, clerk_user_id: str) -> User | None:
         return self._repository.get_by_clerk_user_id(clerk_user_id)
+
+    def ensure(self, clerk_user_id: str) -> User:
+        clerk_user_id = clerk_user_id.strip()
+        if not clerk_user_id:
+            raise InvalidUserAccess("clerk_user_id is required")
+        existing = self._repository.get_by_clerk_user_id(clerk_user_id)
+        if existing is not None:
+            return existing
+        try:
+            return self.create(clerk_user_id)
+        except UserAlreadyExists:
+            found = self._repository.get_by_clerk_user_id(clerk_user_id)
+            if found is None:
+                raise
+            return found
 
     def create(
         self,

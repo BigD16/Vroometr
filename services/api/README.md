@@ -1,9 +1,10 @@
 # FastAPI backend
 
 ```text
-routes/        HTTP only (validation, auth later, call a service, return JSON)
-services/      business rules (users live here; Clerk comes next)
+routes/        HTTP only (validate, identify, call a service, return JSON)
+services/      business rules (users + Clerk sync live here)
 repositories/  database access (users table)
+auth/          Clerk JWT + webhook signature checks
 ```
 
 Migrations are explicit (`alembic upgrade head`). The app does **not** migrate on startup.
@@ -23,6 +24,8 @@ cd ../..
 - Liveness: http://localhost:8000/health/live
 - Readiness: http://localhost:8000/health/ready (needs Postgres)
 - Dependencies: http://localhost:8000/health/deps (Postgres, Redis, LocalStack)
+- Current user (Clerk session): http://localhost:8000/v1/me
+- Clerk webhook: `POST /v1/webhooks/clerk`
 
 ## If you want to change…
 
@@ -34,4 +37,6 @@ cd ../..
 | Error JSON shape | `app/errors.py` |
 | Tables | new SQLAlchemy models + a new Alembic revision (`app/models/`) |
 | Users / roles / entitlements | `app/models/user.py`, `app/services/users.py` |
+| Clerk session / `/v1/me` | `app/auth/tokens.py`, `app/deps.py`, `app/routes/me.py` |
+| Clerk webhook | `app/auth/webhooks.py`, `app/routes/clerk_webhooks.py` |
 | A new HTTP endpoint | `app/routes/` (keep logic out of the route) |

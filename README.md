@@ -81,7 +81,7 @@ npm install
 npm run dev
 ```
 
-Then open http://localhost:3000 — dashboard HUD with locked nav. See [`apps/web/README.md`](apps/web/README.md).
+Then open http://localhost:3000 — dashboard HUD with locked nav. Sign-in is `/sign-in` once Clerk keys are in `.env`. See [`apps/web/README.md`](apps/web/README.md).
 
 ### Python tests and lint
 

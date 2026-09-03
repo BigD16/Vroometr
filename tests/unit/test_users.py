@@ -42,6 +42,15 @@ def test_duplicate_clerk_user_id_is_rejected() -> None:
         service.create("user_clerk_dup")
 
 
+def test_ensure_creates_then_returns_the_same_row() -> None:
+    service = _service()
+    first = service.ensure("user_clerk_ensure")
+    second = service.ensure("user_clerk_ensure")
+    assert first.id == second.id
+    assert first.role == Role.USER.value
+    assert first.entitlement == Entitlement.NONE.value
+
+
 def test_blank_clerk_user_id_is_rejected() -> None:
     with pytest.raises(InvalidUserAccess):
         _service().create("   ")

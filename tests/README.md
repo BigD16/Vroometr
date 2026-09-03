@@ -1,7 +1,8 @@
 # Tests
 
 - `tests/unit/` — domain and helper tests
-- Integration tests (database, S3) land here later
+- `tests/api/` — FastAPI route tests
+- `tests/integration/` — Postgres (and later S3)
 
 ```bash
 source .venv/bin/activate

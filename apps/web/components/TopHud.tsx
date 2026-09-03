@@ -1,5 +1,6 @@
 import { BrandMark } from "@/components/BrandMark";
-import { mockMachine, mockUser } from "@/lib/mock-machine";
+import { ProfileControl } from "@/components/ProfileControl";
+import { mockMachine } from "@/lib/mock-machine";
 
 export function TopHud() {
   return (
@@ -22,14 +23,7 @@ export function TopHud() {
         <button type="button" className="bell" aria-label="Notifications">
           ●<i />
         </button>
-        <button type="button" className="profile">
-          <span>{mockUser.initials}</span>
-          <div>
-            <b>{mockUser.displayName}</b>
-            <small>{mockUser.planLabel}</small>
-          </div>
-          <em>⌄</em>
-        </button>
+        <ProfileControl />
       </div>
     </header>
   );

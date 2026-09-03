@@ -59,6 +59,10 @@ class Settings(BaseSettings):
     image_model: str
     reranker_model: str
 
+    clerk_jwks_url: str
+    clerk_webhook_secret: str
+    clerk_authorized_party: str
+
     @property
     def database_url(self) -> str:
         return (

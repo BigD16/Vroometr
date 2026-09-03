@@ -29,6 +29,7 @@ body {
 
 button,
 a.assistant-fab,
+a.profile,
 .left-hud a {
   font: inherit;
   color: inherit;
@@ -261,6 +262,37 @@ a.assistant-fab,
   font-size: 10px;
   color: #888;
   font-style: normal;
+}
+
+a.profile {
+  text-decoration: none;
+}
+
+.profile-signed-in {
+  padding: 4px 8px;
+}
+
+.auth-screen {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+  background: #090b0b;
+}
+
+.auth-screen h1 {
+  font-family: var(--font-display);
+  font-size: 28px;
+}
+
+.auth-screen p {
+  max-width: 28rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.auth-screen code {
+  color: var(--white);
 }
 
 .left-hud {
