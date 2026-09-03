@@ -2,8 +2,8 @@
 
 ```text
 routes/        HTTP only (validation, auth later, call a service, return JSON)
-services/      business rules — none yet
-repositories/  database access — none yet
+services/      business rules (users live here; Clerk comes next)
+repositories/  database access (users table)
 ```
 
 Migrations are explicit (`alembic upgrade head`). The app does **not** migrate on startup.
@@ -32,5 +32,6 @@ cd ../..
 | How env is read | `libs/vroometr/settings.py` (values in `.env`) |
 | Health checks | `app/health_checks.py` and `app/routes/health.py` |
 | Error JSON shape | `app/errors.py` |
-| Tables | new SQLAlchemy models + a new Alembic revision |
+| Tables | new SQLAlchemy models + a new Alembic revision (`app/models/`) |
+| Users / roles / entitlements | `app/models/user.py`, `app/services/users.py` |
 | A new HTTP endpoint | `app/routes/` (keep logic out of the route) |

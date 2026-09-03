@@ -11,7 +11,8 @@
 #   runner    — the VM (`ubuntu-latest`)
 #
 # This workflow does the same checks you run locally, plus Docker image builds.
-# It does not start Postgres/Unleash and it does not deploy.
+# The Python job starts Postgres (pgvector) so user-table tests can run.
+# It does not start Unleash or Redis, and it does not deploy.
 #
 # Action tags (@v7) are the Node.js runtime *inside* GitHub's helper actions
 # (checkout, setup-python, setup-node). That is separate from node-version: "22"
@@ -35,6 +36,20 @@ jobs:
     # GitHub runners have no `.env` file. Pydantic Settings reads these names
     # from the process environment instead. They are CI placeholders, not
     # production secrets. Real values stay in local `.env` / host env.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       POSTGRES_HOST: localhost
       POSTGRES_PORT: "5432"
@@ -78,6 +93,10 @@ jobs:
 
       - name: Lint
         run: ruff check libs tests services/api workers pipelines
+
+      - name: Apply database migrations
+        working-directory: services/api
+        run: alembic upgrade head
 
       - name: Tests
         run: pytest

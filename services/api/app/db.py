@@ -5,7 +5,7 @@ from app.config import settings
 
 
 class Base(DeclarativeBase):
-    """SQLAlchemy base. Product tables are added in later tasks."""
+    """SQLAlchemy base for product tables."""
 
 
 engine = create_engine(settings.database_url, pool_pre_ping=True)
