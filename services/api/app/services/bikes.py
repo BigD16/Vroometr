@@ -1,7 +1,8 @@
+from collections.abc import Iterator
+from dataclasses import dataclass, fields
 from datetime import UTC, date, datetime
 from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
-from typing import Any
 from uuid import UUID
 
 from app.models.bike import Bike, BikeStatus, BikeType, StrokeType, UnitPreference
@@ -9,23 +10,39 @@ from app.models.user import User
 from app.repositories.bikes import BikeStore
 
 _HOURS_QUANTUM = Decimal("0.1")
-_WRITABLE = frozenset(
-    {
-        "nickname",
-        "make",
-        "model",
-        "year",
-        "displacement",
-        "bike_type",
-        "stroke_type",
-        "purchase_date",
-        "engine_hours_at_purchase",
-        "current_engine_hours",
-        "current_engine_hours_is_estimated",
-        "status",
-        "unit_preference",
-    }
-)
+_TEXT_FIELDS = frozenset({"nickname", "make", "model"})
+
+
+class _Unset:
+    __slots__ = ()
+
+
+_UNSET = _Unset()
+
+
+@dataclass(frozen=True, slots=True)
+class BikePatch:
+    """Typed update command; omitted and explicitly cleared values stay distinct."""
+
+    nickname: str | _Unset = _UNSET
+    make: str | _Unset = _UNSET
+    model: str | _Unset = _UNSET
+    year: int | _Unset = _UNSET
+    displacement: int | _Unset = _UNSET
+    bike_type: str | _Unset = _UNSET
+    stroke_type: str | _Unset = _UNSET
+    purchase_date: date | None | _Unset = _UNSET
+    engine_hours_at_purchase: Decimal | float | int | None | _Unset = _UNSET
+    current_engine_hours: Decimal | float | int | None | _Unset = _UNSET
+    current_engine_hours_is_estimated: bool | _Unset = _UNSET
+    status: str | _Unset = _UNSET
+    unit_preference: str | _Unset = _UNSET
+
+    def changes(self) -> Iterator[tuple[str, object]]:
+        for field in fields(self):
+            value = getattr(self, field.name)
+            if value is not _UNSET:
+                yield field.name, value
 
 
 class InvalidBike(ValueError):
@@ -36,7 +53,9 @@ class BikeNotFound(LookupError):
     """No bike with this id belongs to the current user."""
 
 
-def _enum(cls: type[StrEnum], value: str, field: str) -> StrEnum:
+def _enum(cls: type[StrEnum], value: object, field: str) -> StrEnum:
+    if not isinstance(value, str):
+        raise InvalidBike(f"{field} must be text")
     try:
         return cls(value)
     except ValueError:
@@ -44,20 +63,36 @@ def _enum(cls: type[StrEnum], value: str, field: str) -> StrEnum:
         raise InvalidBike(f"invalid {field}: expected {allowed}") from None
 
 
-def _required_text(value: str, field: str) -> str:
+def _required_text(value: object, field: str) -> str:
+    if not isinstance(value, str):
+        raise InvalidBike(f"{field} must be text")
     text = value.strip()
     if not text:
         raise InvalidBike(f"{field} is required")
     return text
 
 
-def _hours(value: Decimal | float | int | None) -> Decimal | None:
+def _hours(value: object) -> Decimal | None:
     if value is None:
         return None
+    if isinstance(value, bool) or not isinstance(value, (Decimal, float, int)):
+        raise InvalidBike("engine hours must be a number")
     hours = Decimal(str(value))
-    if hours < 0:
+    if not hours.is_finite() or hours < 0:
         raise InvalidBike("engine hours cannot be negative")
     return hours.quantize(_HOURS_QUANTUM, rounding=ROUND_HALF_UP)
+
+
+def _integer(value: object, field: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise InvalidBike(f"{field} must be an integer")
+    return value
+
+
+def _boolean(value: object, field: str) -> bool:
+    if not isinstance(value, bool):
+        raise InvalidBike(f"{field} must be true or false")
+    return value
 
 
 class BikeService:
@@ -100,61 +135,59 @@ class BikeService:
         now = datetime.now(UTC)
         bike = Bike(
             user_id=user.id,
-            nickname=_required_text(nickname, "nickname"),
-            make=_required_text(make, "make"),
-            model=_required_text(model, "model"),
-            year=self._year(year),
-            displacement=self._displacement(displacement),
-            bike_type=_enum(BikeType, bike_type, "bike_type").value,
-            stroke_type=_enum(StrokeType, stroke_type, "stroke_type").value,
-            purchase_date=self._purchase_date(purchase_date),
-            engine_hours_at_purchase=_hours(engine_hours_at_purchase),
-            current_engine_hours=_hours(current_engine_hours),
-            current_engine_hours_is_estimated=current_engine_hours_is_estimated,
-            status=_enum(BikeStatus, status, "status").value,
-            unit_preference=_enum(UnitPreference, unit_preference, "unit_preference").value,
+            nickname=self._normalize_field("nickname", nickname),
+            make=self._normalize_field("make", make),
+            model=self._normalize_field("model", model),
+            year=self._normalize_field("year", year),
+            displacement=self._normalize_field("displacement", displacement),
+            bike_type=self._normalize_field("bike_type", bike_type),
+            stroke_type=self._normalize_field("stroke_type", stroke_type),
+            purchase_date=self._normalize_field("purchase_date", purchase_date),
+            engine_hours_at_purchase=self._normalize_field(
+                "engine_hours_at_purchase", engine_hours_at_purchase
+            ),
+            current_engine_hours=self._normalize_field(
+                "current_engine_hours", current_engine_hours
+            ),
+            current_engine_hours_is_estimated=self._normalize_field(
+                "current_engine_hours_is_estimated", current_engine_hours_is_estimated
+            ),
+            status=self._normalize_field("status", status),
+            unit_preference=self._normalize_field("unit_preference", unit_preference),
             created_at=now,
             updated_at=now,
         )
         return self._repository.add(bike)
 
-    def update(self, user: User, bike_id: UUID, changes: dict[str, Any]) -> Bike:
+    def update(self, user: User, bike_id: UUID, patch: BikePatch) -> Bike:
         bike = self.get(user, bike_id)
-        unknown = set(changes) - _WRITABLE
-        if unknown:
-            raise InvalidBike(f"cannot update fields: {', '.join(sorted(unknown))}")
-        if "nickname" in changes:
-            bike.nickname = _required_text(str(changes["nickname"]), "nickname")
-        if "make" in changes:
-            bike.make = _required_text(str(changes["make"]), "make")
-        if "model" in changes:
-            bike.model = _required_text(str(changes["model"]), "model")
-        if "year" in changes:
-            bike.year = self._year(int(changes["year"]))
-        if "displacement" in changes:
-            bike.displacement = self._displacement(int(changes["displacement"]))
-        if "bike_type" in changes:
-            bike.bike_type = _enum(BikeType, str(changes["bike_type"]), "bike_type").value
-        if "stroke_type" in changes:
-            bike.stroke_type = _enum(StrokeType, str(changes["stroke_type"]), "stroke_type").value
-        if "purchase_date" in changes:
-            bike.purchase_date = self._purchase_date(changes["purchase_date"])
-        if "engine_hours_at_purchase" in changes:
-            bike.engine_hours_at_purchase = _hours(changes["engine_hours_at_purchase"])
-        if "current_engine_hours" in changes:
-            bike.current_engine_hours = _hours(changes["current_engine_hours"])
-        if "current_engine_hours_is_estimated" in changes:
-            bike.current_engine_hours_is_estimated = bool(
-                changes["current_engine_hours_is_estimated"]
-            )
-        if "status" in changes:
-            bike.status = _enum(BikeStatus, str(changes["status"]), "status").value
-        if "unit_preference" in changes:
-            bike.unit_preference = _enum(
-                UnitPreference, str(changes["unit_preference"]), "unit_preference"
-            ).value
+        for field, value in patch.changes():
+            setattr(bike, field, self._normalize_field(field, value))
         bike.updated_at = datetime.now(UTC)
         return self._repository.save(bike)
+
+    def _normalize_field(self, field: str, value: object) -> object:
+        if field in _TEXT_FIELDS:
+            return _required_text(value, field)
+        if field == "year":
+            return self._year(_integer(value, field))
+        if field == "displacement":
+            return self._displacement(_integer(value, field))
+        if field == "bike_type":
+            return _enum(BikeType, value, field).value
+        if field == "stroke_type":
+            return _enum(StrokeType, value, field).value
+        if field == "purchase_date":
+            return self._purchase_date(value)
+        if field in {"engine_hours_at_purchase", "current_engine_hours"}:
+            return _hours(value)
+        if field == "current_engine_hours_is_estimated":
+            return _boolean(value, field)
+        if field == "status":
+            return _enum(BikeStatus, value, field).value
+        if field == "unit_preference":
+            return _enum(UnitPreference, value, field).value
+        raise InvalidBike(f"cannot update field: {field}")
 
     def _year(self, year: int) -> int:
         latest = self._today_utc().year + 1
@@ -167,9 +200,11 @@ class BikeService:
             raise InvalidBike("displacement must be a positive cc value")
         return displacement
 
-    def _purchase_date(self, purchase_date: date | None) -> date | None:
+    def _purchase_date(self, purchase_date: object) -> date | None:
         if purchase_date is None:
             return None
+        if not isinstance(purchase_date, date) or isinstance(purchase_date, datetime):
+            raise InvalidBike("purchase_date must be a date")
         if purchase_date > self._today_utc():
             raise InvalidBike("purchase_date cannot be in the future")
         return purchase_date

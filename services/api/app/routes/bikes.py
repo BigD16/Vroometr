@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Annotated, Any, NoReturn
+from typing import Annotated, NoReturn
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
@@ -10,7 +10,7 @@ from app.deps import get_bike_service, get_current_user
 from app.errors import AppError
 from app.models.bike import Bike
 from app.models.user import User
-from app.services.bikes import BikeNotFound, BikeService, InvalidBike
+from app.services.bikes import BikeNotFound, BikePatch, BikeService, InvalidBike
 
 router = APIRouter(tags=["bikes"])
 
@@ -167,9 +167,9 @@ def update_bike(
     user: Annotated[User, Depends(get_current_user)],
     bikes: Annotated[BikeService, Depends(get_bike_service)],
 ) -> BikeResponse:
-    changes: dict[str, Any] = body.model_dump(exclude_unset=True)
+    patch = BikePatch(**body.model_dump(exclude_unset=True))
     try:
-        bike = bikes.update(user, bike_id, changes)
+        bike = bikes.update(user, bike_id, patch)
     except (InvalidBike, BikeNotFound) as exc:
         _raise_bike(exc)
     return _to_response(bike)

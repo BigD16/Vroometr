@@ -110,6 +110,26 @@ def test_owner_can_patch_hours_and_archive() -> None:
     assert updated.json()["nickname"] == "YZ"
 
 
+def test_patch_can_clear_nullable_but_not_required_fields() -> None:
+    client = _client()
+    created = client.post("/v1/bikes", json=_YZ, headers=_auth())
+    bike_id = created.json()["id"]
+    cleared = client.patch(
+        f"/v1/bikes/{bike_id}",
+        json={"purchase_date": None},
+        headers=_auth(),
+    )
+    assert cleared.status_code == 200
+    assert cleared.json()["purchase_date"] is None
+    rejected = client.patch(
+        f"/v1/bikes/{bike_id}",
+        json={"nickname": None},
+        headers=_auth(),
+    )
+    assert rejected.status_code == 400
+    assert rejected.json()["error"]["code"] == "invalid_bike"
+
+
 def test_invalid_bike_payload_is_400() -> None:
     client = _client()
     response = client.post(

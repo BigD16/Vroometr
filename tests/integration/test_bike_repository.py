@@ -5,7 +5,7 @@ import pytest
 from app.db import engine
 from app.repositories.bikes import BikeRepository
 from app.repositories.users import UserRepository
-from app.services.bikes import BikeNotFound, BikeService
+from app.services.bikes import BikeNotFound, BikePatch, BikeService
 from app.services.users import UserService
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -60,6 +60,6 @@ def test_bike_round_trip_is_owner_scoped_in_postgres(db_session: Session) -> Non
     assert [bike.id for bike in bikes.list_for_user(owner)] == [created.id]
     with pytest.raises(BikeNotFound):
         bikes.get(other, created.id)
-    archived = bikes.update(owner, created.id, {"status": "archive"})
+    archived = bikes.update(owner, created.id, BikePatch(status="archive"))
     db_session.flush()
     assert archived.status == "archive"

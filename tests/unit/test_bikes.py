@@ -3,7 +3,7 @@ from decimal import Decimal
 from uuid import uuid4
 
 import pytest
-from app.services.bikes import BikeNotFound, BikeService, InvalidBike
+from app.services.bikes import BikeNotFound, BikePatch, BikeService, InvalidBike
 from app.services.users import UserService
 from tests.unit.fakes import InMemoryBikeRepository, InMemoryUserRepository
 
@@ -75,7 +75,7 @@ def test_update_own_bike_and_archive() -> None:
     updated = bikes.update(
         owner,
         bike.id,
-        {"nickname": "Track bike", "status": "archive", "current_engine_hours": 50},
+        BikePatch(nickname="Track bike", status="archive", current_engine_hours=50),
     )
     assert updated.nickname == "Track bike"
     assert updated.status == "archive"
@@ -89,18 +89,35 @@ def test_cannot_update_another_users_bike() -> None:
     other = users.create("user_clerk_other")
     bike = _create_yz(bikes, owner)
     with pytest.raises(BikeNotFound):
-        bikes.update(other, bike.id, {"nickname": "Stolen"})
+        bikes.update(other, bike.id, BikePatch(nickname="Stolen"))
     assert bikes.get(owner, bike.id).nickname == "YZ"
 
 
-def test_client_cannot_reassign_owner_on_update() -> None:
+def test_patch_cannot_reassign_owner() -> None:
     users, bikes = _services()
     owner = users.create("user_clerk_owner")
     other = users.create("user_clerk_other")
     bike = _create_yz(bikes, owner)
-    with pytest.raises(InvalidBike):
-        bikes.update(owner, bike.id, {"user_id": other.id})
+    with pytest.raises(TypeError):
+        BikePatch(user_id=other.id)
     assert bikes.get(owner, bike.id).user_id == owner.id
+
+
+def test_patch_distinguishes_cleared_from_omitted_fields() -> None:
+    users, bikes = _services()
+    owner = users.create("user_clerk_clear")
+    bike = _create_yz(bikes, owner)
+    updated = bikes.update(owner, bike.id, BikePatch(purchase_date=None))
+    assert updated.purchase_date is None
+    assert updated.nickname == "YZ"
+
+
+def test_patch_rejects_null_for_required_fields() -> None:
+    users, bikes = _services()
+    owner = users.create("user_clerk_null")
+    bike = _create_yz(bikes, owner)
+    with pytest.raises(InvalidBike):
+        bikes.update(owner, bike.id, BikePatch(nickname=None))
 
 
 def test_blank_nickname_and_invalid_enums_are_rejected() -> None:
