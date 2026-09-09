@@ -1,6 +1,6 @@
 # Website (`apps/web`)
 
-Next.js App Router UI. The garage HUD is a static visual shell (placeholder bike copy). Bike rows live in FastAPI `GET/POST /v1/bikes`; garage pages are not wired yet.
+Next.js App Router UI. The garage HUD's active-machine selector loads owner-scoped bike rows and persists the selected bike through FastAPI. Dashboard cards remain placeholder data; garage pages are not wired yet.
 
 Scene stills live in `public/`:
 
@@ -8,11 +8,11 @@ Scene stills live in `public/`:
 - `rides-track.jpg` — rides backdrop
 
 ```bash
-npm install
-npm run dev
+cd apps/web && npm install && cd ../..
+./scripts/web-dev.sh
 ```
 
-Then open http://localhost:3000
+Run those commands from the repo root, then open http://localhost:3000. The wrapper loads server-side settings such as `API_URL` from the repo-root `.env`; Next.js still loads Clerk's browser keys from `apps/web/.env.local` when present.
 
 Sign-in is `/sign-in` (needs Clerk keys in the repo-root `.env` or `apps/web/.env.local`). The garage HUD and other `(shell)` routes require a Clerk session; signed-out visits redirect to sign-in. After sign-in, http://localhost:3000/api/me proxies the FastAPI `/v1/me` row (role/entitlement from Postgres). Middleware is a UX gate only — FastAPI still authorizes `/v1/*`.
 
@@ -23,6 +23,7 @@ Sign-in is `/sign-in` (needs Clerk keys in the repo-root `.env` or `apps/web/.en
 | Sign-in / profile | `app/sign-in/`, `components/ProfileControl.tsx` |
 | Clerk wiring | `proxy.ts`, `components/ClerkProviders.tsx` |
 | Public vs protected paths | `lib/public-routes.ts`, `proxy.ts` |
+| Active-bike state / selector | `components/ActiveBikeProvider.tsx`, `components/ActiveBikeSelector.tsx` |
 | Top bar, left rail, scene, FAB | `components/` |
 | Dashboard cards | `components/dashboard/` |
 | Look (glass, type, spacing) | `app/globals.css` |

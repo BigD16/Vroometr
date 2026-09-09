@@ -5,6 +5,7 @@ import pytest
 from app.db import engine
 from app.repositories.bikes import BikeRepository
 from app.repositories.users import UserRepository
+from app.services.active_bikes import ActiveBikeService
 from app.services.bikes import BikeNotFound, BikePatch, BikeService
 from app.services.users import UserService
 from sqlalchemy import text
@@ -24,6 +25,21 @@ def db_session() -> Iterator[Session]:
         transaction.rollback()
         connection.close()
         pytest.skip("Run `cd services/api && alembic upgrade head` first")
+    active_bike_column_exists = connection.execute(
+        text(
+            """
+            SELECT EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_name = 'users' AND column_name = 'active_bike_id'
+            )
+            """
+        )
+    ).scalar()
+    if not active_bike_column_exists:
+        transaction.rollback()
+        connection.close()
+        pytest.skip("Run `cd services/api && alembic upgrade head` first")
 
     session = Session(bind=connection)
     try:
@@ -36,7 +52,9 @@ def db_session() -> Iterator[Session]:
 
 def test_bike_round_trip_is_owner_scoped_in_postgres(db_session: Session) -> None:
     users = UserRepository(db_session)
-    bikes = BikeService(BikeRepository(db_session), today=date(2026, 9, 3))
+    bike_repository = BikeRepository(db_session)
+    bikes = BikeService(bike_repository, today=date(2026, 9, 3))
+    active_bikes = ActiveBikeService(users, bike_repository)
     service = UserService(users)
     owner = service.create("user_clerk_bike_owner")
     other = service.create("user_clerk_bike_other")
@@ -58,6 +76,10 @@ def test_bike_round_trip_is_owner_scoped_in_postgres(db_session: Session) -> Non
     assert found.nickname == "YZ"
     assert found.user_id == owner.id
     assert [bike.id for bike in bikes.list_for_user(owner)] == [created.id]
+    assert active_bikes.resolve(owner).id == created.id
+    db_session.flush()
+    db_session.expire(owner, ["active_bike_id"])
+    assert owner.active_bike_id == created.id
     with pytest.raises(BikeNotFound):
         bikes.get(other, created.id)
     archived = bikes.update(owner, created.id, BikePatch(status="archive"))

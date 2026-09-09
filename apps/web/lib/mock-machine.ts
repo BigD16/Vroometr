@@ -1,4 +1,4 @@
-/** Static placeholder copy so the HUD looks like the mock. Replace in Phase 2. */
+/** Static dashboard placeholders until maintenance and ride data are implemented. */
 
 export const mockUser = {
   initials: "DG",
@@ -7,8 +7,6 @@ export const mockUser = {
 };
 
 export const mockMachine = {
-  nickname: "Drake's YZ",
-  identityLine: "2006 Yamaha YZ250 · Two-stroke",
   engineHours: "42.7",
   hoursSinceService: "6.2",
   lastRide: "AUG 20",

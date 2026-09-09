@@ -36,7 +36,7 @@ docs/adr          Architecture decision records
 
 ## How to run (right now)
 
-Garage HUD is a static visual shell over the default scene. Copy is placeholder until bikes are real.
+Garage HUD uses real owner-scoped bikes in its persistent active-machine selector. Dashboard cards remain placeholders over the default scene.
 
 ### Local data stores (Postgres, Redis, S3)
 
@@ -77,9 +77,8 @@ See [`workers/README.md`](workers/README.md).
 ### Website
 
 ```bash
-cd apps/web
-npm install
-npm run dev
+cd apps/web && npm install && cd ../..
+./scripts/web-dev.sh
 ```
 
 Then open http://localhost:3000 — signed-out visits redirect to `/sign-in`; the garage HUD requires a Clerk session. See [`apps/web/README.md`](apps/web/README.md).

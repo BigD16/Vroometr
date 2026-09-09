@@ -1,6 +1,6 @@
+import { ActiveBikeSelector } from "@/components/ActiveBikeSelector";
 import { BrandMark } from "@/components/BrandMark";
 import { ProfileControl } from "@/components/ProfileControl";
-import { mockMachine } from "@/lib/mock-machine";
 
 export function TopHud() {
   return (
@@ -12,13 +12,7 @@ export function TopHud() {
           <small>KNOW YOUR MACHINE.</small>
         </div>
       </div>
-      <div className="machine-title">
-        <span>
-          <i /> ACTIVE MACHINE
-        </span>
-        <h1>{mockMachine.nickname}</h1>
-        <p>{mockMachine.identityLine}</p>
-      </div>
+      <ActiveBikeSelector />
       <div className="top-actions">
         <button type="button" className="bell" aria-label="Notifications">
           ●<i />

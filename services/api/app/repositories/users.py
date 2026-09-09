@@ -33,9 +33,10 @@ class UserRepository:
         return self._session.scalars(statement).first()
 
     def add(self, user: User) -> User:
-        self._session.add(user)
         try:
-            self._session.flush()
+            with self._session.begin_nested():
+                self._session.add(user)
+                self._session.flush()
         except IntegrityError as exc:
             raise UserAlreadyExists from exc
         return user

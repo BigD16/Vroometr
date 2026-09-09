@@ -160,7 +160,9 @@ a.profile,
   text-align: center;
 }
 
-.machine-title > span {
+.machine-title > span,
+.machine-title > label {
+  display: block;
   font-size: 7px;
   font-weight: 800;
   color: #aaa;
@@ -179,6 +181,64 @@ a.profile,
 .machine-title h1 {
   font: 600 20px/1.1 var(--font-display);
   margin: 4px;
+}
+
+.machine-title select {
+  display: block;
+  width: min(360px, 38vw);
+  margin: 2px auto;
+  padding: 0 20px 0 4px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  outline: none;
+  background: transparent;
+  color: var(--white);
+  font: 600 20px/1.1 var(--font-display);
+  text-align: center;
+  text-align-last: center;
+}
+
+.machine-title select:hover:not(:disabled) {
+  border-color: var(--line);
+  background: #ffffff08;
+}
+
+.machine-title select:focus-visible,
+.active-bike-retry:focus-visible {
+  border-color: var(--green);
+  box-shadow: 0 0 0 2px #55d66f33;
+}
+
+.machine-title select:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.machine-title option {
+  background: #141717;
+  color: var(--white);
+}
+
+.active-bike-status {
+  display: block;
+  margin: 5px 0;
+  font: 600 16px/1.1 var(--font-display);
+}
+
+.active-bike-retry {
+  margin: 5px 0 2px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #ffffff0b;
+  color: var(--white);
+  font: 700 10px/1.5 var(--font-inter), Inter, ui-sans-serif, sans-serif;
+}
+
+.active-bike-error {
+  display: block;
+  margin-top: 2px;
+  color: #ff8f8f;
+  font-size: 7px;
 }
 
 .machine-title p {

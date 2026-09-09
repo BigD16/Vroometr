@@ -3,9 +3,9 @@ from datetime import date
 
 import pytest
 from app.db import engine
-from app.models.user import Entitlement, Role
+from app.models.user import Entitlement, Role, User
 from app.repositories.parental_consents import ParentalConsentRepository
-from app.repositories.users import UserRepository
+from app.repositories.users import UserAlreadyExists, UserRepository
 from app.services.age_gate import AgeGateService, Eligibility
 from app.services.users import UserService
 from sqlalchemy import text
@@ -44,6 +44,16 @@ def test_user_round_trip_in_postgres(db_session: Session) -> None:
     assert found.id == created.id
     assert found.role == Role.USER.value
     assert found.entitlement == Entitlement.NONE.value
+
+
+def test_duplicate_insert_does_not_poison_repository_session(db_session: Session) -> None:
+    repository = UserRepository(db_session)
+    created = UserService(repository).create("user_clerk_race")
+    with pytest.raises(UserAlreadyExists):
+        repository.add(User(clerk_user_id=created.clerk_user_id))
+    found = repository.get_by_clerk_user_id(created.clerk_user_id)
+    assert found is not None
+    assert found.id == created.id
 
 
 def test_parental_consent_round_trip_in_postgres(db_session: Session) -> None:

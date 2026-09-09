@@ -5,3 +5,5 @@
 `age_gate.py` decides eligibility from date of birth and versioned guardian consent. 18+ may use Vroometr directly; 13–17 need a granted consent; under-13 dates of birth are rejected and not stored.
 
 `bikes.py` creates, lists, reads, and updates bikes for the signed-in user. Owner id always comes from the session user, never from a client-supplied `user_id`.
+
+`active_bikes.py` resolves and persists the signed-in user's active bike. Selection is owner-validated; an empty or archived selection falls back to the first non-archived owned bike.

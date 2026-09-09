@@ -2,7 +2,7 @@ from datetime import UTC, date, datetime
 from enum import StrEnum
 from uuid import UUID, uuid4
 
-from sqlalchemy import CheckConstraint, Date, DateTime, String, UniqueConstraint, Uuid
+from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, String, UniqueConstraint, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -38,6 +38,11 @@ class User(Base):
     role: Mapped[str] = mapped_column(String(32), default=Role.USER.value)
     entitlement: Mapped[str] = mapped_column(String(32), default=Entitlement.NONE.value)
     date_of_birth: Mapped[date | None] = mapped_column(Date, nullable=True)
+    active_bike_id: Mapped[UUID | None] = mapped_column(
+        Uuid,
+        ForeignKey("bikes.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
