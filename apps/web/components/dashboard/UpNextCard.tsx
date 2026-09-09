@@ -1,32 +1,27 @@
-import { mockUpNext } from "@/lib/mock-machine";
+import Link from "next/link";
 
-export function UpNextCard() {
-  const [priority, ...rest] = mockUpNext;
+import type { Bike } from "@/lib/bikes";
 
+export function UpNextCard({ bike }: { bike: Bike | null }) {
   return (
     <article className="glass-card">
       <header>
         <span>UP NEXT</span>
-        <button type="button">VIEW ALL →</button>
+        <Link className="dashboard-card-link" href="/maintenance">
+          VIEW ALL →
+        </Link>
       </header>
-      {priority ? (
-        <div className="priority">
-          <i />
-          <div>
-            <b>{priority.title}</b>
-            <span>{priority.detail}</span>
-          </div>
+      <div className="dashboard-card-empty">
+        <span aria-hidden="true">◇</span>
+        <div>
+          <b>{bike === null ? "No active machine" : "No verified tasks yet"}</b>
+          <p>
+            {bike === null
+              ? "Add a bike before building a maintenance plan."
+              : "Maintenance recommendations will appear after a verified service plan is available."}
+          </p>
         </div>
-      ) : null}
-      {rest.map((item) => (
-        <div className="service-line" key={item.title}>
-          <div>
-            <b>{item.title}</b>
-            <span>{item.detail}</span>
-          </div>
-          <strong>{item.due}</strong>
-        </div>
-      ))}
+      </div>
     </article>
   );
 }

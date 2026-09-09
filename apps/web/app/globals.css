@@ -476,11 +476,13 @@ a.profile {
   letter-spacing: 0.14em;
 }
 
-.glass-card header button {
+.glass-card header button,
+.dashboard-card-link {
   border: 0;
   background: none;
   color: #aaa;
   font-size: 7px;
+  text-decoration: none;
 }
 
 .right-panel {
@@ -506,15 +508,64 @@ a.profile {
   border-radius: 4px;
 }
 
+.meter-empty {
+  background: repeating-linear-gradient(
+    90deg,
+    #ffffff12 0,
+    #ffffff12 8px,
+    transparent 8px,
+    transparent 12px
+  );
+}
+
 .health footer {
   display: flex;
   justify-content: space-between;
+  gap: 12px;
   font-size: 8px;
   color: #999;
 }
 
 .health footer strong {
   color: var(--green);
+  white-space: nowrap;
+}
+
+.health footer span {
+  max-width: 175px;
+  line-height: 1.4;
+  text-align: right;
+}
+
+.dashboard-card-empty {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding-top: 12px;
+}
+
+.dashboard-card-empty > span {
+  width: 27px;
+  height: 27px;
+  border: 1px solid #ffffff1a;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #8d8e89;
+}
+
+.dashboard-card-empty b {
+  display: block;
+  font-size: 9px;
+}
+
+.dashboard-card-empty p {
+  max-width: 215px;
+  margin: 4px 0 0;
+  color: #999;
+  font-size: 7px;
+  line-height: 1.4;
 }
 
 .priority {
@@ -600,12 +651,16 @@ a.profile {
   margin: 0;
 }
 
-.next-ride > button {
+.next-ride > a {
   width: 25px;
   height: 25px;
   border-radius: 50%;
   border: 1px solid var(--line);
   background: none;
+  display: grid;
+  place-items: center;
+  color: #ddd;
+  text-decoration: none;
 }
 
 .scene-label {
@@ -643,6 +698,52 @@ a.profile {
   font-size: 8px;
   color: #ccc;
   margin: 0;
+}
+
+.dashboard-context-state {
+  min-height: 95px;
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-context-state strong {
+  font-size: 9px;
+}
+
+.dashboard-context-state p {
+  margin: 4px 0 0;
+  color: #999;
+  font-size: 7px;
+  line-height: 1.4;
+}
+
+.dashboard-context-state button {
+  grid-column: 2;
+  justify-self: start;
+  border: 1px solid #ffffff24;
+  border-radius: 5px;
+  background: #ffffff0d;
+  color: #ddd;
+  padding: 5px 9px;
+  font-size: 7px;
+}
+
+.dashboard-state-mark {
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: #ef52381a;
+}
+
+.dashboard-state-error::before {
+  content: "!";
+  display: grid;
+  height: 100%;
+  place-items: center;
+  color: #ff8b78;
+  font-weight: 800;
 }
 
 .metrics {

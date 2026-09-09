@@ -1,6 +1,6 @@
 # Website (`apps/web`)
 
-Next.js App Router UI. The garage HUD's active-machine selector and Garage pages load owner-scoped bike rows through FastAPI. Garage supports combustion and electric bikes across list, create, dedicated detail, edit, archive, and restore flows. Dashboard cards remain placeholder data.
+Next.js App Router UI. The garage HUD, Garage pages, and dashboard load owner-scoped bike rows through FastAPI. Garage supports combustion and electric bikes across list, create, dedicated detail, edit, archive, and restore flows. Dashboard identity, powertrain, engine hours, and Assistant context are live; maintenance and ride areas show empty states until those domains are implemented.
 
 Scene stills live in `public/`:
 
@@ -19,7 +19,7 @@ Sign-in is `/sign-in` (needs Clerk keys in the repo-root `.env` or `apps/web/.en
 | If you want to change… | Open |
 | --- | --- |
 | Nav items / scene per route | `lib/nav.ts` |
-| Placeholder bike copy | `lib/mock-machine.ts` |
+| Dashboard active-bike composition | `components/dashboard/DashboardOverview.tsx` |
 | Sign-in / profile | `app/sign-in/`, `components/ProfileControl.tsx` |
 | Clerk wiring | `proxy.ts`, `components/ClerkProviders.tsx` |
 | Public vs protected paths | `lib/public-routes.ts`, `proxy.ts` |

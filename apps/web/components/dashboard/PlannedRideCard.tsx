@@ -1,20 +1,26 @@
-import { mockPlannedRide } from "@/lib/mock-machine";
+import Link from "next/link";
 
-export function PlannedRideCard() {
+import type { Bike } from "@/lib/bikes";
+
+export function PlannedRideCard({ bike }: { bike: Bike | null }) {
   return (
     <article className="glass-card next-ride">
       <time>
-        <b>{mockPlannedRide.day}</b>
-        <span>{mockPlannedRide.month}</span>
+        <b>—</b>
+        <span>RIDE</span>
       </time>
       <div>
         <small>PLANNED RIDE</small>
-        <h3>{mockPlannedRide.name}</h3>
-        <p>{mockPlannedRide.detail}</p>
+        <h3>{bike === null ? "No active machine" : "Nothing scheduled"}</h3>
+        <p>
+          {bike === null
+            ? "Add a bike before planning a ride."
+            : "Upcoming rides will appear here when ride tracking is available."}
+        </p>
       </div>
-      <button type="button" aria-label="Open planned ride">
+      <Link href="/rides" aria-label="Open rides">
         →
-      </button>
+      </Link>
     </article>
   );
 }

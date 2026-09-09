@@ -36,7 +36,7 @@ docs/adr          Architecture decision records
 
 ## How to run (right now)
 
-Garage HUD and Garage pages use real owner-scoped combustion or electric bikes, including create, detail, edit, archive, and restore flows. Dashboard cards remain placeholders over the default scene.
+Garage HUD, Garage pages, and the dashboard use real owner-scoped combustion or electric bikes. The dashboard shows live machine identity, powertrain, and engine hours; maintenance and ride cards stay honest empty states until those records exist.
 
 ### Local data stores (Postgres, Redis, S3)
 
