@@ -36,7 +36,7 @@ docs/adr          Architecture decision records
 
 ## How to run (right now)
 
-Garage HUD uses real owner-scoped bikes in its persistent active-machine selector. Dashboard cards remain placeholders over the default scene.
+Garage HUD and Garage pages use real owner-scoped bikes, including create, detail, edit, archive, and restore flows. Dashboard cards remain placeholders over the default scene.
 
 ### Local data stores (Postgres, Redis, S3)
 

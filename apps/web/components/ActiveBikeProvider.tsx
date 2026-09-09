@@ -9,30 +9,22 @@ import {
   useState,
 } from "react";
 
-import type { ActiveBikeSnapshot, BikeSummary } from "@/lib/bikes";
+import { readApiError } from "@/lib/api-errors";
+import type { ActiveBikeSnapshot, Bike } from "@/lib/bikes";
 
 type LoadState = "loading" | "ready" | "error";
 
 type ActiveBikeContextValue = {
-  bikes: BikeSummary[];
-  activeBike: BikeSummary | null;
+  bikes: Bike[];
+  activeBike: Bike | null;
   state: LoadState;
   isSaving: boolean;
   error: string | null;
-  selectBike: (bikeId: string) => Promise<void>;
+  selectBike: (bikeId: string) => Promise<boolean>;
   reload: () => Promise<void>;
 };
 
 const ActiveBikeContext = createContext<ActiveBikeContextValue | null>(null);
-
-async function responseError(response: Response): Promise<string> {
-  try {
-    const body = (await response.json()) as { error?: { message?: string } };
-    return body.error?.message ?? "Bike context is unavailable";
-  } catch {
-    return "Bike context is unavailable";
-  }
-}
 
 export function ActiveBikeProvider({
   children,
@@ -41,7 +33,7 @@ export function ActiveBikeProvider({
   children: ReactNode;
   initial: ActiveBikeSnapshot;
 }) {
-  const [bikes, setBikes] = useState<BikeSummary[]>(initial.bikes);
+  const [bikes, setBikes] = useState<Bike[]>(initial.bikes);
   const [activeBikeId, setActiveBikeId] = useState<string | null>(initial.activeBikeId);
   const [state, setState] = useState<LoadState>(initial.error === null ? "ready" : "error");
   const [isSaving, setIsSaving] = useState(false);
@@ -56,12 +48,12 @@ export function ActiveBikeProvider({
         fetch("/api/me/active-bike", { cache: "no-store" }),
       ]);
       if (!bikesResponse.ok) {
-        throw new Error(await responseError(bikesResponse));
+        throw new Error(await readApiError(bikesResponse, "Bike context is unavailable"));
       }
       if (!activeResponse.ok) {
-        throw new Error(await responseError(activeResponse));
+        throw new Error(await readApiError(activeResponse, "Bike context is unavailable"));
       }
-      const loadedBikes = (await bikesResponse.json()) as BikeSummary[];
+      const loadedBikes = (await bikesResponse.json()) as Bike[];
       const active = (await activeResponse.json()) as { active_bike_id: string | null };
       setBikes(loadedBikes);
       setActiveBikeId(active.active_bike_id);
@@ -82,12 +74,14 @@ export function ActiveBikeProvider({
         body: JSON.stringify({ bike_id: bikeId }),
       });
       if (!response.ok) {
-        throw new Error(await responseError(response));
+        throw new Error(await readApiError(response, "Could not change active bike"));
       }
       const active = (await response.json()) as { active_bike_id: string };
       setActiveBikeId(active.active_bike_id);
+      return true;
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not change active bike");
+      return false;
     } finally {
       setIsSaving(false);
     }

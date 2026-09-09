@@ -1,3 +1,4 @@
+import { GarageList } from "@/components/GarageList";
 import { WorkspacePage } from "@/components/WorkspacePage";
 
 export default function GaragePage() {
@@ -5,11 +6,10 @@ export default function GaragePage() {
     <WorkspacePage
       kicker="YOUR MACHINES"
       title="Garage"
-      description="Every bike you own, in one place."
+      description="Every bike you own, with one active machine across Vroometr."
+      wide
     >
-      <article className="glass-card">
-        <p>Bike list is empty until Phase 2. The dashboard still uses the default garage scene.</p>
-      </article>
+      <GarageList />
     </WorkspacePage>
   );
 }

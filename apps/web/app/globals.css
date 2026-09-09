@@ -734,6 +734,665 @@ a.profile {
   margin: 0;
 }
 
+.workspace-body-wide {
+  top: 112px;
+  width: min(1080px, 100%);
+  overflow-y: auto;
+  padding: 0 4px 8px;
+  scrollbar-color: #ffffff28 transparent;
+}
+
+.garage-stack {
+  display: grid;
+  gap: 22px;
+}
+
+.garage-toolbar,
+.garage-detail-toolbar,
+.bike-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.garage-toolbar {
+  min-height: 39px;
+}
+
+.garage-toolbar p {
+  color: var(--muted);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.garage-action {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 13px;
+  color: var(--white);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    opacity 0.2s,
+    transform 0.2s;
+}
+
+.garage-action:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.garage-action:focus-visible,
+.bike-field input:focus-visible,
+.bike-field select:focus-visible,
+.bike-check-field input:focus-visible,
+.garage-back-link:focus-visible,
+.bike-card h3 a:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+.garage-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.garage-action-primary {
+  border-color: #ef5238aa;
+  background: var(--red);
+  color: #fff;
+}
+
+.garage-action-primary:hover:not(:disabled) {
+  border-color: #ff866f;
+  background: #fa6248;
+}
+
+.garage-action-secondary {
+  background: #ffffff0b;
+}
+
+.garage-action-secondary:hover:not(:disabled) {
+  border-color: #ffffff38;
+  background: #ffffff14;
+}
+
+.garage-inline-error {
+  border: 1px solid #ef52386b;
+  border-radius: 7px;
+  background: #ef523817;
+  color: #ffaaa0;
+  font-size: 10px;
+  line-height: 1.45;
+  padding: 10px 12px;
+}
+
+.garage-state-card {
+  min-height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+}
+
+.garage-state-card h3,
+.garage-empty h3 {
+  margin: 0 0 6px;
+  font: 600 20px var(--font-display);
+}
+
+.garage-state-card p,
+.garage-empty p {
+  max-width: 580px;
+}
+
+.garage-spinner {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  border: 2px solid #ffffff24;
+  border-top-color: var(--red);
+  border-radius: 50%;
+  animation: garage-spin 0.8s linear infinite;
+}
+
+@keyframes garage-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.garage-empty {
+  min-height: 260px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.garage-empty > span {
+  width: 44px;
+  height: 44px;
+  border: 1px solid #ffffff24;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: var(--red);
+  background: #ffffff09;
+  font-size: 19px;
+}
+
+.garage-empty .garage-action {
+  margin-top: 8px;
+}
+
+.garage-section {
+  display: grid;
+  gap: 10px;
+}
+
+.garage-section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  border-bottom: 1px solid #ffffff14;
+  padding: 0 2px 9px;
+}
+
+.garage-section-heading small {
+  color: var(--red);
+  font-size: 6px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.garage-section-heading h3 {
+  margin: 3px 0 0;
+  font: 600 17px var(--font-display);
+}
+
+.garage-section-heading > span {
+  min-width: 26px;
+  height: 22px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.bike-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.bike-card {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    transform 0.2s;
+}
+
+.bike-card:hover {
+  border-color: #ffffff2b;
+  background: rgba(18, 21, 21, 0.88);
+  transform: translateY(-1px);
+}
+
+.bike-card-active {
+  border-color: #69d99a70;
+  box-shadow:
+    inset 2px 0 var(--green),
+    0 18px 48px #0004;
+}
+
+.bike-card-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.bike-card-heading h3 {
+  margin: 7px 0 2px;
+  font: 600 23px var(--font-display);
+}
+
+.bike-card-heading h3 a {
+  color: var(--white);
+  text-decoration: none;
+}
+
+.bike-card-heading p {
+  overflow-wrap: anywhere;
+}
+
+.bike-card-heading > strong {
+  color: var(--white);
+  font: 600 13px var(--font-display);
+  white-space: nowrap;
+}
+
+.bike-status {
+  width: fit-content;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 0 8px;
+  background: #ffffff0f;
+  color: #c3c2bc;
+  font-size: 6px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.bike-status-active {
+  background: #69d99a1b;
+  color: #89e8b1;
+}
+
+.bike-status-inactive {
+  background: #efb15217;
+  color: #efc06f;
+}
+
+.bike-status-archive {
+  background: #ffffff0c;
+  color: #92918d;
+}
+
+.bike-card-facts,
+.garage-fact-panel dl {
+  margin: 0;
+}
+
+.bike-card-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.bike-card-facts div {
+  min-width: 0;
+}
+
+.bike-card-facts dt,
+.garage-fact-panel dt {
+  color: #858580;
+  font-size: 6px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.bike-card-facts dd,
+.garage-fact-panel dd {
+  margin: 4px 0 0;
+  color: #d8d7d1;
+  font-size: 9px;
+}
+
+.bike-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 7px;
+  border-top: 1px solid #ffffff10;
+  padding-top: 12px;
+}
+
+.garage-section-empty p {
+  color: var(--muted);
+}
+
+.garage-archive .bike-card {
+  background: rgba(10, 12, 12, 0.7);
+}
+
+.garage-detail {
+  display: grid;
+  gap: 10px;
+}
+
+.garage-detail-toolbar > div {
+  display: flex;
+  gap: 7px;
+}
+
+.garage-back-link {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.garage-back-link:hover {
+  color: var(--white);
+}
+
+.garage-machine-hero {
+  min-height: 145px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 24px;
+}
+
+.garage-machine-hero h3 {
+  margin: 10px 0 3px;
+  font: 600 32px var(--font-display);
+}
+
+.garage-machine-hero p {
+  font-size: 11px;
+}
+
+.garage-machine-number {
+  min-width: 128px;
+  border-left: 1px solid #ffffff18;
+  text-align: right;
+}
+
+.garage-machine-number strong,
+.garage-machine-number span {
+  display: block;
+}
+
+.garage-machine-number strong {
+  font: 600 42px/1 var(--font-display);
+}
+
+.garage-machine-number span {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+}
+
+.garage-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.garage-fact-panel {
+  min-width: 0;
+}
+
+.garage-fact-panel header {
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ffffff10;
+}
+
+.garage-fact-panel dl {
+  display: grid;
+}
+
+.garage-fact-panel dl div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #ffffff0c;
+  padding: 10px 0;
+}
+
+.garage-fact-panel dl div:last-child {
+  border: 0;
+  padding-bottom: 0;
+}
+
+.garage-fact-panel dd {
+  text-align: right;
+  text-transform: capitalize;
+}
+
+.garage-scene-panel > strong {
+  display: block;
+  margin: 18px 0 7px;
+  font: 600 20px var(--font-display);
+}
+
+.garage-scene-panel > small {
+  display: block;
+  margin-top: 14px;
+  color: #858580;
+  font-size: 7px;
+  line-height: 1.5;
+}
+
+.bike-form {
+  display: grid;
+  gap: 22px;
+  padding: 22px;
+}
+
+.bike-form-intro {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 28px;
+  border-bottom: 1px solid #ffffff14;
+  padding-bottom: 17px;
+}
+
+.bike-form-intro small {
+  color: var(--red);
+  font-size: 6px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.bike-form-intro h3 {
+  margin: 5px 0 0;
+  font: 600 23px var(--font-display);
+}
+
+.bike-form-intro p {
+  max-width: 330px;
+  text-align: right;
+}
+
+.bike-form fieldset {
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  padding: 0;
+  display: grid;
+  gap: 22px;
+}
+
+.bike-form-section {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  gap: 24px;
+}
+
+.bike-form-section + .bike-form-section {
+  border-top: 1px solid #ffffff10;
+  padding-top: 22px;
+}
+
+.bike-form-section-title {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+}
+
+.bike-form-section-title > span {
+  width: 25px;
+  height: 25px;
+  border: 1px solid #ffffff1c;
+  border-radius: 50%;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--red);
+  font-size: 7px;
+  font-weight: 900;
+}
+
+.bike-form-section-title h4 {
+  margin: 1px 0 4px;
+  font: 600 14px var(--font-display);
+}
+
+.bike-form-section-title p {
+  color: #8f8f8a;
+  font-size: 8px;
+  line-height: 1.45;
+}
+
+.bike-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+}
+
+.bike-field,
+.bike-form-default {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 6px;
+}
+
+.bike-field-wide {
+  grid-column: 1 / -1;
+}
+
+.bike-field > span:first-child,
+.bike-form-default > span {
+  color: #a6a59f;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.bike-field input,
+.bike-field select {
+  width: 100%;
+  height: 40px;
+  border: 1px solid #ffffff18;
+  border-radius: 7px;
+  outline: none;
+  background: #0608087a;
+  color: var(--white);
+  font: 500 11px var(--font-inter), Inter, ui-sans-serif, sans-serif;
+  padding: 0 11px;
+}
+
+.bike-field input::placeholder {
+  color: #6f706c;
+}
+
+.bike-field input:hover,
+.bike-field select:hover {
+  border-color: #ffffff2d;
+}
+
+.bike-field select {
+  appearance: auto;
+}
+
+.bike-field > small,
+.bike-form-default small {
+  color: #858580;
+  font-size: 7px;
+  line-height: 1.4;
+}
+
+.bike-input-with-unit {
+  position: relative;
+  display: block;
+}
+
+.bike-input-with-unit input {
+  padding-right: 39px;
+}
+
+.bike-input-with-unit em {
+  position: absolute;
+  right: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #858580;
+  font-size: 8px;
+  font-style: normal;
+}
+
+.bike-check-field {
+  min-height: 40px;
+  border: 1px solid #ffffff14;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+}
+
+.bike-check-field input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--red);
+}
+
+.bike-check-field strong,
+.bike-check-field small {
+  display: block;
+}
+
+.bike-check-field strong {
+  font-size: 8px;
+}
+
+.bike-check-field small {
+  margin-top: 2px;
+  color: #858580;
+  font-size: 7px;
+  line-height: 1.3;
+}
+
+.bike-form-default {
+  min-height: 40px;
+  border: 1px solid #69d99a35;
+  border-radius: 7px;
+  background: #69d99a0b;
+  padding: 8px 10px;
+}
+
+.bike-form-default strong {
+  color: #89e8b1;
+  font-size: 10px;
+}
+
+.bike-form-actions {
+  justify-content: flex-end;
+  border-top: 1px solid #ffffff14;
+  padding-top: 17px;
+}
+
 .settings-stack {
   display: grid;
   gap: 10px;
@@ -945,6 +1604,22 @@ a.profile {
     width: 82%;
   }
 
+  .workspace-body-wide {
+    width: 100%;
+  }
+
+  .garage-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .garage-scene-panel {
+    grid-column: 1 / -1;
+  }
+
+  .bike-form-section {
+    grid-template-columns: 180px minmax(0, 1fr);
+  }
+
   .assistant-fab {
     left: auto;
     right: 26px;
@@ -1037,6 +1712,66 @@ a.profile {
   .workspace-body,
   .assistant-screen {
     width: 100%;
+  }
+
+  .workspace-body-wide {
+    top: 100px;
+  }
+
+  .garage-toolbar,
+  .garage-detail-toolbar,
+  .bike-form-intro {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .garage-toolbar,
+  .garage-detail-toolbar {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .bike-card-grid,
+  .garage-detail-grid,
+  .bike-form-grid,
+  .bike-form-section {
+    grid-template-columns: 1fr;
+  }
+
+  .garage-scene-panel,
+  .bike-field-wide {
+    grid-column: auto;
+  }
+
+  .garage-state-card,
+  .garage-machine-hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .garage-machine-number {
+    min-width: 0;
+    width: 100%;
+    border-top: 1px solid #ffffff18;
+    border-left: 0;
+    padding-top: 14px;
+    text-align: left;
+  }
+
+  .bike-form {
+    padding: 15px;
+  }
+
+  .bike-form-intro p {
+    text-align: left;
+  }
+
+  .bike-form-section {
+    gap: 13px;
+  }
+
+  .bike-form-actions .garage-action {
+    flex: 1;
   }
 
   .assistant-screen {
