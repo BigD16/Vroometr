@@ -1,6 +1,6 @@
 # Website (`apps/web`)
 
-Next.js App Router UI. The garage HUD's active-machine selector and Garage pages load owner-scoped bike rows through FastAPI. Garage supports list, create, dedicated detail, edit, archive, and restore flows. Dashboard cards remain placeholder data.
+Next.js App Router UI. The garage HUD's active-machine selector and Garage pages load owner-scoped bike rows through FastAPI. Garage supports combustion and electric bikes across list, create, dedicated detail, edit, archive, and restore flows. Dashboard cards remain placeholder data.
 
 Scene stills live in `public/`:
 

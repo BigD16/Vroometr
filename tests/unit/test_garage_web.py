@@ -10,7 +10,9 @@ _EDIT_PAGE = (
     _WEB / "app" / "(shell)" / "garage" / "[bikeId]" / "edit" / "page.tsx"
 ).read_text()
 _BIKE_FORM = (_WEB / "components" / "BikeForm.tsx").read_text()
+_BIKE_DETAILS = (_WEB / "components" / "BikeDetails.tsx").read_text()
 _GARAGE_LIST = (_WEB / "components" / "GarageList.tsx").read_text()
+_ACTIVE_SELECTOR = (_WEB / "components" / "ActiveBikeSelector.tsx").read_text()
 _BIKES_ROUTE = (_WEB / "app" / "api" / "bikes" / "route.ts").read_text()
 _BIKE_ROUTE = (
     _WEB / "app" / "api" / "bikes" / "[bikeId]" / "route.ts"
@@ -42,3 +44,13 @@ def test_create_selects_new_bike_and_archive_is_reversible() -> None:
     assert 'body: JSON.stringify({ status: "active" })' in _GARAGE_LIST
     assert "Archived" in _GARAGE_LIST
     assert "Restore" in _GARAGE_LIST
+
+
+def test_garage_supports_electric_bikes_and_defaults_to_metric() -> None:
+    assert 'name="powertrain_type"' in _BIKE_FORM
+    assert 'powertrainType === "combustion"' in _BIKE_FORM
+    assert 'powertrainType === "combustion" ? nullableNumber' in _BIKE_FORM
+    assert 'bike?.unit_preference ?? "metric"' in _BIKE_FORM
+    assert 'bike.powertrain_type === "electric"' in _GARAGE_LIST
+    assert 'bike.powertrain_type === "electric"' in _BIKE_DETAILS
+    assert 'bike.powertrain_type === "electric"' in _ACTIVE_SELECTOR

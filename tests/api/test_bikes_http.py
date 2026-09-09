@@ -64,7 +64,10 @@ def test_create_list_get_round_trip_ignores_client_owner_id() -> None:
     assert created.status_code == 200
     body = created.json()
     assert body["nickname"] == "YZ"
+    assert body["powertrain_type"] == "combustion"
+    assert body["displacement"] == 250
     assert body["stroke_type"] == "2T"
+    assert body["unit_preference"] == "metric"
     assert body["current_engine_hours"] == 42.7
     assert body["selected_garage_scene_id"] is None
     me = client.get("/v1/me", headers=_auth())
@@ -75,6 +78,28 @@ def test_create_list_get_round_trip_ignores_client_owner_id() -> None:
     fetched = client.get(f"/v1/bikes/{body['id']}", headers=_auth())
     assert fetched.status_code == 200
     assert fetched.json()["model"] == "YZ250"
+
+
+def test_electric_bike_round_trip_omits_combustion_fields() -> None:
+    client = _client()
+    created = client.post(
+        "/v1/bikes",
+        json={
+            **_YZ,
+            "nickname": "Electric",
+            "model": "EX",
+            "powertrain_type": "electric",
+            "displacement": None,
+            "stroke_type": None,
+        },
+        headers=_auth(),
+    )
+    assert created.status_code == 200
+    body = created.json()
+    assert body["powertrain_type"] == "electric"
+    assert body["displacement"] is None
+    assert body["stroke_type"] is None
+    assert body["unit_preference"] == "metric"
 
 
 def test_another_user_cannot_read_or_update_a_bike() -> None:
@@ -110,6 +135,34 @@ def test_owner_can_patch_hours_and_archive() -> None:
     assert updated.json()["nickname"] == "YZ"
 
 
+def test_owner_can_switch_powertrain_with_complete_configuration() -> None:
+    client = _client()
+    created = client.post("/v1/bikes", json=_YZ, headers=_auth()).json()
+    bike_id = created["id"]
+
+    incomplete = client.patch(
+        f"/v1/bikes/{bike_id}",
+        json={"powertrain_type": "electric"},
+        headers=_auth(),
+    )
+    assert incomplete.status_code == 400
+    assert incomplete.json()["error"]["code"] == "invalid_bike"
+
+    electric = client.patch(
+        f"/v1/bikes/{bike_id}",
+        json={
+            "powertrain_type": "electric",
+            "displacement": None,
+            "stroke_type": None,
+        },
+        headers=_auth(),
+    )
+    assert electric.status_code == 200
+    assert electric.json()["powertrain_type"] == "electric"
+    assert electric.json()["displacement"] is None
+    assert electric.json()["stroke_type"] is None
+
+
 def test_patch_can_clear_nullable_but_not_required_fields() -> None:
     client = _client()
     created = client.post("/v1/bikes", json=_YZ, headers=_auth())
@@ -139,3 +192,11 @@ def test_invalid_bike_payload_is_400() -> None:
     )
     assert response.status_code == 400
     assert response.json()["error"]["code"] == "invalid_bike"
+
+    mixed = client.post(
+        "/v1/bikes",
+        json={**_YZ, "powertrain_type": "electric"},
+        headers=_auth(),
+    )
+    assert mixed.status_code == 400
+    assert mixed.json()["error"]["code"] == "invalid_bike"

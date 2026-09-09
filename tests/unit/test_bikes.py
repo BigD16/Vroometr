@@ -39,12 +39,32 @@ def test_create_assigns_owner_from_user_not_client() -> None:
     bike = _create_yz(bikes, owner)
     assert bike.user_id == owner.id
     assert bike.nickname == "YZ"
+    assert bike.powertrain_type == "combustion"
+    assert bike.displacement == 250
     assert bike.stroke_type == "2T"
     assert bike.status == "active"
-    assert bike.unit_preference == "imperial"
+    assert bike.unit_preference == "metric"
     assert bike.current_engine_hours == Decimal("42.7")
     assert bike.current_engine_hours_is_estimated is False
     assert bike.selected_garage_scene_id is None
+
+
+def test_create_electric_bike_has_no_combustion_fields() -> None:
+    users, bikes = _services()
+    owner = users.create("user_clerk_electric")
+    bike = _create_yz(
+        bikes,
+        owner,
+        nickname="Electric",
+        model="EX",
+        powertrain_type="electric",
+        displacement=None,
+        stroke_type=None,
+    )
+    assert bike.powertrain_type == "electric"
+    assert bike.displacement is None
+    assert bike.stroke_type is None
+    assert bike.unit_preference == "metric"
 
 
 def test_list_and_get_are_owner_scoped() -> None:
@@ -112,6 +132,36 @@ def test_patch_distinguishes_cleared_from_omitted_fields() -> None:
     assert updated.nickname == "YZ"
 
 
+def test_powertrain_transition_requires_one_complete_atomic_patch() -> None:
+    users, bikes = _services()
+    owner = users.create("user_clerk_powertrain")
+    bike = _create_yz(bikes, owner)
+
+    with pytest.raises(InvalidBike):
+        bikes.update(owner, bike.id, BikePatch(powertrain_type="electric"))
+    assert bike.powertrain_type == "combustion"
+    assert bike.displacement == 250
+    assert bike.stroke_type == "2T"
+
+    electric = bikes.update(
+        owner,
+        bike.id,
+        BikePatch(powertrain_type="electric", displacement=None, stroke_type=None),
+    )
+    assert electric.powertrain_type == "electric"
+    assert electric.displacement is None
+    assert electric.stroke_type is None
+
+    combustion = bikes.update(
+        owner,
+        bike.id,
+        BikePatch(powertrain_type="combustion", displacement=300, stroke_type="2T"),
+    )
+    assert combustion.powertrain_type == "combustion"
+    assert combustion.displacement == 300
+    assert combustion.stroke_type == "2T"
+
+
 def test_patch_rejects_null_for_required_fields() -> None:
     users, bikes = _services()
     owner = users.create("user_clerk_null")
@@ -131,6 +181,8 @@ def test_blank_nickname_and_invalid_enums_are_rejected() -> None:
         _create_yz(bikes, owner, bike_type="scooter")
     with pytest.raises(InvalidBike):
         _create_yz(bikes, owner, status="deleted")
+    with pytest.raises(InvalidBike):
+        _create_yz(bikes, owner, powertrain_type="steam")
 
 
 def test_hours_year_displacement_and_purchase_date_are_validated() -> None:
@@ -144,3 +196,14 @@ def test_hours_year_displacement_and_purchase_date_are_validated() -> None:
         _create_yz(bikes, owner, year=1800)
     with pytest.raises(InvalidBike):
         _create_yz(bikes, owner, purchase_date=date(2027, 1, 1))
+
+
+def test_powertrain_configuration_rejects_mixed_fields() -> None:
+    users, bikes = _services()
+    owner = users.create("user_clerk_mixed_powertrain")
+    with pytest.raises(InvalidBike, match="electric bikes cannot have"):
+        _create_yz(bikes, owner, powertrain_type="electric")
+    with pytest.raises(InvalidBike, match="combustion bikes require displacement"):
+        _create_yz(bikes, owner, displacement=None)
+    with pytest.raises(InvalidBike, match="combustion bikes require stroke type"):
+        _create_yz(bikes, owner, stroke_type=None)

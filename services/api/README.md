@@ -27,7 +27,7 @@ cd ../..
 - Current user (Clerk session): http://localhost:8000/v1/me
 - Active bike: `GET/PUT /v1/me/active-bike`
 - Age eligibility: `GET /v1/me/eligibility`, `POST /v1/me/date-of-birth`, `POST /v1/parental-consents`
-- Bikes (signed-in owner only): `GET/POST /v1/bikes`, `GET/PATCH /v1/bikes/{id}`
+- Bikes (signed-in owner only; combustion or electric): `GET/POST /v1/bikes`, `GET/PATCH /v1/bikes/{id}`
 - Clerk webhook: `POST /v1/webhooks/clerk`
 
 ## If you want to change…

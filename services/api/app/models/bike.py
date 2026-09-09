@@ -24,6 +24,11 @@ class BikeType(StrEnum):
     DIRT_BIKE = "dirt_bike"
 
 
+class PowertrainType(StrEnum):
+    COMBUSTION = "combustion"
+    ELECTRIC = "electric"
+
+
 class StrokeType(StrEnum):
     TWO_STROKE = "2T"
     FOUR_STROKE = "4T"
@@ -49,7 +54,27 @@ class Bike(Base):
             "bike_type IN ('motorcycle', 'dirt_bike')",
             name="ck_bikes_bike_type",
         ),
+        CheckConstraint(
+            "powertrain_type IN ('combustion', 'electric')",
+            name="ck_bikes_powertrain_type",
+        ),
         CheckConstraint("stroke_type IN ('2T', '4T')", name="ck_bikes_stroke_type"),
+        CheckConstraint(
+            """
+            (
+                powertrain_type = 'combustion'
+                AND displacement IS NOT NULL
+                AND stroke_type IS NOT NULL
+            )
+            OR
+            (
+                powertrain_type = 'electric'
+                AND displacement IS NULL
+                AND stroke_type IS NULL
+            )
+            """,
+            name="ck_bikes_powertrain_configuration",
+        ),
         CheckConstraint(
             "status IN ('active', 'inactive', 'archive')",
             name="ck_bikes_status",
@@ -76,15 +101,18 @@ class Bike(Base):
     make: Mapped[str] = mapped_column(String(255))
     model: Mapped[str] = mapped_column(String(255))
     year: Mapped[int] = mapped_column(Integer)
-    displacement: Mapped[int] = mapped_column(Integer)
     bike_type: Mapped[str] = mapped_column(String(32))
-    stroke_type: Mapped[str] = mapped_column(String(8))
+    powertrain_type: Mapped[str] = mapped_column(
+        String(32), default=PowertrainType.COMBUSTION.value
+    )
+    displacement: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    stroke_type: Mapped[str | None] = mapped_column(String(8), nullable=True)
     purchase_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     engine_hours_at_purchase: Mapped[Decimal | None] = mapped_column(Numeric(8, 1), nullable=True)
     current_engine_hours: Mapped[Decimal | None] = mapped_column(Numeric(8, 1), nullable=True)
     current_engine_hours_is_estimated: Mapped[bool] = mapped_column(Boolean, default=True)
     status: Mapped[str] = mapped_column(String(32), default=BikeStatus.ACTIVE.value)
-    unit_preference: Mapped[str] = mapped_column(String(32), default=UnitPreference.IMPERIAL.value)
+    unit_preference: Mapped[str] = mapped_column(String(32), default=UnitPreference.METRIC.value)
     selected_garage_scene_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)

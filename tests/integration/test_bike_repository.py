@@ -40,6 +40,21 @@ def db_session() -> Iterator[Session]:
         transaction.rollback()
         connection.close()
         pytest.skip("Run `cd services/api && alembic upgrade head` first")
+    powertrain_column_exists = connection.execute(
+        text(
+            """
+            SELECT EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_name = 'bikes' AND column_name = 'powertrain_type'
+            )
+            """
+        )
+    ).scalar()
+    if not powertrain_column_exists:
+        transaction.rollback()
+        connection.close()
+        pytest.skip("Run `cd services/api && alembic upgrade head` first")
 
     session = Session(bind=connection)
     try:
@@ -85,3 +100,29 @@ def test_bike_round_trip_is_owner_scoped_in_postgres(db_session: Session) -> Non
     archived = bikes.update(owner, created.id, BikePatch(status="archive"))
     db_session.flush()
     assert archived.status == "archive"
+
+
+def test_electric_bike_round_trip_has_no_combustion_fields(db_session: Session) -> None:
+    users = UserRepository(db_session)
+    repository = BikeRepository(db_session)
+    bikes = BikeService(repository, today=date(2026, 9, 3))
+    owner = UserService(users).create("user_clerk_electric_bike")
+    db_session.flush()
+
+    created = bikes.create(
+        owner,
+        nickname="Electric",
+        make="Stark",
+        model="VARG",
+        year=2026,
+        bike_type="dirt_bike",
+        powertrain_type="electric",
+    )
+    db_session.flush()
+    db_session.expire(created)
+
+    found = bikes.get(owner, created.id)
+    assert found.powertrain_type == "electric"
+    assert found.displacement is None
+    assert found.stroke_type is None
+    assert found.unit_preference == "metric"

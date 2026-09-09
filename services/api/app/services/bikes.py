@@ -5,12 +5,20 @@ from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
 from uuid import UUID
 
-from app.models.bike import Bike, BikeStatus, BikeType, StrokeType, UnitPreference
+from app.models.bike import (
+    Bike,
+    BikeStatus,
+    BikeType,
+    PowertrainType,
+    StrokeType,
+    UnitPreference,
+)
 from app.models.user import User
 from app.repositories.bikes import BikeStore
 
 _HOURS_QUANTUM = Decimal("0.1")
 _TEXT_FIELDS = frozenset({"nickname", "make", "model"})
+_POWERTRAIN_FIELDS = frozenset({"powertrain_type", "displacement", "stroke_type"})
 
 
 class _Unset:
@@ -28,9 +36,10 @@ class BikePatch:
     make: str | _Unset = _UNSET
     model: str | _Unset = _UNSET
     year: int | _Unset = _UNSET
-    displacement: int | _Unset = _UNSET
     bike_type: str | _Unset = _UNSET
-    stroke_type: str | _Unset = _UNSET
+    powertrain_type: str | _Unset = _UNSET
+    displacement: int | None | _Unset = _UNSET
+    stroke_type: str | None | _Unset = _UNSET
     purchase_date: date | None | _Unset = _UNSET
     engine_hours_at_purchase: Decimal | float | int | None | _Unset = _UNSET
     current_engine_hours: Decimal | float | int | None | _Unset = _UNSET
@@ -122,26 +131,35 @@ class BikeService:
         make: str,
         model: str,
         year: int,
-        displacement: int,
         bike_type: str,
-        stroke_type: str,
+        powertrain_type: str = PowertrainType.COMBUSTION.value,
+        displacement: int | None = None,
+        stroke_type: str | None = None,
         purchase_date: date | None = None,
         engine_hours_at_purchase: Decimal | float | int | None = None,
         current_engine_hours: Decimal | float | int | None = None,
         current_engine_hours_is_estimated: bool = True,
         status: str = BikeStatus.ACTIVE.value,
-        unit_preference: str = UnitPreference.IMPERIAL.value,
+        unit_preference: str = UnitPreference.METRIC.value,
     ) -> Bike:
         now = datetime.now(UTC)
+        normalized_powertrain, normalized_displacement, normalized_stroke = (
+            self._normalize_powertrain_configuration(
+                powertrain_type,
+                displacement,
+                stroke_type,
+            )
+        )
         bike = Bike(
             user_id=user.id,
             nickname=self._normalize_field("nickname", nickname),
             make=self._normalize_field("make", make),
             model=self._normalize_field("model", model),
             year=self._normalize_field("year", year),
-            displacement=self._normalize_field("displacement", displacement),
             bike_type=self._normalize_field("bike_type", bike_type),
-            stroke_type=self._normalize_field("stroke_type", stroke_type),
+            powertrain_type=normalized_powertrain,
+            displacement=normalized_displacement,
+            stroke_type=normalized_stroke,
             purchase_date=self._normalize_field("purchase_date", purchase_date),
             engine_hours_at_purchase=self._normalize_field(
                 "engine_hours_at_purchase", engine_hours_at_purchase
@@ -161,8 +179,25 @@ class BikeService:
 
     def update(self, user: User, bike_id: UUID, patch: BikePatch) -> Bike:
         bike = self.get(user, bike_id)
-        for field, value in patch.changes():
-            setattr(bike, field, self._normalize_field(field, value))
+        changes = dict(patch.changes())
+        normalized = {
+            field: self._normalize_field(field, value)
+            for field, value in changes.items()
+            if field not in _POWERTRAIN_FIELDS
+        }
+        if _POWERTRAIN_FIELDS.intersection(changes):
+            powertrain, displacement, stroke_type = self._normalize_powertrain_configuration(
+                changes.get("powertrain_type", bike.powertrain_type),
+                changes.get("displacement", bike.displacement),
+                changes.get("stroke_type", bike.stroke_type),
+            )
+            normalized.update(
+                powertrain_type=powertrain,
+                displacement=displacement,
+                stroke_type=stroke_type,
+            )
+        for field, value in normalized.items():
+            setattr(bike, field, value)
         bike.updated_at = datetime.now(UTC)
         return self._repository.save(bike)
 
@@ -171,12 +206,8 @@ class BikeService:
             return _required_text(value, field)
         if field == "year":
             return self._year(_integer(value, field))
-        if field == "displacement":
-            return self._displacement(_integer(value, field))
         if field == "bike_type":
             return _enum(BikeType, value, field).value
-        if field == "stroke_type":
-            return _enum(StrokeType, value, field).value
         if field == "purchase_date":
             return self._purchase_date(value)
         if field in {"engine_hours_at_purchase", "current_engine_hours"}:
@@ -188,6 +219,28 @@ class BikeService:
         if field == "unit_preference":
             return _enum(UnitPreference, value, field).value
         raise InvalidBike(f"cannot update field: {field}")
+
+    def _normalize_powertrain_configuration(
+        self,
+        powertrain_type: object,
+        displacement: object,
+        stroke_type: object,
+    ) -> tuple[str, int | None, str | None]:
+        powertrain = _enum(PowertrainType, powertrain_type, "powertrain_type").value
+        if powertrain == PowertrainType.ELECTRIC.value:
+            if displacement is not None or stroke_type is not None:
+                raise InvalidBike("electric bikes cannot have displacement or stroke type")
+            return powertrain, None, None
+
+        if displacement is None:
+            raise InvalidBike("combustion bikes require displacement")
+        if stroke_type is None:
+            raise InvalidBike("combustion bikes require stroke type")
+        return (
+            powertrain,
+            self._displacement(_integer(displacement, "displacement")),
+            _enum(StrokeType, stroke_type, "stroke_type").value,
+        )
 
     def _year(self, year: int) -> int:
         latest = self._today_utc().year + 1

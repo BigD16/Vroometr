@@ -19,6 +19,13 @@ function hoursLabel(bike: Bike): string {
   return `${bike.current_engine_hours.toFixed(1)} hrs${qualifier}`;
 }
 
+function configurationLabel(bike: Bike): string {
+  if (bike.powertrain_type === "electric") {
+    return `Electric · ${bikeTypeLabel(bike)}`;
+  }
+  return `${bike.stroke_type ?? "Combustion"} · ${bikeTypeLabel(bike)}`;
+}
+
 function BikeCard({
   bike,
   active,
@@ -48,14 +55,18 @@ function BikeCard({
             {bike.year} {bike.make} {bike.model}
           </p>
         </div>
-        <strong>{bike.displacement} cc</strong>
+        <strong>
+          {bike.powertrain_type === "electric"
+            ? "Electric"
+            : bike.displacement === null
+              ? "Combustion"
+              : `${bike.displacement} cc`}
+        </strong>
       </div>
       <dl className="bike-card-facts">
         <div>
           <dt>Configuration</dt>
-          <dd>
-            {bike.stroke_type} · {bikeTypeLabel(bike)}
-          </dd>
+          <dd>{configurationLabel(bike)}</dd>
         </div>
         <div>
           <dt>Engine time</dt>

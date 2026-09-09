@@ -1,5 +1,6 @@
 export type BikeStatus = "active" | "inactive" | "archive";
 export type BikeType = "motorcycle" | "dirt_bike";
+export type PowertrainType = "combustion" | "electric";
 export type StrokeType = "2T" | "4T";
 export type UnitPreference = "imperial" | "metric";
 
@@ -10,9 +11,10 @@ export type Bike = {
   make: string;
   model: string;
   year: number;
-  displacement: number;
   bike_type: BikeType;
-  stroke_type: StrokeType;
+  powertrain_type: PowertrainType;
+  displacement: number | null;
+  stroke_type: StrokeType | null;
   purchase_date: string | null;
   engine_hours_at_purchase: number | null;
   current_engine_hours: number | null;
@@ -26,7 +28,14 @@ export type Bike = {
 
 export type BikeSummary = Pick<
   Bike,
-  "id" | "nickname" | "make" | "model" | "year" | "stroke_type" | "status"
+  | "id"
+  | "nickname"
+  | "make"
+  | "model"
+  | "year"
+  | "powertrain_type"
+  | "stroke_type"
+  | "status"
 >;
 
 export type ActiveBikeSnapshot = {

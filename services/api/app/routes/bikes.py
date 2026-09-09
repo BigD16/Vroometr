@@ -24,15 +24,16 @@ class BikeCreateBody(BaseModel):
     make: str
     model: str
     year: int
-    displacement: int
     bike_type: str
-    stroke_type: str
+    powertrain_type: str = "combustion"
+    displacement: int | None = None
+    stroke_type: str | None = None
     purchase_date: date | None = None
     engine_hours_at_purchase: float | None = None
     current_engine_hours: float | None = None
     current_engine_hours_is_estimated: bool = True
     status: str = "active"
-    unit_preference: str = "imperial"
+    unit_preference: str = "metric"
 
 
 class BikeUpdateBody(BaseModel):
@@ -44,8 +45,9 @@ class BikeUpdateBody(BaseModel):
     make: str | None = None
     model: str | None = None
     year: int | None = None
-    displacement: int | None = None
     bike_type: str | None = None
+    powertrain_type: str | None = None
+    displacement: int | None = None
     stroke_type: str | None = None
     purchase_date: date | None = None
     engine_hours_at_purchase: float | None = None
@@ -62,9 +64,10 @@ class BikeResponse(BaseModel):
     make: str
     model: str
     year: int
-    displacement: int
     bike_type: str
-    stroke_type: str
+    powertrain_type: str
+    displacement: int | None
+    stroke_type: str | None
     purchase_date: date | None
     engine_hours_at_purchase: float | None
     current_engine_hours: float | None
@@ -90,8 +93,9 @@ def _to_response(bike: Bike) -> BikeResponse:
         make=bike.make,
         model=bike.model,
         year=bike.year,
-        displacement=bike.displacement,
         bike_type=bike.bike_type,
+        powertrain_type=bike.powertrain_type,
+        displacement=bike.displacement,
         stroke_type=bike.stroke_type,
         purchase_date=bike.purchase_date,
         engine_hours_at_purchase=_hours_out(bike.engine_hours_at_purchase),
@@ -132,8 +136,9 @@ def create_bike(
             make=body.make,
             model=body.model,
             year=body.year,
-            displacement=body.displacement,
             bike_type=body.bike_type,
+            powertrain_type=body.powertrain_type,
+            displacement=body.displacement,
             stroke_type=body.stroke_type,
             purchase_date=body.purchase_date,
             engine_hours_at_purchase=body.engine_hours_at_purchase,

@@ -4,8 +4,15 @@ import { useActiveBike } from "@/components/ActiveBikeProvider";
 import type { BikeSummary } from "@/lib/bikes";
 
 function identityLine(bike: BikeSummary): string {
-  const stroke = bike.stroke_type === "2T" ? "Two-stroke" : "Four-stroke";
-  return `${bike.year} ${bike.make} ${bike.model} · ${stroke}`;
+  let powertrain = "Combustion";
+  if (bike.powertrain_type === "electric") {
+    powertrain = "Electric";
+  } else if (bike.stroke_type === "2T") {
+    powertrain = "Two-stroke";
+  } else if (bike.stroke_type === "4T") {
+    powertrain = "Four-stroke";
+  }
+  return `${bike.year} ${bike.make} ${bike.model} · ${powertrain}`;
 }
 
 export function ActiveBikeSelector() {

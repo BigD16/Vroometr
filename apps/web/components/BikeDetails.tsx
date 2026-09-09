@@ -69,8 +69,14 @@ export function BikeDetails({ bike }: { bike: Bike }) {
           </p>
         </div>
         <div className="garage-machine-number">
-          <strong>{bike.displacement}</strong>
-          <span>CC · {bike.stroke_type}</span>
+          <strong>
+            {bike.powertrain_type === "electric" ? "EV" : (bike.displacement ?? "—")}
+          </strong>
+          <span>
+            {bike.powertrain_type === "electric"
+              ? "ELECTRIC"
+              : `CC · ${bike.stroke_type ?? "COMBUSTION"}`}
+          </span>
         </div>
       </article>
 
@@ -85,9 +91,21 @@ export function BikeDetails({ bike }: { bike: Bike }) {
               <dd>{bike.bike_type === "dirt_bike" ? "Dirt bike" : "Motorcycle"}</dd>
             </div>
             <div>
-              <dt>Engine</dt>
-              <dd>{bike.stroke_type === "2T" ? "Two-stroke" : "Four-stroke"}</dd>
+              <dt>Powertrain</dt>
+              <dd>{bike.powertrain_type === "electric" ? "Electric" : "Combustion"}</dd>
             </div>
+            {bike.powertrain_type === "combustion" ? (
+              <div>
+                <dt>Engine cycle</dt>
+                <dd>
+                  {bike.stroke_type === "2T"
+                    ? "Two-stroke"
+                    : bike.stroke_type === "4T"
+                      ? "Four-stroke"
+                      : "Not recorded"}
+                </dd>
+              </div>
+            ) : null}
             <div>
               <dt>Status</dt>
               <dd>{bike.status === "archive" ? "Archived" : bike.status}</dd>

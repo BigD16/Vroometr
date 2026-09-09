@@ -7,7 +7,7 @@ import { useState } from "react";
 
 import { useActiveBike } from "@/components/ActiveBikeProvider";
 import { readApiError } from "@/lib/api-errors";
-import type { Bike } from "@/lib/bikes";
+import type { Bike, PowertrainType } from "@/lib/bikes";
 
 function text(formData: FormData, name: string): string {
   return String(formData.get(name) ?? "").trim();
@@ -22,6 +22,9 @@ export function BikeForm({ bike }: { bike?: Bike }) {
   const editing = bike !== undefined;
   const router = useRouter();
   const { reload, selectBike } = useActiveBike();
+  const [powertrainType, setPowertrainType] = useState<PowertrainType>(
+    bike?.powertrain_type ?? "combustion",
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,9 +39,11 @@ export function BikeForm({ bike }: { bike?: Bike }) {
       make: text(formData, "make"),
       model: text(formData, "model"),
       year: Number(text(formData, "year")),
-      displacement: Number(text(formData, "displacement")),
       bike_type: text(formData, "bike_type"),
-      stroke_type: text(formData, "stroke_type"),
+      powertrain_type: powertrainType,
+      displacement:
+        powertrainType === "combustion" ? nullableNumber(formData, "displacement") : null,
+      stroke_type: powertrainType === "combustion" ? text(formData, "stroke_type") : null,
       purchase_date: text(formData, "purchase_date") || null,
       engine_hours_at_purchase: nullableNumber(formData, "engine_hours_at_purchase"),
       current_engine_hours: nullableNumber(formData, "current_engine_hours"),
@@ -151,34 +156,60 @@ export function BikeForm({ bike }: { bike?: Bike }) {
               />
             </label>
             <label className="bike-field">
-              <span>Displacement</span>
-              <span className="bike-input-with-unit">
-                <input
-                  name="displacement"
-                  type="number"
-                  defaultValue={bike?.displacement}
-                  min={1}
-                  inputMode="numeric"
-                  placeholder="250"
-                  required
-                />
-                <em>cc</em>
-              </span>
-            </label>
-            <label className="bike-field">
               <span>Machine type</span>
               <select name="bike_type" defaultValue={bike?.bike_type ?? "dirt_bike"} required>
                 <option value="dirt_bike">Dirt bike</option>
                 <option value="motorcycle">Motorcycle</option>
               </select>
             </label>
-            <label className="bike-field">
-              <span>Engine cycle</span>
-              <select name="stroke_type" defaultValue={bike?.stroke_type ?? "4T"} required>
-                <option value="2T">Two-stroke (2T)</option>
-                <option value="4T">Four-stroke (4T)</option>
+            <label className="bike-field bike-field-wide">
+              <span>Powertrain</span>
+              <select
+                name="powertrain_type"
+                value={powertrainType}
+                onChange={(event) =>
+                  setPowertrainType(event.target.value as PowertrainType)
+                }
+                required
+              >
+                <option value="combustion">Combustion</option>
+                <option value="electric">Electric</option>
               </select>
             </label>
+            {powertrainType === "combustion" ? (
+              <>
+                <label className="bike-field">
+                  <span>Displacement</span>
+                  <span className="bike-input-with-unit">
+                    <input
+                      name="displacement"
+                      type="number"
+                      defaultValue={bike?.displacement ?? ""}
+                      min={1}
+                      inputMode="numeric"
+                      placeholder="250"
+                      required
+                    />
+                    <em>cc</em>
+                  </span>
+                </label>
+                <label className="bike-field">
+                  <span>Engine cycle</span>
+                  <select name="stroke_type" defaultValue={bike?.stroke_type ?? "4T"} required>
+                    <option value="2T">Two-stroke (2T)</option>
+                    <option value="4T">Four-stroke (4T)</option>
+                  </select>
+                </label>
+              </>
+            ) : (
+              <div className="bike-electric-note bike-field-wide">
+                <span aria-hidden="true">ϟ</span>
+                <div>
+                  <strong>Electric powertrain</strong>
+                  <small>Displacement and stroke cycle do not apply to this machine.</small>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
@@ -246,11 +277,11 @@ export function BikeForm({ bike }: { bike?: Bike }) {
               <span>Units</span>
               <select
                 name="unit_preference"
-                defaultValue={bike?.unit_preference ?? "imperial"}
+                defaultValue={bike?.unit_preference ?? "metric"}
                 required
               >
-                <option value="imperial">Imperial</option>
                 <option value="metric">Metric</option>
+                <option value="imperial">Imperial</option>
               </select>
             </label>
             {editing ? (

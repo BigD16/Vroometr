@@ -1387,6 +1387,44 @@ a.profile {
   font-size: 10px;
 }
 
+.bike-electric-note {
+  min-height: 54px;
+  border: 1px solid #69d99a35;
+  border-radius: 7px;
+  background: #69d99a0b;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 11px;
+}
+
+.bike-electric-note > span {
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #69d99a1b;
+  color: var(--green);
+  font-size: 14px;
+}
+
+.bike-electric-note strong,
+.bike-electric-note small {
+  display: block;
+}
+
+.bike-electric-note strong {
+  color: #89e8b1;
+  font-size: 9px;
+}
+
+.bike-electric-note small {
+  margin-top: 3px;
+  color: #92938e;
+  font-size: 7px;
+}
+
 .bike-form-actions {
   justify-content: flex-end;
   border-top: 1px solid #ffffff14;
