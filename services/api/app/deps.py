@@ -11,13 +11,16 @@ from app.config import settings
 from app.db import SessionLocal
 from app.errors import AppError
 from app.models.user import User
+from app.repositories.attachments import AttachmentRepository
 from app.repositories.bikes import BikeRepository
 from app.repositories.parental_consents import ParentalConsentRepository
 from app.repositories.users import UserRepository
 from app.services.active_bikes import ActiveBikeService
 from app.services.age_gate import AgeGateService
 from app.services.bikes import BikeService
+from app.services.uploads import ObjectStorage, UploadService
 from app.services.users import UserService
+from app.storage.s3 import S3ObjectStorage
 
 
 def get_db() -> Iterator[Session]:
@@ -56,6 +59,24 @@ def get_bike_service(session: Session = Depends(get_db)) -> BikeService:
 
 def get_active_bike_service(session: Session = Depends(get_db)) -> ActiveBikeService:
     return ActiveBikeService(UserRepository(session), BikeRepository(session))
+
+
+@lru_cache(maxsize=1)
+def get_object_storage() -> ObjectStorage:
+    return S3ObjectStorage(
+        bucket=settings.s3_bucket,
+        region=settings.aws_default_region,
+        access_key_id=settings.aws_access_key_id,
+        secret_access_key=settings.aws_secret_access_key,
+        endpoint_url=settings.aws_endpoint_url.strip() or None,
+    )
+
+
+def get_upload_service(
+    session: Session = Depends(get_db),
+    storage: ObjectStorage = Depends(get_object_storage),
+) -> UploadService:
+    return UploadService(AttachmentRepository(session), storage)
 
 
 def require_clerk_user_id(

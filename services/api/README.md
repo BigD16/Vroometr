@@ -2,9 +2,10 @@
 
 ```text
 routes/        HTTP only (validate, identify, call a service, return JSON)
-services/      business rules (users, age gate, bikes)
-repositories/  database access (users, parental_consents, bikes)
+services/      business rules (users, age gate, bikes, uploads)
+repositories/  database access (users, parental_consents, bikes, attachments)
 auth/          Clerk JWT + webhook signature checks
+storage/       AWS S3 adapter behind the upload service port
 ```
 
 Migrations are explicit (`alembic upgrade head`). The app does **not** migrate on startup.
@@ -28,6 +29,7 @@ cd ../..
 - Active bike: `GET/PUT /v1/me/active-bike`
 - Age eligibility: `GET /v1/me/eligibility`, `POST /v1/me/date-of-birth`, `POST /v1/parental-consents`
 - Bikes (signed-in owner only; combustion or electric): `GET/POST /v1/bikes`, `GET/PATCH /v1/bikes/{id}`
+- Uploads (signed-in owner only): `POST /v1/uploads/presign`, `POST /v1/uploads/{id}/complete`
 - Clerk webhook: `POST /v1/webhooks/clerk`
 
 ## If you want to change…
@@ -45,4 +47,5 @@ cd ../..
 | Age gate / parental consent | `app/services/age_gate.py`, `app/routes/age_gate.py` |
 | Bikes / garage machine rows | `app/models/bike.py`, `app/services/bikes.py`, `app/routes/bikes.py` |
 | Persistent active bike | `app/services/active_bikes.py`, `app/routes/active_bike.py` |
+| Direct private uploads | `app/services/uploads.py`, `app/storage/s3.py`, `app/routes/uploads.py` |
 | A new HTTP endpoint | `app/routes/` (keep logic out of the route) |

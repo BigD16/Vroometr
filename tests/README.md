@@ -2,7 +2,7 @@
 
 - `tests/unit/` — domain and helper tests
 - `tests/api/` — FastAPI route tests
-- `tests/integration/` — Postgres (and later S3)
+- `tests/integration/` — Postgres and LocalStack S3
 
 ```bash
 source .venv/bin/activate

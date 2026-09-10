@@ -36,7 +36,7 @@ docs/adr          Architecture decision records
 
 ## How to run (right now)
 
-Garage HUD, Garage pages, and the dashboard use real owner-scoped combustion or electric bikes. The dashboard shows live machine identity, powertrain, and engine hours; maintenance and ride cards stay honest empty states until those records exist.
+Garage HUD, Garage pages, and the dashboard use real owner-scoped combustion or electric bikes. The dashboard shows live machine identity, powertrain, and engine hours; maintenance and ride cards stay honest empty states until those records exist. Documents supports authenticated browser-direct uploads to private LocalStack S3.
 
 ### Local data stores (Postgres, Redis, S3)
 
@@ -62,6 +62,7 @@ cd ../..
 - http://localhost:8000/health/ready
 - http://localhost:8000/health/deps
 - http://localhost:8000/v1/bikes (Clerk JWT; current user's machines)
+- http://localhost:8000/v1/uploads/presign (Clerk JWT; private direct-upload grant)
 
 See [`services/api/README.md`](services/api/README.md).
 

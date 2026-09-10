@@ -11,7 +11,10 @@ Local data stores. No API or website containers yet.
 
 Ports and passwords: `.env` only. [`.env.example`](../.env.example) lists the key names.
 
-S3 bucket created on first start: `S3_BUCKET`. Unleash database: `UNLEASH_DATABASE_NAME` (created on first Postgres boot, or by `scripts/ensure-unleash-db.sh` after `./scripts/dev-up.sh`).
+S3 bucket created on start: `S3_BUCKET`. Its LocalStack-only CORS policy accepts browser
+presigned POSTs; authorization still comes from the signed upload policy. Unleash database:
+`UNLEASH_DATABASE_NAME` (created on first Postgres boot, or by
+`scripts/ensure-unleash-db.sh` after `./scripts/dev-up.sh`).
 
 Unleash UI: `http://localhost:${UNLEASH_PORT}` (admin password is `UNLEASH_ADMIN_PASSWORD`). The API uses OpenFeature; it does not call Unleash APIs directly.
 

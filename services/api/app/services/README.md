@@ -7,3 +7,7 @@
 `bikes.py` creates, lists, reads, and updates bikes for the signed-in user. Owner id always comes from the session user, never from a client-supplied `user_id`. Powertrain validation requires displacement and 2T/4T for combustion bikes, and omits both for electric bikes.
 
 `active_bikes.py` resolves and persists the signed-in user's active bike. Selection is owner-validated; an empty or archived selection falls back to the first non-archived owned bike.
+
+`uploads.py` validates document metadata, creates an owner-scoped pending attachment, requests
+a short-lived exact-size S3 POST policy, and marks the row uploaded only after S3 metadata
+verification.

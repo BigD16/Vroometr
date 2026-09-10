@@ -1,0 +1,28 @@
+---
+description: Require developer handoff and teach-back after meaningful changes
+alwaysApply: true
+---
+
+# Developer Handoff Workflow
+
+Keep implementation updates quiet. Send interim messages only for a blocker, a required
+decision, or a material change in scope.
+
+After implementing a meaningful change or feature, give Drake a developer handoff that covers:
+
+1. architecture and data flow
+2. files to read, in the recommended order
+3. important types, functions, and invariants
+4. security and failure behavior
+5. tests and checks actually run
+6. manual review steps
+7. migrations, environment variables, dependencies, and unresolved work
+
+Then ask Drake to summarize back:
+
+- how the feature works end to end
+- where its important rules live
+- how he would verify or modify it
+
+Do not begin the next feature until Drake provides an accurate summary. Correct material gaps
+and ask for another summary when needed.

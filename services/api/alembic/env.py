@@ -3,7 +3,12 @@ from logging.config import fileConfig
 from alembic import context
 from app.config import settings
 from app.db import Base
-from app.models import Bike, ParentalConsent, User  # noqa: F401 — register metadata for Alembic
+from app.models import (  # noqa: F401 — register metadata for Alembic
+    Attachment,
+    Bike,
+    ParentalConsent,
+    User,
+)
 from sqlalchemy import engine_from_config, pool
 
 config = context.config
