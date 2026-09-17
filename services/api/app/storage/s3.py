@@ -1,9 +1,11 @@
+from urllib.parse import quote
 from uuid import UUID
 
 import boto3
 from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
 
+from app.models.attachment import Attachment
 from app.services.uploads import (
     PresignedPost,
     StoredObjectMetadata,
@@ -89,3 +91,58 @@ class S3ObjectStorage:
             content_type=response.get("ContentType"),
             attachment_id=metadata.get("attachment-id"),
         )
+
+    def presign_read(self, attachment: Attachment, *, download: bool, expires_in: int) -> str:
+        disposition = "attachment" if download else "inline"
+        # Force an allowed response type; never render client-supplied HTML as active content.
+        mime_type = (
+            attachment.mime_type
+            if attachment.mime_type
+            in {
+                "application/pdf",
+                "image/jpeg",
+                "image/png",
+                "image/webp",
+            }
+            else "application/octet-stream"
+        )
+        try:
+            return self._client.generate_presigned_url(
+                "get_object",
+                Params={
+                    "Bucket": self._bucket,
+                    "Key": attachment.s3_key,
+                    "ResponseContentType": "application/octet-stream" if download else mime_type,
+                    "ResponseContentDisposition": (
+                        f"{disposition}; filename*=UTF-8''{quote(attachment.file_name, safe='')}"
+                    ),
+                    "ResponseCacheControl": "private, no-store",
+                },
+                ExpiresIn=expires_in,
+            )
+        except (BotoCoreError, ClientError) as exc:
+            raise UploadStorageUnavailable("could not authorize file access") from exc
+
+    def delete_object(self, object_key: str) -> None:
+        try:
+            self._client.delete_object(Bucket=self._bucket, Key=object_key)
+        except (BotoCoreError, ClientError) as exc:
+            raise UploadStorageUnavailable("could not delete file") from exc
+
+    def read_attachment(self, attachment: Attachment) -> bytes:
+        try:
+            response = self._client.get_object(Bucket=self._bucket, Key=attachment.s3_key)
+            body = response["Body"]
+            try:
+                if (response["ContentLength"] != attachment.file_size
+                    or response.get("ContentType") != attachment.mime_type
+                    or response.get("Metadata", {}).get("attachment-id") != str(attachment.id)):
+                    raise UploadStorageUnavailable("Stored file metadata changed")
+                content = body.read(attachment.file_size + 1)
+                if len(content) != attachment.file_size:
+                    raise UploadStorageUnavailable("Stored file size changed")
+                return content
+            finally:
+                body.close()
+        except (BotoCoreError, ClientError) as exc:
+            raise UploadStorageUnavailable("Could not read the stored file") from exc

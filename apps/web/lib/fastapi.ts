@@ -29,10 +29,11 @@ export async function proxyFastApi(path: string, init?: RequestInit): Promise<Re
       headers,
       cache: "no-store",
     });
-    return new Response(await response.text(), {
+    return new Response(response.status === 204 ? null : await response.text(), {
       status: response.status,
       headers: {
         "content-type": response.headers.get("content-type") ?? "application/json",
+        "cache-control": "no-store",
       },
     });
   } catch (error) {

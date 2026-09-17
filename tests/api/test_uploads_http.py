@@ -28,6 +28,19 @@ class _Attachments:
     def __init__(self) -> None:
         self.items: dict[UUID, Attachment] = {}
 
+    def lock_owner(self, user_id: UUID) -> None:
+        pass
+
+    def storage_bytes(self, user_id: UUID) -> int:
+        return sum(a.file_size for a in self.items.values() if a.user_id == user_id
+                   and a.retention_class == "persistent" and a.purpose != "garage_scene")
+
+    def list_for_user(self, user_id: UUID) -> list[Attachment]:
+        return [a for a in self.items.values() if a.user_id == user_id]
+
+    def delete(self, attachment: Attachment) -> None:
+        del self.items[attachment.id]
+
     def get(self, attachment_id: UUID, user_id: UUID) -> Attachment | None:
         attachment = self.items.get(attachment_id)
         if attachment is None or attachment.user_id != user_id:

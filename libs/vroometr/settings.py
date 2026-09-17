@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from pydantic import ValidationError
+from pydantic import PositiveInt, SecretStr, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # libs/vroometr/settings.py → repo root
@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     api_port: int
 
     celery_log_level: str
+    processing_lease_seconds: PositiveInt
 
     flags_provider: str
     unleash_url: str
@@ -53,10 +54,16 @@ class Settings(BaseSettings):
     escalation_model: str
     summary_model: str
     vision_model: str
+    openai_api_key: SecretStr = SecretStr("")
+    openai_base_url: str = ""
+    embedding_version: str = ""
+    embedding_timeout_seconds: PositiveInt
+
     embedding_model: str
     stt_model: str
     tts_model: str
     image_model: str
+    reranker_timeout_seconds: PositiveInt
     reranker_model: str
 
     clerk_jwks_url: str

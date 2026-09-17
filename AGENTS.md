@@ -21,3 +21,10 @@ Do not introduce new infrastructure or replace locked architecture without expli
 Important config (passwords, keys, hosts, ports, buckets, model names) lives in `.env`, not hardcoded. `.env.example` lists key names only — no values.
 
 Keep changes small, tested, and focused.
+
+Documentation is part of completing every task. Follow `docs/documentation-standard.md`:
+update `docs/roadmap.md` status when a numbered task advances, update
+`docs/implementation-progress.md`, maintain affected subsystem READMEs and developer
+guides/run instructions, and record actual verification and remaining limitations. Another
+developer must be able to continue without chat history. Include documentation links in the
+handoff; review documentation even for small fixes and explain when no guide changes are needed.

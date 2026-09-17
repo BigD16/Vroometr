@@ -1,4 +1,4 @@
-import { DocumentUpload } from "@/components/DocumentUpload";
+import { DocumentsWorkspace } from "@/components/DocumentsWorkspace";
 import { WorkspacePage } from "@/components/WorkspacePage";
 
 export default function DocumentsPage() {
@@ -6,10 +6,10 @@ export default function DocumentsPage() {
     <WorkspacePage
       kicker="YOUR RECORDS"
       title="Documents"
-      description="Upload manuals and reference files directly to private storage."
+      description="Manage manuals and reference files for your machine."
       wide
     >
-      <DocumentUpload />
+      <DocumentsWorkspace />
     </WorkspacePage>
   );
 }

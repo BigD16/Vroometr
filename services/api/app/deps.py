@@ -9,15 +9,24 @@ from app.auth.tokens import ClerkJwtVerifier, InvalidIdentity, TokenVerifier
 from app.auth.webhooks import ClerkWebhookVerifier, WebhookVerifier
 from app.config import settings
 from app.db import SessionLocal
+from app.documents.dispatch import dispatch_ingestion
+from app.documents.index_dispatch import dispatch_indexes
 from app.errors import AppError
 from app.models.user import User
+from app.processing.dispatch import dispatch_committed
+from app.processing.runtime import processing_service
+from app.repositories.attachment_links import AttachmentLinkRepository
 from app.repositories.attachments import AttachmentRepository
 from app.repositories.bikes import BikeRepository
 from app.repositories.parental_consents import ParentalConsentRepository
 from app.repositories.users import UserRepository
 from app.services.active_bikes import ActiveBikeService
 from app.services.age_gate import AgeGateService
+from app.services.attachment_links import AttachmentLinkService
+from app.services.attachment_processing import AttachmentProcessingService
+from app.services.attachments import AttachmentService
 from app.services.bikes import BikeService
+from app.services.storage_quota import StorageQuotaService
 from app.services.uploads import ObjectStorage, UploadService
 from app.services.users import UserService
 from app.storage.s3 import S3ObjectStorage
@@ -28,6 +37,9 @@ def get_db() -> Iterator[Session]:
     try:
         yield session
         session.commit()
+        dispatch_committed(session.info.pop("processing_messages", []))
+        dispatch_ingestion(session.info.pop("ingestion_messages", []))
+        dispatch_indexes(session.info.pop("index_messages", []))
     except Exception:
         session.rollback()
         raise
@@ -76,7 +88,7 @@ def get_upload_service(
     session: Session = Depends(get_db),
     storage: ObjectStorage = Depends(get_object_storage),
 ) -> UploadService:
-    return UploadService(AttachmentRepository(session), storage)
+    return UploadService(AttachmentRepository(session), storage, processing_service(session))
 
 
 def require_clerk_user_id(
@@ -99,3 +111,39 @@ def get_current_user(
     user_service: Annotated[UserService, Depends(get_user_service)],
 ) -> User:
     return user_service.ensure(clerk_user_id)
+
+
+def get_attachment_link_service(session: Session = Depends(get_db)) -> AttachmentLinkService:
+    return AttachmentLinkService(
+        AttachmentLinkRepository(session), AttachmentRepository(session), BikeRepository(session),
+    )
+
+
+def get_attachment_service(
+    session: Session = Depends(get_db), storage: S3ObjectStorage = Depends(get_object_storage),
+) -> AttachmentService:
+    return AttachmentService(
+        AttachmentRepository(session), AttachmentLinkRepository(session),
+        BikeRepository(session), storage,
+    )
+
+
+def get_storage_quota_service(session: Session = Depends(get_db)) -> StorageQuotaService:
+    return StorageQuotaService(AttachmentRepository(session))
+
+
+def get_attachment_processing_service(
+    session: Session = Depends(get_db),
+) -> AttachmentProcessingService:
+    return processing_service(session)
+
+
+def get_document_service(
+    session: Session = Depends(get_db), storage: S3ObjectStorage = Depends(get_object_storage),
+):
+    from app.documents.inspection import PdfDocumentInspector
+    from app.repositories.documents import DocumentRepository
+    from app.services.documents import DocumentService
+
+    return DocumentService(DocumentRepository(session), AttachmentRepository(session),
+                           BikeRepository(session), PdfDocumentInspector(storage))

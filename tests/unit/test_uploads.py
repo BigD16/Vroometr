@@ -20,6 +20,24 @@ class _Attachments:
     def __init__(self) -> None:
         self.items: dict[UUID, Attachment] = {}
 
+    def lock_owner(self, user_id: UUID) -> None:
+        pass
+
+    def storage_bytes(self, user_id: UUID) -> int:
+        return sum(
+            a.file_size
+            for a in self.items.values()
+            if a.user_id == user_id
+            and a.retention_class == "persistent"
+            and a.purpose != "garage_scene"
+        )
+
+    def list_for_user(self, user_id: UUID) -> list[Attachment]:
+        return [a for a in self.items.values() if a.user_id == user_id]
+
+    def delete(self, attachment: Attachment) -> None:
+        del self.items[attachment.id]
+
     def get(self, attachment_id: UUID, user_id: UUID) -> Attachment | None:
         attachment = self.items.get(attachment_id)
         if attachment is None or attachment.user_id != user_id:
@@ -164,3 +182,33 @@ def test_complete_rejects_metadata_mismatch_and_hides_other_owners() -> None:
         uploads.complete(owner, attachment.id)
     with pytest.raises(AttachmentNotFound):
         uploads.complete(other, attachment.id)
+
+
+@pytest.mark.parametrize(
+    ("name", "mime", "limit"),
+    [
+        ("manual.pdf", "application/pdf", 100 * 1024 * 1024),
+        ("photo.jpg", "image/jpeg", 15 * 1024 * 1024),
+        ("photo.png", "image/png", 15 * 1024 * 1024),
+        ("photo.webp", "image/webp", 15 * 1024 * 1024),
+    ],
+)
+def test_exact_file_size_limits_are_accepted(name, mime, limit):
+    uploads, _, _ = _service()
+    owner = UserService(InMemoryUserRepository()).create("size_boundary")
+    grant = uploads.begin(
+        owner, file_name=name, mime_type=mime, file_size=limit, purpose="document"
+    )
+    assert grant.attachment.file_size == limit
+
+
+@pytest.mark.parametrize("purpose", ["garage_scene", "troubleshooting", "temporary"])
+def test_clients_cannot_claim_quota_exclusions(purpose):
+    uploads, attachments, storage = _service()
+    owner = UserService(InMemoryUserRepository()).create("quota_bypass")
+    with pytest.raises(InvalidUpload):
+        uploads.begin(
+            owner, file_name="photo.png", mime_type="image/png", file_size=128, purpose=purpose
+        )
+    assert not attachments.items
+    assert not storage.presign_calls

@@ -65,6 +65,7 @@ jobs:
       API_HOST: 0.0.0.0
       API_PORT: "8000"
       CELERY_LOG_LEVEL: info
+      PROCESSING_LEASE_SECONDS: "300"
       FLAGS_PROVIDER: inmemory
       UNLEASH_URL: http://localhost:4242/api
       UNLEASH_API_TOKEN: ci
@@ -74,10 +75,12 @@ jobs:
       SUMMARY_MODEL: ""
       VISION_MODEL: ""
       EMBEDDING_MODEL: ""
+      EMBEDDING_TIMEOUT_SECONDS: "30"
       STT_MODEL: ""
       TTS_MODEL: ""
       IMAGE_MODEL: ""
       RERANKER_MODEL: ""
+      RERANKER_TIMEOUT_SECONDS: "30"
       CLERK_JWKS_URL: ""
       CLERK_WEBHOOK_SECRET: ""
       CLERK_AUTHORIZED_PARTY: ""
@@ -95,11 +98,20 @@ jobs:
         run: pip install -e ".[dev]"
 
       - name: Lint
-        run: ruff check libs tests services/api workers pipelines
+        run: ruff check libs tests services/api workers pipelines evals
 
       - name: Apply database migrations
         working-directory: services/api
         run: alembic upgrade head
+
+      - name: Source integrity evals
+        run: PYTHONPATH=libs:services/api python -m evals.chunking
+
+      - name: Retrieval baseline evals
+        run: PYTHONPATH=libs:services/api python -m evals.retrieval
+
+      - name: Manual evidence evals (recorded providers, real PostgreSQL)
+        run: PYTHONPATH=libs:services/api python -m evals.manuals
 
       - name: Tests
         run: pytest

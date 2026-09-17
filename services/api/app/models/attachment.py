@@ -1,11 +1,15 @@
 from datetime import UTC, datetime
 from enum import StrEnum
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from sqlalchemy import BigInteger, CheckConstraint, DateTime, ForeignKey, Index, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
+
+if TYPE_CHECKING:
+    from app.models.attachment_processing import AttachmentProcessing
 
 
 class AttachmentStatus(StrEnum):
@@ -56,4 +60,8 @@ class Attachment(Base):
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
+    )
+
+    processing: Mapped["AttachmentProcessing | None"] = relationship(
+        lazy="selectin", passive_deletes="all", uselist=False,
     )

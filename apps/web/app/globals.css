@@ -2130,3 +2130,23 @@ a.profile {
     width: calc(100% - 86px);
   }
 }
+
+.documents-workspace { display: grid; gap: 1.5rem; }
+.document-library, .document-preview { padding: 1.5rem; min-width: 0; }
+.document-library h3, .document-preview h3 { font-size: 1.35rem; overflow-wrap: anywhere; }
+.document-library p, .document-preview p { margin: .6rem 0; }
+.document-library label { display: inline-flex; align-items: center; gap: .5rem; }
+.document-files { list-style: none; padding: 0; }
+.document-files > li { padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,.15); overflow-wrap: anywhere; }
+.document-file-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.document-library button, .document-preview button { padding: .5rem .8rem; border: 1px solid rgba(255,255,255,.3); border-radius: .4rem; cursor: pointer; }
+.document-library button:disabled { opacity: .5; cursor: wait; }
+.document-delete-confirm { margin-top: 1rem; padding: 1rem; border: 1px solid #c76868; border-radius: .5rem; }
+.document-delete-confirm button { margin: .25rem .5rem .25rem 0; }
+.document-preview header { display: flex; justify-content: space-between; gap: 1rem; }
+.document-preview iframe { width: 100%; height: 65vh; background: white; border: none; }
+.document-library button:focus-visible, .document-preview button:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+
+.document-metadata-form { display: grid; gap: .75rem; margin: 1rem 0; max-width: 38rem; }
+.document-metadata-form label { display: grid; gap: .35rem; }
+.document-metadata-form input, .document-metadata-form select { width: 100%; padding: .6rem; color: #fff; background: #202326; border: 1px solid #74777b; border-radius: .4rem; }

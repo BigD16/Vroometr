@@ -16,7 +16,7 @@ _COMPLETE_PROXY = (
 
 
 def test_documents_page_renders_direct_upload_component() -> None:
-    assert "<DocumentUpload />" in _PAGE
+    assert "<DocumentsWorkspace />" in _PAGE
     assert 'type="file"' in _UPLOAD
     assert ".pdf,.jpg,.jpeg,.png,.webp" in _UPLOAD
 

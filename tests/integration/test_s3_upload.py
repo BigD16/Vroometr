@@ -5,6 +5,8 @@ import boto3
 import httpx
 import pytest
 from app.config import settings
+from app.models.attachment import Attachment
+from app.services.uploads import StoredObjectNotFound
 from app.storage.s3 import S3ObjectStorage
 from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
@@ -70,6 +72,30 @@ def test_presigned_post_uploads_to_localstack_and_can_be_verified() -> None:
         assert stored.content_length == len(content)
         assert stored.content_type == "application/pdf"
         assert stored.attachment_id == str(attachment_id)
+
+        attachment = Attachment(
+            id=attachment_id,
+            s3_key=object_key,
+            file_name="manual name.pdf",
+            mime_type="application/pdf",
+            file_size=len(content),
+        )
+        assert storage.read_attachment(attachment) == content
+        with httpx.Client(trust_env=False) as browser:
+            for download in [True, False]:
+                url = storage.presign_read(attachment, download=download, expires_in=60)
+                response = browser.get(url)
+                assert response.status_code == 200
+                assert response.content == content
+                expected = "attachment" if download else "inline"
+                assert response.headers["content-disposition"].startswith(expected)
+                assert "no-store" in response.headers["cache-control"]
+                expected_mime = "application/octet-stream" if download else "application/pdf"
+                assert response.headers["content-type"] == expected_mime
+        storage.delete_object(object_key)
+        storage.delete_object(object_key)
+        with pytest.raises(StoredObjectNotFound):
+            storage.head_object(object_key)
 
         cors = client.get_bucket_cors(Bucket=settings.s3_bucket)
         assert "POST" in cors["CORSRules"][0]["AllowedMethods"]

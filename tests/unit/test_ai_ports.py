@@ -38,7 +38,12 @@ def test_other_ports_are_unconfigured(
     factory: Callable[[], object],
     method: str,
     args: tuple[Any, ...],
+    monkeypatch,
 ) -> None:
+    from vroometr.settings import settings
+
+    monkeypatch.setattr(settings, "embedding_model", "")
+    monkeypatch.setattr(settings, "reranker_model", "")
     port = factory()
     with pytest.raises(UnconfiguredError):
         getattr(port, method)(*args)

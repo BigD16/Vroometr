@@ -3,6 +3,8 @@
 
 from typing import NoReturn
 
+from vroometr.ai.ports import RankedPassage
+
 
 class UnconfiguredError(RuntimeError):
     pass
@@ -26,7 +28,7 @@ class UnconfiguredEmbeddingModel:
 
 
 class UnconfiguredReranker:
-    def rerank(self, query: str, passages: list[str]) -> list[str]:
+    def rerank(self, query: str, passages: list[str]) -> list[RankedPassage]:
         _reject("Reranker")
 
 

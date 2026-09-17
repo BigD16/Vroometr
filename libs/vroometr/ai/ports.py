@@ -1,5 +1,6 @@
 """Provider-neutral AI ports. Do not import vendor SDKs here."""
 
+from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
 
@@ -13,9 +14,15 @@ class EmbeddingModel(Protocol):
     def embed(self, texts: list[str]) -> list[list[float]]: ...
 
 
+@dataclass(frozen=True)
+class RankedPassage:
+    index: int
+    score: float
+
+
 @runtime_checkable
 class Reranker(Protocol):
-    def rerank(self, query: str, passages: list[str]) -> list[str]: ...
+    def rerank(self, query: str, passages: list[str]) -> list[RankedPassage]: ...
 
 
 @runtime_checkable

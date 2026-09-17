@@ -8,7 +8,14 @@ alwaysApply: true
 Keep implementation updates quiet. Send interim messages only for a blocker, a required
 decision, or a material change in scope.
 
-After implementing a meaningful change or feature, give Drake a developer handoff that covers:
+After implementing a meaningful change or feature, give Drake a developer handoff.
+
+First persist the handoff in repository documentation using `docs/documentation-standard.md`.
+Update the implementation progress and affected guides before finishing the task, and link
+those files in the conversational handoff. This written documentation is required for every
+task, with detail proportional to its scope; it must stand alone for another developer.
+
+Cover:
 
 1. architecture and data flow
 2. files to read, in the recommended order

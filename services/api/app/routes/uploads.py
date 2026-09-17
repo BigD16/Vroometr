@@ -8,6 +8,7 @@ from app.deps import get_current_user, get_upload_service
 from app.errors import AppError
 from app.models.attachment import Attachment
 from app.models.user import User
+from app.services.storage_quota import StorageQuotaExceeded
 from app.services.uploads import (
     AttachmentNotFound,
     InvalidUpload,
@@ -59,6 +60,8 @@ def _complete_response(attachment: Attachment) -> CompleteUploadResponse:
 
 
 def _raise_upload(exc: Exception) -> NoReturn:
+    if isinstance(exc, StorageQuotaExceeded):
+        raise AppError("storage_quota_exceeded", str(exc), status_code=409) from exc
     if isinstance(exc, InvalidUpload):
         raise AppError("invalid_upload", str(exc), status_code=400) from exc
     if isinstance(exc, AttachmentNotFound):
@@ -90,7 +93,7 @@ def presign_upload(
             file_size=body.file_size,
             purpose=body.purpose,
         )
-    except (InvalidUpload, UploadStorageUnavailable) as exc:
+    except (InvalidUpload, UploadStorageUnavailable, StorageQuotaExceeded) as exc:
         _raise_upload(exc)
     return PresignUploadResponse(
         attachment_id=grant.attachment.id,

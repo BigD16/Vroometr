@@ -7,6 +7,7 @@ from uuid import UUID, uuid4
 from app.models.attachment import Attachment, AttachmentStatus, RetentionClass
 from app.models.user import User
 from app.repositories.attachments import AttachmentStore
+from app.services.storage_quota import StorageQuotaService
 
 _PRESIGN_EXPIRES_SECONDS = 15 * 60
 _MAX_FILENAME_LENGTH = 255
@@ -85,10 +86,20 @@ class UploadGrant:
     post: PresignedPost
 
 
+class UploadProcessing(Protocol):
+    def queue(self, user_id: UUID, attachment_id: UUID) -> object: ...
+
+
 class UploadService:
-    def __init__(self, attachments: AttachmentStore, storage: ObjectStorage) -> None:
+    def __init__(
+        self,
+        attachments: AttachmentStore,
+        storage: ObjectStorage,
+        processing: UploadProcessing | None = None,
+    ) -> None:
         self._attachments = attachments
         self._storage = storage
+        self._processing = processing
 
     def begin(
         self,
@@ -107,10 +118,9 @@ class UploadService:
         if purpose != "document":
             raise InvalidUpload("unsupported upload purpose")
 
+        StorageQuotaService(self._attachments).reserve(user.id, file_size)
         attachment_id = uuid4()
-        object_key = (
-            f"users/{user.id}/attachments/{attachment_id}{rule.canonical_extension}"
-        )
+        object_key = f"users/{user.id}/attachments/{attachment_id}{rule.canonical_extension}"
         post = self._storage.presign_post(
             object_key=object_key,
             mime_type=normalized_mime,
@@ -135,10 +145,13 @@ class UploadService:
         return UploadGrant(self._attachments.add(attachment), post)
 
     def complete(self, user: User, attachment_id: UUID) -> Attachment:
+        self._attachments.lock_owner(user.id)
         attachment = self._attachments.get(attachment_id, user.id)
         if attachment is None:
             raise AttachmentNotFound
         if attachment.status == AttachmentStatus.UPLOADED.value:
+            if self._processing is not None:
+                self._processing.queue(user.id, attachment.id)
             return attachment
 
         try:
@@ -155,7 +168,10 @@ class UploadService:
 
         attachment.status = AttachmentStatus.UPLOADED.value
         attachment.updated_at = datetime.now(UTC)
-        return self._attachments.save(attachment)
+        self._attachments.save(attachment)
+        if self._processing is not None:
+            self._processing.queue(user.id, attachment.id)
+        return attachment
 
     @staticmethod
     def _validate_file(

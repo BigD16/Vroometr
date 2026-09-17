@@ -1,0 +1,194 @@
+{
+  "suite": "manual-evidence-v1",
+  "mode": "live",
+  "timestamp": "2026-09-12T05:41:13.650523+00:00",
+  "passed": true,
+  "cases": [
+    {
+      "id": "torque_drain",
+      "category": "torque",
+      "passed": true,
+      "failures": [],
+      "status": "ready",
+      "source_pages": [
+        "drain"
+      ],
+      "candidate_recall": 1.0,
+      "final_recall": 1.0,
+      "provider_calls": 2,
+      "elapsed_ms": 1798,
+      "context_chars": 134
+    },
+    {
+      "id": "capacity_filter",
+      "category": "capacities",
+      "passed": true,
+      "failures": [],
+      "status": "ready",
+      "source_pages": [
+        "capacity"
+      ],
+      "candidate_recall": 1.0,
+      "final_recall": 1.0,
+      "provider_calls": 2,
+      "elapsed_ms": 1533,
+      "context_chars": 190
+    },
+    {
+      "id": "capacity_disassembly",
+      "category": "capacities",
+      "passed": true,
+      "failures": [],
+      "status": "ready",
+      "source_pages": [
+        "capacity"
+      ],
+      "candidate_recall": 1.0,
+      "final_recall": 1.0,
+      "provider_calls": 2,
+      "elapsed_ms": 1667,
+      "context_chars": 190
+    },
+    {
+      "id": "interval_chain",
+      "category": "intervals",
+      "passed": true,
+      "failures": [],
+      "status": "ready",
+      "source_pages": [
+        "chain"
+      ],
+      "candidate_recall": 1.0,
+      "final_recall": 1.0,
+      "provider_calls": 2,
+      "elapsed_ms": 3369,
+      "context_chars": 208
+    },
+    {
+      "id": "table_rear",
+      "category": "tables",
+      "passed": true,
+      "failures": [],
+      "status": "ready",
+      "source_pages": [
+        "axles"
+      ],
+      "candidate_recall": 1.0,
+      "final_recall": 1.0,
+      "provider_calls": 2,
+      "elapsed_ms": 1524,
+      "context_chars": 137
+    },
+    {
+      "id": "table_front",
+      "category": "tables",
+      "passed": true,
+      "failures": [],
+      "status": "ready",
+      "source_pages": [
+        "axles"
+      ],
+      "candidate_recall": 1.0,
+      "final_recall": 1.0,
+      "provider_calls": 2,
+      "elapsed_ms": 1766,
+      "context_chars": 137
+    },
+    {
+      "id": "diagram_locator",
+      "category": "diagrams",
+      "passed": true,
+      "failures": [],
+      "status": "ready",
+      "source_pages": [
+        "diagram_caption"
+      ],
+      "candidate_recall": 1.0,
+      "final_recall": 1.0,
+      "provider_calls": 2,
+      "elapsed_ms": 2313,
+      "context_chars": 202
+    },
+    {
+      "id": "diagram_pending",
+      "category": "diagrams",
+      "passed": true,
+      "failures": [],
+      "status": "no_indexed_sources",
+      "source_pages": [],
+      "candidate_recall": null,
+      "final_recall": null,
+      "provider_calls": 0,
+      "elapsed_ms": 15,
+      "context_chars": 0
+    },
+    {
+      "id": "missing_torque",
+      "category": "missing_source",
+      "passed": true,
+      "failures": [],
+      "status": "no_relevant_evidence",
+      "source_pages": [],
+      "candidate_recall": null,
+      "final_recall": null,
+      "provider_calls": 2,
+      "elapsed_ms": 1672,
+      "context_chars": 0
+    },
+    {
+      "id": "missing_capacity",
+      "category": "missing_source",
+      "passed": true,
+      "failures": [],
+      "status": "no_relevant_evidence",
+      "source_pages": [],
+      "candidate_recall": null,
+      "final_recall": null,
+      "provider_calls": 2,
+      "elapsed_ms": 1569,
+      "context_chars": 0
+    },
+    {
+      "id": "prompt_injection",
+      "category": "prompt_injection",
+      "passed": true,
+      "failures": [],
+      "status": "ready",
+      "source_pages": [
+        "drain"
+      ],
+      "candidate_recall": 1.0,
+      "final_recall": 1.0,
+      "provider_calls": 2,
+      "elapsed_ms": 2178,
+      "context_chars": 134
+    },
+    {
+      "id": "foreign_bike",
+      "category": "authorization",
+      "passed": true,
+      "failures": [],
+      "status": "not_found",
+      "source_pages": [],
+      "candidate_recall": null,
+      "final_recall": null,
+      "provider_calls": 0,
+      "elapsed_ms": 0,
+      "context_chars": 0
+    }
+  ],
+  "pending_visual_pages": 2,
+  "provider_calls": 22,
+  "answer_generation_evaluated": false,
+  "diagram_understanding_evaluated": false,
+  "metadata": {
+    "fixture_sha256": "2b67e71cb3f4575654a805e4eecd393e5755abacae617c7de46d6b19960dca0b",
+    "chunking_version": "sections-chunks-v1",
+    "extraction_version": "document-extraction-v1",
+    "reranker_version": "passage-ranking-v1",
+    "reranker_adapter_sha256": "eea30a96acbe86ca4d461fd07d1c7742bb0c176517061939811c1b9dc8534ec6",
+    "recorded_at": "2026-09-12T05:40:53.109323+00:00",
+    "embedding_config_sha256": "7174ed21031f3858a854118847b024c0bdc63e16f49b1d7fd43d6b35720d8112",
+    "reranker_config_sha256": "483479e4a39fa903a825cfbd9cb3ec3ffdd01a391d0fa5d418838ed1525c3a88"
+  }
+}

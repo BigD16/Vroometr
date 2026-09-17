@@ -37,7 +37,7 @@ function formattedSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function DocumentUpload() {
+export function DocumentUpload({ bikeId, onChange }: { bikeId: string; onChange: () => void }) {
   const [phase, setPhase] = useState<UploadPhase>("idle");
   const [error, setError] = useState<string | null>(null);
   const [completed, setCompleted] = useState<CompletedUpload | null>(null);
@@ -98,6 +98,8 @@ export function DocumentUpload() {
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Upload failed.");
       setPhase("error");
+    } finally {
+      onChange();
     }
   }
 
@@ -112,13 +114,24 @@ export function DocumentUpload() {
         throw new Error(await readApiError(completeResponse, "Could not verify the upload."));
       }
 
-      setCompleted((await completeResponse.json()) as CompletedUpload);
+      const uploaded = (await completeResponse.json()) as CompletedUpload;
+      const linkResponse = await fetch("/api/attachment-links", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ attachment_id: attachmentId, entity_type: "bike", entity_id: bikeId }),
+      });
+      if (!linkResponse.ok) {
+        throw new Error(await readApiError(linkResponse, "File uploaded, but could not attach it to this bike. Retry to finish."));
+      }
+      setCompleted(uploaded);
       setPendingAttachmentId(null);
       setPhase("complete");
       form.reset();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not verify the upload.");
       setPhase("error");
+    } finally {
+      onChange();
     }
   }
 
@@ -126,7 +139,7 @@ export function DocumentUpload() {
     <article className="glass-card document-upload">
       <header className="document-upload-header">
         <div>
-          <small>DIRECT TO PRIVATE STORAGE</small>
+          <small>PRIVATE BIKE FILES</small>
           <h3>Add a document</h3>
           <p>PDF manuals up to 100 MB, or JPEG, PNG, and WebP images up to 15 MB.</p>
         </div>
@@ -166,7 +179,7 @@ export function DocumentUpload() {
           disabled={busy}
         >
           {pendingAttachmentId && phase === "error"
-            ? "Retry verification"
+            ? "Finish upload"
             : PHASE_LABELS[phase]}
         </button>
       </form>
@@ -182,15 +195,15 @@ export function DocumentUpload() {
           <div>
             <strong>{completed.file_name}</strong>
             <small>
-              {formattedSize(completed.file_size)} · Private upload verified
+              {formattedSize(completed.file_size)} · Saved to this bike
             </small>
           </div>
         </div>
       ) : null}
 
       <footer>
-        The browser sends the file straight to object storage. Vroometr only authorizes and
-        verifies the upload.
+        Files are private to your account. Pending uploads reserve storage until removed.
+        Uploaded files have not been malware-scanned.
       </footer>
     </article>
   );

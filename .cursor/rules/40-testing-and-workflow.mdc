@@ -15,9 +15,16 @@ For non-trivial tasks:
 6. run relevant tests
 7. run lint/type checks where applicable
 8. fix failures caused by the change
-9. summarize changes and remaining issues
+9. update repository documentation following `docs/documentation-standard.md`
+10. summarize changes and remaining issues, linking the updated documentation
 
 Do not claim tests passed unless they were actually run.
+
+Documentation is required after every completed task, including small fixes. Update
+`docs/implementation-progress.md` and affected READMEs/guides/run instructions before declaring
+completion. Keep current behavior, API/schema changes, setup, verification, and unresolved work
+understandable without chat history. Scale detail to scope; explain when no guide changes are
+needed. Do not leave implementation knowledge only in a conversational handoff.
 
 # Planning
 
