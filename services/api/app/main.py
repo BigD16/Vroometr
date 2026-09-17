@@ -8,6 +8,7 @@ from app.routes.attachment_processing import router as attachment_processing_rou
 from app.routes.attachments import router as attachments_router
 from app.routes.bikes import router as bikes_router
 from app.routes.clerk_webhooks import router as clerk_webhook_router
+from app.routes.conversations import router as conversations_router
 from app.routes.document_index import router as document_index_router
 from app.routes.document_ingestion import router as document_ingestion_router
 from app.routes.documents import router as documents_router
@@ -33,6 +34,7 @@ def create_app() -> FastAPI:
     app.include_router(document_index_router)
     app.include_router(retrieval_router)
     app.include_router(attachment_processing_router)
+    app.include_router(conversations_router)
     app.include_router(clerk_webhook_router)
     return app
 

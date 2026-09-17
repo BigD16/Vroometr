@@ -4,7 +4,7 @@ This is the repository-owned V1 build sequence. Status here is authoritative for
 Detailed verification evidence lives in [implementation progress](implementation-progress.md).
 LOCKED product and architecture decisions live in local `docs/design/` (not committed).
 
-Last reviewed: 2026-09-11. Current position: **through 4.5 first retrieval evals**; next numbered task is **5.1**.
+Last reviewed: 2026-09-16. Current position: **through 5.1 conversations**; next numbered task is **5.2**.
 
 ## Status at a glance
 
@@ -15,7 +15,7 @@ Last reviewed: 2026-09-11. Current position: **through 4.5 first retrieval evals
 | 2 | Bikes, garage, dashboard | Complete |
 | 3 | Uploads and attachments | Complete (real malware scanning deferred; see follow-up) |
 | 4 | Documents, ingestion, RAG | **4.5 first retrieval evals implemented**; OCR/vision and answer-safety follow-ups remain |
-| 5 | Text assistant | Not started |
+| 5 | Text assistant | **5.1 conversations implemented**; compact context/tools/write policy/citations/memory/UI polish remain |
 | 6 | Maintenance and engine hours | Not started |
 | 7 | Modifications, rides, issues | Not started |
 | 8 | Notifications, demo, Stripe | Not started |
@@ -171,7 +171,7 @@ Review: upload a small file locally, see it attached, read the quota and process
 
 ## Phase 4 — Documents, ingestion, RAG
 
-Status: **implemented through 4.5 for current retrieval scope**; **5.1 is next**. Twelve
+Status: **implemented through 4.5 for current retrieval scope**. Twelve
 source-backed/synthetic cases pass in live and recorded modes. Visual understanding and
 generated-answer withholding are not evaluated yet. See [first manual evals](manual-evaluations.md).
 
@@ -202,11 +202,13 @@ Review: upload a short PDF, see chunks, run one eval, open the pipeline module.
 
 ## Phase 5 — Text assistant
 
-Status: **not started**.
+Status: **in progress through 5.1**; **5.2 is next**.
 
 Look like the mock assistant; one tool-calling agent. No Mem0, no second vector DB, no multi-agent.
 
-- **5.1** Conversations — bike-scoped threads, messages, rolling summary, context boundaries
+- **5.1** Conversations — **implemented:** bike-scoped threads, messages, deterministic rolling
+  summary, context boundaries, owner-scoped API, and a minimal Assistant UI (user messages only;
+  no agent replies yet)
 - **5.2** Compact context — always-load identity, hours, powertrain, key mods, high-level
   maintenance, relevant ride, recent turns, summary; retrieve the rest on demand
 - **5.3** Tools — thin adapters to the same domain services as HTTP

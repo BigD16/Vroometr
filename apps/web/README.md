@@ -3,7 +3,7 @@
 See the [implementation guide](../../docs/developer-guide.md) for the backend rules behind the
 UI and the [runbook](../../docs/development-runbook.md) for setup and manual smoke review.
 
-Next.js App Router UI. The garage HUD, Garage pages, and dashboard load owner-scoped bike rows through FastAPI. Garage supports combustion and electric bikes across list, create, dedicated detail, edit, archive, and restore flows. Dashboard identity, powertrain, engine hours, and Assistant context are live; maintenance and ride areas show empty states until those domains are implemented. Documents supports direct private uploads, active-bike and account file lists, sandboxed previews/downloads, unlink/relink, and confirmed file deletion. Account usage includes pending uploads. New uploads become deletable when their 15-minute upload grant expires.
+Next.js App Router UI. The garage HUD, Garage pages, and dashboard load owner-scoped bike rows through FastAPI. Garage supports combustion and electric bikes across list, create, dedicated detail, edit, archive, and restore flows. Dashboard identity, powertrain, engine hours, and Assistant context are live; maintenance and ride areas show empty states until those domains are implemented. Assistant (5.1) lists bike-scoped threads, stores user messages, records bike-context switches, and deletes conversations—there are no agent replies yet. Documents supports direct private uploads, active-bike and account file lists, sandboxed previews/downloads, unlink/relink, and confirmed file deletion. Account usage includes pending uploads. New uploads become deletable when their 15-minute upload grant expires.
 
 Scene stills live in `public/`:
 
@@ -30,6 +30,7 @@ Sign-in is `/sign-in` (needs Clerk keys in the repo-root `.env` or `apps/web/.en
 | Garage list / machine forms | `components/GarageList.tsx`, `components/BikeForm.tsx` |
 | Per-bike detail UI | `components/BikeDetails.tsx`, `app/(shell)/garage/[bikeId]/` |
 | Document library / file actions | `components/DocumentLibrary.tsx`, `components/DocumentsWorkspace.tsx`, `app/api/attachments/` |
+| Assistant conversations (5.1) | `components/AssistantWorkspace.tsx`, `app/api/conversations/` |
 | Processing status / retry | `components/ProcessingStatus.tsx`, `app/api/attachments/[attachmentId]/processing/` |
 | Direct document upload | `components/DocumentUpload.tsx`, `app/api/uploads/` |
 | Top bar, left rail, scene, FAB | `components/` |

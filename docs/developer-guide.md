@@ -1,6 +1,6 @@
 # Vroometr implementation guide
 
-Reviewed against the working tree on 2026-09-11, through roadmap task 4.5 first retrieval evals.
+Reviewed against the working tree on 2026-09-16, through roadmap task 5.1 conversations.
 For the numbered V1 sequence, use the [roadmap](roadmap.md). For setup, use the
 [runbook](development-runbook.md). For per-task evidence and review steps, use
 [implementation progress](implementation-progress.md).
@@ -20,11 +20,13 @@ For the numbered V1 sequence, use the [roadmap](roadmap.md). For setup, use the
 | Ingestion, 4.2 | Async native text, page scores/classes, provenance, partial failure/retry and review UI | OCR/vision providers deferred; only completed native pages are searchable |
 | Sections/chunks, 4.3 | Hierarchy, exact text spans, pgvector vectors, embedding adapter, retries, review UI | Live synthetic-text embedding check passed; full UI/worker/provider flow remains manual |
 | Retrieval, 4.4 | Owner-filtered vector + keyword search, RRF/dedup, reranking, bounded source excerpts, citations and search UI | First source-backed retrieval evals pass; broad full-manual benchmarks and generated answers remain future work |
-| AI foundation | Provider-neutral ports, OpenAI embedding/reranker adapters, feature flags, chunking/retrieval baseline evals | Other model adapters and the assistant remain unconfigured; mechanical-answer evals remain future work |
+| Conversations, 5.1 | Bike-scoped threads, messages, deterministic rolling summary, bike-switch boundaries, owner HTTP API, minimal Assistant UI | No agent replies, tools, compact context, citations, or hierarchical memory search yet |
+| AI foundation | Provider-neutral ports, OpenAI embedding/reranker adapters, feature flags, chunking/retrieval baseline evals | Chat/summary adapters and the ReasoningAgent remain unconfigured; mechanical-answer evals remain future work |
 
-A visible navigation page is not evidence that its backend domain exists. Assistant, maintenance,
+A visible navigation page is not evidence that its backend domain exists. Maintenance,
 rides, modifications, issues, and settings contain presentation scaffolding; suspension is
-Coming Soon. Do not report these as completed product workflows.
+Coming Soon. Assistant now persists conversations (5.1) but does not answer. Do not report
+later Phase 5 workflows as complete.
 
 ## Runtime architecture
 
@@ -272,6 +274,7 @@ does not migrate the database. Never rewrite an already-applied migration.
 | `0011_document_ingestion` | Durable extraction attempts and original-page text/routing/provenance |
 | `0012_document_chunks` | Section hierarchy, exact source chunks, pgvector embeddings, and indexing attempts |
 | `0013_retrieval_fts` | GIN full-text index for hybrid document retrieval |
+| `0014_conversations` | Bike-scoped conversations, messages, and context boundaries |
 
 Read models for exact fields and constraints; read repositories for query behavior. Database
 cascades remove dependent rows, not S3 objects by themselves. Account/bike permanent deletion
@@ -305,7 +308,7 @@ then appropriate unit/API/integration verification. Keep model calls behind the 
 ports and background orchestration in pipelines. Add an ADR when an approved architectural
 decision needs explanation.
 
-The next numbered task is 5.1 on the [roadmap](roadmap.md). OCR/vision providers remain a
+The next numbered task is 5.2 on the [roadmap](roadmap.md). OCR/vision providers remain a
 separate follow-up; routed pages are not completed OCR/vision output. Update this guide, the roadmap status, affected subsystem
 documentation, and the progress log as part of finishing each task; use the
 [documentation standard](documentation-standard.md).
@@ -330,3 +333,12 @@ exact citations, missing evidence, pending visuals, injection exclusion, and own
 All fixture rows roll back. Read [manual evaluations](manual-evaluations.md) before editing
 fixtures or replacing provider recordings. This is a small initial retrieval gate; diagram
 understanding and generated-answer withholding still require future capability-specific evals.
+
+## Conversations (5.1)
+
+`/v1/conversations` creates and lists bike-scoped threads, loads messages/boundaries, appends
+messages, switches bike context, and deletes conversation content. List filtering matches
+`initial_bike_id` or `current_bike_id` so a thread remains visible after an explicit bike switch.
+Rolling summaries are deterministic (`deterministic-v1`) until chat/summary models are wired.
+The Assistant page stores user messages only; agent replies are later Phase 5 work. See
+[implementation progress](implementation-progress.md#conversations-51--2026-09-16).

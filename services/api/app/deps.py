@@ -147,3 +147,10 @@ def get_document_service(
 
     return DocumentService(DocumentRepository(session), AttachmentRepository(session),
                            BikeRepository(session), PdfDocumentInspector(storage))
+
+
+def get_conversation_service(session: Session = Depends(get_db)):
+    from app.repositories.conversations import ConversationRepository
+    from app.services.conversations import ConversationService
+
+    return ConversationService(ConversationRepository(session), BikeRepository(session))

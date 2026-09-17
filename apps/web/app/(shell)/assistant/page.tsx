@@ -1,4 +1,5 @@
 import { BrandMark } from "@/components/BrandMark";
+import { AssistantWorkspace } from "@/components/AssistantWorkspace";
 
 export default function AssistantPage() {
   return (
@@ -10,20 +11,7 @@ export default function AssistantPage() {
           <h2>Diagnose with your machine’s context</h2>
         </div>
       </div>
-      <div className="chat">
-        <p className="placeholder-copy">
-          Conversations are not wired yet. This screen is the visual shell.
-        </p>
-      </div>
-      <div className="composer">
-        <button type="button" aria-label="Add">
-          ＋
-        </button>
-        <span>Message Vroometr about your bike…</span>
-        <button type="button" className="send" aria-label="Send">
-          ↑
-        </button>
-      </div>
+      <AssistantWorkspace />
       <p className="disclaimer">Verify critical specifications in your manual before servicing.</p>
     </section>
   );

@@ -27,3 +27,7 @@ provides offline ranking baselines and an opt-in synthetic live-provider check; 
 The independent `python -m evals.manuals` command is a CI gate using real PostgreSQL and
 recorded provider responses; missing prerequisites fail rather than skip that command.
 See the [manual eval guide](../docs/manual-evaluations.md).
+
+Conversation tests (`test_conversations.py`, `test_conversations_http.py`,
+`test_conversation_repository.py`) cover ownership, bike-context boundaries, rolling-summary
+refresh, and delete cascades. Apply migration `0014_conversations` before the integration case.

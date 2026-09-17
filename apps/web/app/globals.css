@@ -1813,6 +1813,152 @@ a.profile {
   height: 34px;
 }
 
+.assistant-workspace {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(140px, 28%) 1fr;
+  gap: 16px;
+}
+
+.assistant-threads {
+  border-right: 1px solid #ffffff12;
+  padding-right: 12px;
+  overflow: auto;
+}
+
+.assistant-threads-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.assistant-threads-header h3 {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #b7b9b6;
+}
+
+.assistant-threads ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.assistant-threads button {
+  width: 100%;
+  text-align: left;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #d7d9d6;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.assistant-threads button.is-active,
+.assistant-threads button:hover {
+  border-color: #ffffff24;
+  background: #ffffff0d;
+}
+
+.assistant-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.assistant-thread-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 8px;
+}
+
+.assistant-thread-controls label {
+  display: grid;
+  gap: 4px;
+  font-size: 10px;
+  color: #9a9c99;
+}
+
+.assistant-thread-controls select,
+.assistant-thread-controls button,
+.assistant-alert button,
+.assistant-empty button,
+.assistant-threads-header button {
+  border: 1px solid #ffffff24;
+  background: #ffffff0d;
+  color: #eee;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.assistant-note,
+.assistant-boundaries {
+  margin: 0 0 8px;
+  color: #8f918e;
+  font-size: 11px;
+}
+
+.assistant-alert {
+  margin-bottom: 10px;
+}
+
+.chat-message {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #ffffff0a;
+}
+
+.chat-message small {
+  display: block;
+  margin-bottom: 4px;
+  color: #9a9c99;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 9px;
+}
+
+.chat-message p {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.assistant-summary {
+  margin-top: 12px;
+  color: #9a9c99;
+  font-size: 11px;
+}
+
+.assistant-summary pre {
+  white-space: pre-wrap;
+  font-family: inherit;
+  margin: 8px 0 0;
+  color: #c7c9c6;
+}
+
+.composer input {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: #eee;
+  font-size: 12px;
+  outline: none;
+}
+
 .assistant-heading small {
   font-size: 7px;
   color: #999;

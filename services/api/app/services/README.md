@@ -44,3 +44,7 @@ to DocumentIndexRepository and uses the existing ingestion service for source au
 `retrieval.py` authorizes bike searches before model calls and orchestrates hybrid retrieval,
 scored ranking, context limits, and final source validation. Future AI tools use this same
 `RetrievalService.search` entry point. See [4.4](../../../../docs/document-retrieval.md).
+
+`conversations.py` owns bike-scoped threads, message append, rolling-summary refresh, explicit
+bike-switch context boundaries, and conversation deletion. Owner checks use BikeRepository.
+Future assistant tools must call this same ConversationService rather than writing SQL.

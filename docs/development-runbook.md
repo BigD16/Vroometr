@@ -52,7 +52,7 @@ npm ci
 cd ../..
 ```
 
-Current schema head is `0013_retrieval_fts`. `dev-up.sh` starts the existing local services and
+Current schema head is `0014_conversations`. `dev-up.sh` starts the existing local services and
 ensures the Unleash database exists. LocalStack startup initializes the configured private S3
 bucket. See [infrastructure details](../infra/README.md).
 

@@ -1,6 +1,6 @@
 # Implementation progress
 
-Last reviewed: 2026-09-11. The repository [V1 roadmap](roadmap.md) owns the numbered sequence
+Last reviewed: 2026-09-16. The repository [V1 roadmap](roadmap.md) owns the numbered sequence
 and phase status. This file records verification evidence and handoffs. The expanded 3.3
 scope below was approved by Drake and supplements the original roadmap.
 
@@ -24,7 +24,10 @@ scope below was approved by Drake and supplements the original roadmap.
 - **4.4 implemented:** authorized hybrid retrieval, scored reranking, bounded cited passages,
   and document search UI. Offline/live synthetic evals passed.
 - **4.5 first evals implemented:** twelve source-backed/synthetic retrieval cases, recorded/live
-  providers, exact provenance and abstention gates, CI replay, and a saved live report. 5.1 is next.
+  providers, exact provenance and abstention gates, CI replay, and a saved live report.
+- **5.1 implemented:** bike-scoped conversations, messages, deterministic rolling summaries,
+  explicit bike-switch context boundaries, owner-scoped HTTP API, Next proxies, and a minimal
+  Assistant UI that stores user messages only (no ReasoningAgent / replies yet). **5.2 is next.**
 - **Developer documentation established:** repository onboarding guide, setup/troubleshooting
   runbook, and required documentation updates after every task. Start at [docs index](README.md).
 
@@ -625,3 +628,48 @@ capabilities are pending. Cost/token instrumentation and broader conflict/applic
 remain open. OCR/vision and real malware scanning remain separate follow-ups. Next numbered
 work is **5.1**. Updated roadmap, docs index, developer guide/runbook, root/API/test/eval READMEs,
 retrieval handoff, and dedicated eval guide; other subsystem behavior/setup is unchanged.
+
+## Conversations (5.1) — 2026-09-16
+
+Status: **implemented** for conversation storage only. Users can create bike-scoped threads,
+append messages, switch bike context (recording a context boundary), refresh a deterministic
+rolling summary, and delete conversation content. There is still no ReasoningAgent, tool calling,
+compact context pack, citations, or assistant replies.
+
+Architecture: Next proxies → `routes/conversations.py` → `ConversationService` →
+`ConversationRepository` → Postgres. Bike ownership is checked through `BikeRepository` before
+create/list/switch. Messages stamp `bike_context_id` from `current_bike_id`. Rolling summary is
+a bounded recent-turn compression (`deterministic-v1`); LLM `SUMMARY_MODEL` refresh is deferred.
+
+Files to read, in order:
+
+1. `services/api/app/models/conversation.py` — tables/enums
+2. `services/api/alembic/versions/0014_conversations.py` — migration
+3. `services/api/app/repositories/conversations.py` — owner-scoped queries
+4. `services/api/app/services/conversations.py` — create/list/get/append/switch/delete + summary
+5. `services/api/app/routes/conversations.py` — HTTP contract
+6. `apps/web/components/AssistantWorkspace.tsx` — minimal UI
+7. `tests/unit/test_conversations.py` and `tests/api/test_conversations_http.py`
+
+Security and failure behavior: foreign conversation/bike ids return the same not-found path;
+empty messages are rejected; delete removes messages and boundaries with the conversation;
+routes do not log message bodies.
+
+Verification actually run:
+
+- `python -m pytest tests/unit/test_conversations.py tests/api/test_conversations_http.py -q`
+  — 6 passed
+- `alembic upgrade head` applied `0014_conversations`
+- `python -m pytest tests/integration/test_conversation_repository.py -q` — 1 passed
+- `ruff check` on new conversation modules — passed
+- `npx tsc --noEmit -p apps/web/tsconfig.json` — passed
+- Combined conversation suite after list-filter fix — 7 passed
+
+Manual review: open `/assistant` with an active bike, create a thread, send a user message,
+switch bike context, confirm a boundary and rolling summary appear, delete the thread.
+
+Migrations: `0014_conversations`. Environment variables: none added. Dependencies: none added.
+Unresolved: agent replies (5.2–5.5), hierarchical summary embeddings (5.6), polished UI (5.7),
+LLM rolling-summary generation when chat is configured.
+
+Next numbered task is **5.2**.

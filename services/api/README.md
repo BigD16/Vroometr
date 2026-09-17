@@ -37,6 +37,8 @@ cd ../..
 - Files: `GET /v1/attachments`, `GET /v1/attachments/{id}/access`, `DELETE /v1/attachments/{id}` with `confirmed: true`
 - Processing: `POST /v1/attachments/{id}/processing` (run/retry); file lists include persistent processing and scan status
 - Account storage usage: `GET /v1/storage` (pending uploads reserve quota)
+- Conversations (5.1): `GET/POST /v1/conversations`, `GET/DELETE /v1/conversations/{id}`,
+  `POST /v1/conversations/{id}/messages`, `POST /v1/conversations/{id}/bike`
 - Clerk webhook: `POST /v1/webhooks/clerk`
 
 ## If you want to change…
@@ -58,6 +60,7 @@ cd ../..
 | Link/reuse uploaded files | `app/services/attachment_links.py`, `app/routes/attachment_links.py` |
 | File access / deletion / pooled quota | `app/services/attachments.py`, `app/services/storage_quota.py` |
 | Attachment processing / retry / scan hook | `app/services/attachment_processing.py`, `app/processing/`, `app/scanning/ports.py` |
+| Conversations / messages / bike-context boundaries | `app/services/conversations.py`, `app/routes/conversations.py` |
 | A new HTTP endpoint | `app/routes/` (keep logic out of the route) |
 
 Processing requires migration `0009_attachment_processing`, `PROCESSING_LEASE_SECONDS` in `.env`,

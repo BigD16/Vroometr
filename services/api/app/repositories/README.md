@@ -34,3 +34,7 @@ DocumentIndexService authorizes these internal operations.
 `retrieval.py` owns hybrid-search SQL: exact pgvector cosine search, GIN-backed PostgreSQL
 keyword search, same-section adjacent chunks, and final source-snapshot validation. All share
 `_eligible` ownership/source-state/version predicates. See [4.4](../../../../docs/document-retrieval.md).
+
+`conversations.py` loads and saves owner-scoped threads, messages, and context boundaries.
+Conversation lookups always include `user_id`. Bike-filtered lists match either
+`initial_bike_id` or `current_bike_id`.
