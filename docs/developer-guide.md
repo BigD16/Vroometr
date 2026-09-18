@@ -1,6 +1,6 @@
 # Vroometr implementation guide
 
-Reviewed against the working tree on 2026-09-17, through roadmap task 5.3 assistant tools.
+Reviewed against the working tree on 2026-09-17, through roadmap task 5.4 write policy.
 For the numbered V1 sequence, use the [roadmap](roadmap.md). For setup, use the
 [runbook](development-runbook.md). For per-task evidence and review steps, use
 [implementation progress](implementation-progress.md).
@@ -22,14 +22,15 @@ For the numbered V1 sequence, use the [roadmap](roadmap.md). For setup, use the
 | Retrieval, 4.4 | Owner-filtered vector + keyword search, RRF/dedup, reranking, bounded source excerpts, citations and search UI | First source-backed retrieval evals pass; broad full-manual benchmarks and generated answers remain future work |
 | Conversations, 5.1 | Bike-scoped threads, messages, deterministic rolling summary, bike-switch boundaries, owner HTTP API, minimal Assistant UI | No agent replies yet |
 | Compact context, 5.2 | Always-load bike/hours/powertrain + recent turns/summary pack, deferred domain stubs, context endpoint/panel | Mods/maintenance/rides await Phases 6–7; agent replies remain |
-| Assistant tools, 5.3 | Read-only registry over bike/context/manuals/conversation services | No mutating tools; ReasoningAgent / ChatModel tool-calling deferred |
+| Assistant tools, 5.3 | Read-only registry over bike/context/manuals/conversation services | ReasoningAgent / ChatModel tool-calling deferred |
+| Write policy, 5.4 | Auto vs confirm classes, `FLAG_AI_WRITES`, confirmation/explicit-instruction gate | No durable write tools until Phase 6+ domains; no NLP classifier |
 | AI foundation | Provider-neutral ports, OpenAI embedding/reranker adapters, feature flags, chunking/retrieval baseline evals | Chat/summary adapters and the ReasoningAgent remain unconfigured; mechanical-answer evals remain future work |
 
 A visible navigation page is not evidence that its backend domain exists. Maintenance,
 rides, modifications, issues, and settings contain presentation scaffolding; suspension is
-Coming Soon. Assistant persists conversations, exposes always-load compact context, and has
-read-only tool adapters (5.1–5.3) but does not answer yet. Do not report later Phase 5 workflows
-as complete.
+Coming Soon. Assistant persists conversations, exposes always-load compact context, has
+read-only tools, and gates future writes with policy (5.1–5.4), but does not answer yet. Do not
+report later Phase 5 workflows as complete.
 
 ## Runtime architecture
 
@@ -311,7 +312,7 @@ then appropriate unit/API/integration verification. Keep model calls behind the 
 ports and background orchestration in pipelines. Add an ADR when an approved architectural
 decision needs explanation.
 
-The next numbered task is 5.4 on the [roadmap](roadmap.md). OCR/vision providers remain a
+The next numbered task is 5.5 on the [roadmap](roadmap.md). OCR/vision providers remain a
 separate follow-up; routed pages are not completed OCR/vision output. Update this guide, the roadmap status, affected subsystem
 documentation, and the progress log as part of finishing each task; use the
 [documentation standard](documentation-standard.md).
@@ -361,3 +362,11 @@ modifications/maintenance/rides. `CompactContextService.search_manuals` delegate
 tools are rejected until write policy (5.4). There is no agent loop yet. See
 [implementation progress](implementation-progress.md#assistant-tools-53--2026-09-17) and
 [assistant_tools README](../services/api/app/assistant_tools/README.md).
+
+## Write policy (5.4)
+
+`write_policy.py` classifies mutating tools as `auto` (low-risk metadata/summaries) or `confirm`
+(durable machine writes). `ToolRegistry.invoke` checks `FLAG_AI_WRITES` and requires
+confirmation or an explicit-instruction flag for confirm-class tools. Casual “I changed the oil”
+cannot write without those flags. No durable write tools ship in the default registry yet. See
+[implementation progress](implementation-progress.md#write-policy-54--2026-09-17).

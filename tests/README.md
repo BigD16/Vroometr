@@ -34,4 +34,5 @@ refresh, and delete cascades. Apply migration `0014_conversations` before the in
 Compact-context tests (`test_compact_context.py`, `test_compact_context_http.py`) cover pack
 shape, turn budgets, deferred domain stubs, and owner isolation.
 Assistant tool tests (`test_assistant_tools.py`) cover the read-only registry, ownership, and
-manuals call-through.
+manuals call-through. Write-policy tests (`test_write_policy.py`) cover auto/confirm decisions,
+flag kill-switch, and confirmation gates.

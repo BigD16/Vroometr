@@ -7,7 +7,7 @@ Start here when joining Vroometr or resuming work without the previous conversat
    important rules, data relationships, and where to make changes.
 3. [Development runbook](development-runbook.md): setup, migrations, verification, and troubleshooting.
 4. [Implementation progress](implementation-progress.md): feature handoffs, verification history,
-   and outstanding work for completed tasks. Current implementation is through 5.3 assistant tools.
+   and outstanding work for completed tasks. Current implementation is through 5.4 write policy.
 5. [Documentation standard](documentation-standard.md): required updates before finishing a task.
 6. [Architecture decision records](adr/README.md): explanations of approved design changes.
 

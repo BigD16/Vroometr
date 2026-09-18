@@ -1,7 +1,7 @@
 import pytest
 from app.assistant_tools import build_default_registry
 from app.assistant_tools.registry import ToolRegistry
-from app.assistant_tools.types import ToolContext, ToolSpec
+from app.assistant_tools.types import ToolContext, ToolResult, ToolSpec
 from app.services.bikes import BikeService
 from tests.unit.test_compact_context import setup_context
 
@@ -28,9 +28,9 @@ def test_default_registry_is_read_only():
     assert all(not spec.mutates for spec in registry.list_specs())
 
 
-def test_registry_rejects_mutating_registration_and_unknown_invoke():
+def test_registry_requires_write_class_for_mutators_and_unknown_invoke():
     registry = ToolRegistry()
-    with pytest.raises(ValueError, match="mutating"):
+    with pytest.raises(ValueError, match="write_class"):
         registry.register(
             ToolSpec(
                 name="update_bike",
@@ -38,7 +38,7 @@ def test_registry_rejects_mutating_registration_and_unknown_invoke():
                 parameters_schema={},
                 mutates=True,
             ),
-            lambda ctx, args: None,
+            lambda ctx, args: ToolResult.success({}),
         )
     owner, _, _, _, _, conversations, context, _, bikes = setup_context()
     tool_ctx = _tool_context(owner, bikes, conversations, context)

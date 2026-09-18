@@ -2,15 +2,24 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import Any
 
 from app.assistant_tools.types import RegisteredTool, ToolContext, ToolResult, ToolSpec
+from app.assistant_tools.write_policy import WriteDecision, evaluate_write_policy
+from vroometr.flags import FLAG_AI_WRITES, is_enabled
 
 
 class ToolRegistry:
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        writes_enabled: Callable[[], bool] | None = None,
+    ) -> None:
         self._tools: dict[str, RegisteredTool] = {}
+        self._writes_enabled = writes_enabled or (
+            lambda: is_enabled(FLAG_AI_WRITES, default=True)
+        )
 
     def register(self, spec: ToolSpec, handler) -> None:
         if not spec.name or not spec.name.strip():
@@ -18,8 +27,14 @@ class ToolRegistry:
         if spec.name in self._tools:
             raise ValueError(f"tool already registered: {spec.name}")
         if spec.mutates:
+            if spec.write_class is None:
+                raise ValueError(
+                    f"mutating tool {spec.name!r} requires write_class "
+                    "(auto or confirm)"
+                )
+        elif spec.write_class is not None:
             raise ValueError(
-                f"mutating tool {spec.name!r} is not allowed until write policy (5.4)"
+                f"read-only tool {spec.name!r} must not set write_class"
             )
         self._tools[spec.name] = RegisteredTool(spec=spec, handler=handler)
 
@@ -36,10 +51,18 @@ class ToolRegistry:
         if registered is None:
             return ToolResult.failure("unknown_tool", f"Unknown tool: {name}")
         if registered.spec.mutates:
-            return ToolResult.failure(
-                "writes_disabled",
-                "Mutating tools are not available until write policy is implemented.",
+            assert registered.spec.write_class is not None
+            policy = evaluate_write_policy(
+                write_class=registered.spec.write_class,
+                writes_enabled=self._writes_enabled(),
+                confirmed=context.confirmed,
+                explicit_instruction=context.explicit_instruction,
             )
+            if policy.decision is not WriteDecision.ALLOW:
+                return ToolResult.failure(
+                    policy.code or "writes_disabled",
+                    policy.reason,
+                )
         args = dict(arguments or {})
         try:
             return registered.handler(context, args)

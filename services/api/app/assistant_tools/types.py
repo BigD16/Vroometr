@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
 
+from app.assistant_tools.write_policy import WriteClass
 from app.models.user import User
 from app.services.bikes import BikeService
 from app.services.compact_context import CompactContextService
@@ -19,6 +20,7 @@ class ToolSpec:
     description: str
     parameters_schema: dict[str, Any]
     mutates: bool = False
+    write_class: WriteClass | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +49,8 @@ class ToolContext:
     compact_context: CompactContextService
     conversation_id: UUID | None = None
     bike_id: UUID | None = None
+    confirmed: bool = False
+    explicit_instruction: bool = False
 
 
 ToolHandler = Callable[[ToolContext, Mapping[str, Any]], ToolResult]

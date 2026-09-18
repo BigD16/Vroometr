@@ -4,7 +4,7 @@ This is the repository-owned V1 build sequence. Status here is authoritative for
 Detailed verification evidence lives in [implementation progress](implementation-progress.md).
 LOCKED product and architecture decisions live in local `docs/design/` (not committed).
 
-Last reviewed: 2026-09-17. Current position: **through 5.3 assistant tools**; next numbered task is **5.4**.
+Last reviewed: 2026-09-17. Current position: **through 5.4 write policy**; next numbered task is **5.5**.
 
 ## Status at a glance
 
@@ -15,7 +15,7 @@ Last reviewed: 2026-09-17. Current position: **through 5.3 assistant tools**; ne
 | 2 | Bikes, garage, dashboard | Complete |
 | 3 | Uploads and attachments | Complete (real malware scanning deferred; see follow-up) |
 | 4 | Documents, ingestion, RAG | **4.5 first retrieval evals implemented**; OCR/vision and answer-safety follow-ups remain |
-| 5 | Text assistant | **5.3 read-only tools implemented**; write policy/citations/memory/UI polish remain |
+| 5 | Text assistant | **5.4 write policy implemented**; citations/memory/UI polish and agent loop remain |
 | 6 | Maintenance and engine hours | Not started |
 | 7 | Modifications, rides, issues | Not started |
 | 8 | Notifications, demo, Stripe | Not started |
@@ -202,7 +202,7 @@ Review: upload a short PDF, see chunks, run one eval, open the pipeline module.
 
 ## Phase 5 — Text assistant
 
-Status: **in progress through 5.3**; **5.4 is next**.
+Status: **in progress through 5.4**; **5.5 is next**.
 
 Look like the mock assistant; one tool-calling agent. No Mem0, no second vector DB, no multi-agent.
 
@@ -215,7 +215,9 @@ Look like the mock assistant; one tool-calling agent. No Mem0, no second vector 
 - **5.3** Tools — **implemented:** read-only registry adapters (`get_bike`, `get_compact_context`,
   `search_manuals`, `get_conversation`) over the same domain services as HTTP; no mutating tools
   and no ReasoningAgent loop yet
-- **5.4** Write policy — auto for summaries/tags/metadata; confirm for durable machine writes
+- **5.4** Write policy — **implemented:** `WriteClass` auto vs confirm, `FLAG_AI_WRITES` gate,
+  confirmation / explicit-instruction checks on mutating tool invoke; no durable write tools yet
+  (domains arrive in later phases)
 - **5.5** Citations + safety — withhold unverified critical specs; escalate only for real risk
 - **5.6** Hierarchical memory — search summaries, expand raw spans on hit
 - **5.7** UI — composer, messages, source chips, FAB, disclaimer

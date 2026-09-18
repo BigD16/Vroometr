@@ -33,7 +33,10 @@ scope below was approved by Drake and supplements the original roadmap.
   context endpoint, and Assistant panel. On-demand manuals remain `RetrievalService.search`.
 - **5.3 implemented:** read-only assistant tool registry wrapping the same domain services as
   HTTP (`get_bike`, `get_compact_context`, `search_manuals`, `get_conversation`). Mutating tools
-  and the ReasoningAgent loop remain deferred. **5.4 is next.**
+  and the ReasoningAgent loop remain deferred.
+- **5.4 implemented:** write-policy gate (`auto` vs `confirm`, `FLAG_AI_WRITES`, confirmation /
+  explicit-instruction on `ToolContext`). Default registry still has no durable write tools.
+  **5.5 is next.**
 - **Developer documentation established:** repository onboarding guide, setup/troubleshooting
   runbook, and required documentation updates after every task. Start at [docs index](README.md).
 
@@ -747,3 +750,31 @@ Unresolved: write policy + confirmations (5.4), citations/safety (5.5), hierarch
 agent loop / ChatModel tools, polished UI (5.7).
 
 Next numbered task is **5.4**.
+
+## Write policy (5.4) — 2026-09-17
+
+Status: **implemented** as a policy framework on the assistant tool registry. Mutating tools must
+declare `write_class` (`auto` or `confirm`). Before invoke, the registry checks `FLAG_AI_WRITES`
+and, for confirm-class tools, requires `ToolContext.confirmed` or
+`ToolContext.explicit_instruction`. Casual mentions without those flags get
+`confirmation_required`. The default registry still registers only read tools — durable machine
+writes wait for maintenance/mods/hours domain services.
+
+Files to read, in order:
+
+1. `services/api/app/assistant_tools/write_policy.py`
+2. `services/api/app/assistant_tools/registry.py`
+3. `services/api/app/assistant_tools/types.py`
+4. `tests/unit/test_write_policy.py`
+
+Verification actually run:
+
+- `python -m pytest tests/unit/test_write_policy.py tests/unit/test_assistant_tools.py -q`
+  — 7 passed
+- `ruff check` on assistant_tools / related tests — passed
+
+Migrations: none. Environment variables: none (uses existing `FLAG_AI_WRITES`). Dependencies: none.
+Unresolved: real mutating tools, confirmation UI, utterance classification NLP, citations (5.5),
+agent loop, hierarchical memory (5.6), polished UI (5.7).
+
+Next numbered task is **5.5**.
