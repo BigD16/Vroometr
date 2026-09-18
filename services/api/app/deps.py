@@ -164,3 +164,35 @@ def get_compact_context_service(session: Session = Depends(get_db)):
     bikes = BikeRepository(session)
     conversations = ConversationService(ConversationRepository(session), bikes)
     return CompactContextService(conversations, bikes, build_retrieval_service(session))
+
+
+def get_assistant_tool_registry():
+    from app.assistant_tools import build_default_registry
+
+    return build_default_registry()
+
+
+def build_assistant_tool_context(
+    user: User,
+    session: Session,
+    *,
+    conversation_id=None,
+    bike_id=None,
+):
+    from app.assistant_tools.types import ToolContext
+    from app.repositories.conversations import ConversationRepository
+    from app.services.compact_context import CompactContextService, build_retrieval_service
+    from app.services.conversations import ConversationService
+
+    bikes_repo = BikeRepository(session)
+    conversations = ConversationService(ConversationRepository(session), bikes_repo)
+    return ToolContext(
+        user=user,
+        bikes=BikeService(bikes_repo),
+        conversations=conversations,
+        compact_context=CompactContextService(
+            conversations, bikes_repo, build_retrieval_service(session)
+        ),
+        conversation_id=conversation_id,
+        bike_id=bike_id,
+    )

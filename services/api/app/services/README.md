@@ -52,3 +52,6 @@ Future assistant tools must call this same ConversationService rather than writi
 `compact_context.py` assembles the always-load assistant context pack from bike identity/hours/
 powertrain plus recent turns and rolling summary. Mods/maintenance/ride slices stay deferred
 stubs until those domains exist. On-demand manuals call through to RetrievalService.
+
+Read-only assistant tools live in `app/assistant_tools/` and wrap these services for the future
+agent. Do not add SQL or a second authorization path inside tools.

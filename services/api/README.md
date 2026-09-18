@@ -63,6 +63,7 @@ cd ../..
 | Attachment processing / retry / scan hook | `app/services/attachment_processing.py`, `app/processing/`, `app/scanning/ports.py` |
 | Conversations / messages / bike-context boundaries | `app/services/conversations.py`, `app/routes/conversations.py` |
 | Always-load compact assistant context | `app/services/compact_context.py`, `GET /v1/conversations/{id}/context` |
+| Read-only assistant tools (5.3) | `app/assistant_tools/` |
 | A new HTTP endpoint | `app/routes/` (keep logic out of the route) |
 
 Processing requires migration `0009_attachment_processing`, `PROCESSING_LEASE_SECONDS` in `.env`,

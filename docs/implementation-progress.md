@@ -31,7 +31,9 @@ scope below was approved by Drake and supplements the original roadmap.
 - **5.2 implemented:** always-load `CompactContextPack` (bike identity/hours/powertrain, recent
   turns, rolling summary, deferred mods/maintenance/ride stubs), context budget, conversation
   context endpoint, and Assistant panel. On-demand manuals remain `RetrievalService.search`.
-  **5.3 is next.**
+- **5.3 implemented:** read-only assistant tool registry wrapping the same domain services as
+  HTTP (`get_bike`, `get_compact_context`, `search_manuals`, `get_conversation`). Mutating tools
+  and the ReasoningAgent loop remain deferred. **5.4 is next.**
 - **Developer documentation established:** repository onboarding guide, setup/troubleshooting
   runbook, and required documentation updates after every task. Start at [docs index](README.md).
 
@@ -714,3 +716,34 @@ Unresolved: agent tools (5.3), write policy (5.4), citations/safety (5.5), hiera
 (5.6), polished UI (5.7), real mods/maintenance/ride slices when those domains land.
 
 Next numbered task is **5.3**.
+
+## Assistant tools (5.3) — 2026-09-17
+
+Status: **implemented** for read-only tool adapters. `ToolRegistry` exposes
+`get_bike`, `get_compact_context`, `search_manuals`, and `get_conversation`. Each handler calls
+the same domain services HTTP uses. The registry refuses mutating tool registration until write
+policy (5.4). There is still no ReasoningAgent / ChatModel tool-calling loop.
+
+Architecture: future agent → `ToolRegistry.invoke` → domain service → repository → Postgres.
+
+Files to read, in order:
+
+1. `services/api/app/assistant_tools/types.py` — ToolSpec / ToolContext / ToolResult
+2. `services/api/app/assistant_tools/registry.py` — register / list / invoke
+3. `services/api/app/assistant_tools/read_tools.py` — handlers
+4. `services/api/app/assistant_tools/factory.py` — default registry
+5. `tests/unit/test_assistant_tools.py`
+
+Security: ownership stays in BikeService / ConversationService / CompactContextService; tools map
+not-found the same way HTTP does. No write tools exist, so casual oil-change talk cannot mutate.
+
+Verification actually run:
+
+- `python -m pytest tests/unit/test_assistant_tools.py -q` — 3 passed
+- `ruff check` on assistant_tools / deps / tests — passed
+
+Migrations: none. Environment variables: none. Dependencies: none.
+Unresolved: write policy + confirmations (5.4), citations/safety (5.5), hierarchical memory (5.6),
+agent loop / ChatModel tools, polished UI (5.7).
+
+Next numbered task is **5.4**.

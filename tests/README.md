@@ -33,3 +33,5 @@ Conversation tests (`test_conversations.py`, `test_conversations_http.py`,
 refresh, and delete cascades. Apply migration `0014_conversations` before the integration case.
 Compact-context tests (`test_compact_context.py`, `test_compact_context_http.py`) cover pack
 shape, turn budgets, deferred domain stubs, and owner isolation.
+Assistant tool tests (`test_assistant_tools.py`) cover the read-only registry, ownership, and
+manuals call-through.

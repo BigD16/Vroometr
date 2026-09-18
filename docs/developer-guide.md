@@ -1,6 +1,6 @@
 # Vroometr implementation guide
 
-Reviewed against the working tree on 2026-09-16, through roadmap task 5.2 compact context.
+Reviewed against the working tree on 2026-09-17, through roadmap task 5.3 assistant tools.
 For the numbered V1 sequence, use the [roadmap](roadmap.md). For setup, use the
 [runbook](development-runbook.md). For per-task evidence and review steps, use
 [implementation progress](implementation-progress.md).
@@ -21,13 +21,15 @@ For the numbered V1 sequence, use the [roadmap](roadmap.md). For setup, use the
 | Sections/chunks, 4.3 | Hierarchy, exact text spans, pgvector vectors, embedding adapter, retries, review UI | Live synthetic-text embedding check passed; full UI/worker/provider flow remains manual |
 | Retrieval, 4.4 | Owner-filtered vector + keyword search, RRF/dedup, reranking, bounded source excerpts, citations and search UI | First source-backed retrieval evals pass; broad full-manual benchmarks and generated answers remain future work |
 | Conversations, 5.1 | Bike-scoped threads, messages, deterministic rolling summary, bike-switch boundaries, owner HTTP API, minimal Assistant UI | No agent replies yet |
-| Compact context, 5.2 | Always-load bike/hours/powertrain + recent turns/summary pack, deferred domain stubs, context endpoint/panel | Mods/maintenance/rides await Phases 6–7; tools/agent replies remain |
+| Compact context, 5.2 | Always-load bike/hours/powertrain + recent turns/summary pack, deferred domain stubs, context endpoint/panel | Mods/maintenance/rides await Phases 6–7; agent replies remain |
+| Assistant tools, 5.3 | Read-only registry over bike/context/manuals/conversation services | No mutating tools; ReasoningAgent / ChatModel tool-calling deferred |
 | AI foundation | Provider-neutral ports, OpenAI embedding/reranker adapters, feature flags, chunking/retrieval baseline evals | Chat/summary adapters and the ReasoningAgent remain unconfigured; mechanical-answer evals remain future work |
 
 A visible navigation page is not evidence that its backend domain exists. Maintenance,
 rides, modifications, issues, and settings contain presentation scaffolding; suspension is
-Coming Soon. Assistant persists conversations and exposes always-load compact context (5.1–5.2)
-but does not answer. Do not report later Phase 5 workflows as complete.
+Coming Soon. Assistant persists conversations, exposes always-load compact context, and has
+read-only tool adapters (5.1–5.3) but does not answer yet. Do not report later Phase 5 workflows
+as complete.
 
 ## Runtime architecture
 
@@ -309,7 +311,7 @@ then appropriate unit/API/integration verification. Keep model calls behind the 
 ports and background orchestration in pipelines. Add an ADR when an approved architectural
 decision needs explanation.
 
-The next numbered task is 5.3 on the [roadmap](roadmap.md). OCR/vision providers remain a
+The next numbered task is 5.4 on the [roadmap](roadmap.md). OCR/vision providers remain a
 separate follow-up; routed pages are not completed OCR/vision output. Update this guide, the roadmap status, affected subsystem
 documentation, and the progress log as part of finishing each task; use the
 [documentation standard](documentation-standard.md).
@@ -351,3 +353,11 @@ hours, powertrain, recent turns (budgeted), rolling summary, and deferred stubs 
 modifications/maintenance/rides. `CompactContextService.search_manuals` delegates to
 `RetrievalService` for on-demand manuals (tools arrive in 5.3). See
 [implementation progress](implementation-progress.md#compact-context-52--2026-09-16).
+
+## Assistant tools (5.3)
+
+`services/api/app/assistant_tools/` is a read-only registry (`get_bike`, `get_compact_context`,
+`search_manuals`, `get_conversation`) that invokes the same domain services as HTTP. Mutating
+tools are rejected until write policy (5.4). There is no agent loop yet. See
+[implementation progress](implementation-progress.md#assistant-tools-53--2026-09-17) and
+[assistant_tools README](../services/api/app/assistant_tools/README.md).
