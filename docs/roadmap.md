@@ -4,7 +4,7 @@ This is the repository-owned V1 build sequence. Status here is authoritative for
 Detailed verification evidence lives in [implementation progress](implementation-progress.md).
 LOCKED product and architecture decisions live in local `docs/design/` (not committed).
 
-Last reviewed: 2026-09-16. Current position: **through 5.1 conversations**; next numbered task is **5.2**.
+Last reviewed: 2026-09-16. Current position: **through 5.2 compact context**; next numbered task is **5.3**.
 
 ## Status at a glance
 
@@ -15,7 +15,7 @@ Last reviewed: 2026-09-16. Current position: **through 5.1 conversations**; next
 | 2 | Bikes, garage, dashboard | Complete |
 | 3 | Uploads and attachments | Complete (real malware scanning deferred; see follow-up) |
 | 4 | Documents, ingestion, RAG | **4.5 first retrieval evals implemented**; OCR/vision and answer-safety follow-ups remain |
-| 5 | Text assistant | **5.1 conversations implemented**; compact context/tools/write policy/citations/memory/UI polish remain |
+| 5 | Text assistant | **5.2 compact context implemented**; tools/write policy/citations/memory/UI polish remain |
 | 6 | Maintenance and engine hours | Not started |
 | 7 | Modifications, rides, issues | Not started |
 | 8 | Notifications, demo, Stripe | Not started |
@@ -202,15 +202,16 @@ Review: upload a short PDF, see chunks, run one eval, open the pipeline module.
 
 ## Phase 5 — Text assistant
 
-Status: **in progress through 5.1**; **5.2 is next**.
+Status: **in progress through 5.2**; **5.3 is next**.
 
 Look like the mock assistant; one tool-calling agent. No Mem0, no second vector DB, no multi-agent.
 
 - **5.1** Conversations — **implemented:** bike-scoped threads, messages, deterministic rolling
   summary, context boundaries, owner-scoped API, and a minimal Assistant UI (user messages only;
   no agent replies yet)
-- **5.2** Compact context — always-load identity, hours, powertrain, key mods, high-level
-  maintenance, relevant ride, recent turns, summary; retrieve the rest on demand
+- **5.2** Compact context — **implemented:** always-load bike identity/hours/powertrain, recent
+  turns + rolling summary, deferred stubs for mods/maintenance/rides, context budget, and
+  `GET /v1/conversations/{id}/context`; on-demand manuals still via `RetrievalService`
 - **5.3** Tools — thin adapters to the same domain services as HTTP
 - **5.4** Write policy — auto for summaries/tags/metadata; confirm for durable machine writes
 - **5.5** Citations + safety — withhold unverified critical specs; escalate only for real risk

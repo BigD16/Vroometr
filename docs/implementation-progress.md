@@ -27,7 +27,11 @@ scope below was approved by Drake and supplements the original roadmap.
   providers, exact provenance and abstention gates, CI replay, and a saved live report.
 - **5.1 implemented:** bike-scoped conversations, messages, deterministic rolling summaries,
   explicit bike-switch context boundaries, owner-scoped HTTP API, Next proxies, and a minimal
-  Assistant UI that stores user messages only (no ReasoningAgent / replies yet). **5.2 is next.**
+  Assistant UI that stores user messages only (no ReasoningAgent / replies yet).
+- **5.2 implemented:** always-load `CompactContextPack` (bike identity/hours/powertrain, recent
+  turns, rolling summary, deferred mods/maintenance/ride stubs), context budget, conversation
+  context endpoint, and Assistant panel. On-demand manuals remain `RetrievalService.search`.
+  **5.3 is next.**
 - **Developer documentation established:** repository onboarding guide, setup/troubleshooting
   runbook, and required documentation updates after every task. Start at [docs index](README.md).
 
@@ -669,7 +673,44 @@ Manual review: open `/assistant` with an active bike, create a thread, send a us
 switch bike context, confirm a boundary and rolling summary appear, delete the thread.
 
 Migrations: `0014_conversations`. Environment variables: none added. Dependencies: none added.
-Unresolved: agent replies (5.2–5.5), hierarchical summary embeddings (5.6), polished UI (5.7),
-LLM rolling-summary generation when chat is configured.
+Unresolved at time of 5.1: agent replies, compact context, tools, citations, hierarchical memory,
+polished UI. Compact context is now covered in 5.2 below.
 
-Next numbered task is **5.2**.
+## Compact context (5.2) — 2026-09-16
+
+Status: **implemented** for always-load context assembly. `CompactContextService.build` returns a
+bounded pack from the conversation’s current bike plus recent turns and rolling summary.
+Modifications, maintenance, and ride slices are explicit stubs (`available: false`,
+`reason: domain_not_implemented`) until Phases 6–7. On-demand manuals use
+`CompactContextService.search_manuals` → `RetrievalService.search` (no new HTTP; existing
+`POST /v1/retrieval` remains).
+
+Architecture: Assistant panel → Next proxy → `GET /v1/conversations/{id}/context` →
+`CompactContextService` → `ConversationService` + `BikeRepository`.
+
+Files to read, in order:
+
+1. `services/api/app/services/compact_context.py` — pack types, budget, build, manuals helper
+2. `services/api/app/routes/conversations.py` — context response schema/route
+3. `apps/web/app/api/conversations/[conversationId]/context/route.ts`
+4. `apps/web/components/AssistantWorkspace.tsx` — always-loaded context panel
+5. `tests/unit/test_compact_context.py` / `tests/api/test_compact_context_http.py`
+
+Security: owner-scoped conversation and bike lookups; foreign ids return not-found. No full
+message logging.
+
+Verification actually run:
+
+- `python -m pytest tests/unit/test_compact_context.py tests/api/test_compact_context_http.py -q`
+  — 5 passed
+- `ruff check` on new/changed modules — passed
+- `npx tsc --noEmit -p apps/web/tsconfig.json` — passed
+
+Manual review: open a thread on `/assistant`, expand “Always-loaded context”, confirm bike
+identity/hours and deferred domain stubs.
+
+Migrations: none. Environment variables: none. Dependencies: none.
+Unresolved: agent tools (5.3), write policy (5.4), citations/safety (5.5), hierarchical memory
+(5.6), polished UI (5.7), real mods/maintenance/ride slices when those domains land.
+
+Next numbered task is **5.3**.

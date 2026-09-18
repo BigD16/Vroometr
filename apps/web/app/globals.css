@@ -1943,6 +1943,16 @@ a.profile {
   font-size: 11px;
 }
 
+.assistant-context-pack {
+  margin: 0 0 10px;
+  color: #9a9c99;
+  font-size: 11px;
+}
+
+.assistant-context-pack p {
+  margin: 6px 0 0;
+}
+
 .assistant-summary pre {
   white-space: pre-wrap;
   font-family: inherit;

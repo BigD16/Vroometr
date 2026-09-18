@@ -35,6 +35,34 @@ type Detail = {
   boundaries: Boundary[];
 };
 
+type CompactContext = {
+  version: string;
+  bike: {
+    nickname: string;
+    make: string;
+    model: string;
+    year: number;
+    powertrain_type: string;
+    stroke_type: string | null;
+    current_engine_hours: number | null;
+    current_engine_hours_is_estimated: boolean;
+  };
+  conversation: {
+    recent_turns: Message[];
+    rolling_summary: string | null;
+    boundary_count: number;
+  };
+  modifications: { available: boolean; reason: string | null };
+  maintenance: { available: boolean; reason: string | null };
+  ride: { available: boolean; reason: string | null };
+  budget: {
+    recent_turns_included: number;
+    recent_turns_omitted: number;
+    recent_chars_used: number;
+    summary_chars: number;
+  };
+};
+
 async function checked(response: Response): Promise<Response> {
   if (!response.ok) {
     throw new Error(await readApiError(response, "Could not complete this action."));
@@ -56,6 +84,7 @@ export function AssistantWorkspace() {
   const { activeBike, bikes, state, error: bikeError, reload } = useActiveBike();
   const [threads, setThreads] = useState<Conversation[]>([]);
   const [detail, setDetail] = useState<Detail | null>(null);
+  const [contextPack, setContextPack] = useState<CompactContext | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(true);
@@ -100,14 +129,23 @@ export function AssistantWorkspace() {
   useEffect(() => {
     if (!selectedId) {
       setDetail(null);
+      setContextPack(null);
       return;
     }
     const controller = new AbortController();
-    fetch(`/api/conversations/${selectedId}`, { signal: controller.signal })
-      .then(checked)
-      .then((response) => response.json())
-      .then((payload: Detail) => {
-        if (!controller.signal.aborted) setDetail(payload);
+    Promise.all([
+      fetch(`/api/conversations/${selectedId}`, { signal: controller.signal })
+        .then(checked)
+        .then((response) => response.json()),
+      fetch(`/api/conversations/${selectedId}/context`, { signal: controller.signal })
+        .then(checked)
+        .then((response) => response.json()),
+    ])
+      .then(([payload, pack]: [Detail, CompactContext]) => {
+        if (!controller.signal.aborted) {
+          setDetail(payload);
+          setContextPack(pack);
+        }
       })
       .catch((caught: Error) => {
         if (!controller.signal.aborted) setError(caught.message);
@@ -179,6 +217,7 @@ export function AssistantWorkspace() {
       await checked(await fetch(`/api/conversations/${selectedId}`, { method: "DELETE" }));
       setSelectedId(null);
       setDetail(null);
+      setContextPack(null);
     });
   }
 
@@ -270,6 +309,33 @@ export function AssistantWorkspace() {
             <p className="assistant-note">
               Messages are saved. There is no agent reply yet—only conversation storage.
             </p>
+            {contextPack ? (
+              <details className="assistant-context-pack">
+                <summary>Always-loaded context</summary>
+                <p>
+                  {contextPack.bike.year} {contextPack.bike.make} {contextPack.bike.model} (
+                  {contextPack.bike.nickname}) · {contextPack.bike.powertrain_type}
+                  {contextPack.bike.stroke_type ? ` · ${contextPack.bike.stroke_type}` : ""}
+                  {contextPack.bike.current_engine_hours != null
+                    ? ` · ${contextPack.bike.current_engine_hours}h${
+                        contextPack.bike.current_engine_hours_is_estimated ? " est." : ""
+                      }`
+                    : ""}
+                </p>
+                <p>
+                  Recent turns: {contextPack.budget.recent_turns_included} included
+                  {contextPack.budget.recent_turns_omitted > 0
+                    ? `, ${contextPack.budget.recent_turns_omitted} omitted`
+                    : ""}{" "}
+                  · {contextPack.budget.recent_chars_used} chars · summary{" "}
+                  {contextPack.budget.summary_chars} chars
+                </p>
+                <p>
+                  Mods/maintenance/rides: not available yet (
+                  {contextPack.modifications.reason ?? "domain_not_implemented"}).
+                </p>
+              </details>
+            ) : null}
             <div className="chat" aria-live="polite">
               {detail.messages.length === 0 ? (
                 <p className="placeholder-copy">No messages yet. Send one below.</p>

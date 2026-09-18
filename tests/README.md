@@ -31,3 +31,5 @@ See the [manual eval guide](../docs/manual-evaluations.md).
 Conversation tests (`test_conversations.py`, `test_conversations_http.py`,
 `test_conversation_repository.py`) cover ownership, bike-context boundaries, rolling-summary
 refresh, and delete cascades. Apply migration `0014_conversations` before the integration case.
+Compact-context tests (`test_compact_context.py`, `test_compact_context_http.py`) cover pack
+shape, turn budgets, deferred domain stubs, and owner isolation.

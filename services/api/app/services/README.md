@@ -48,3 +48,7 @@ scored ranking, context limits, and final source validation. Future AI tools use
 `conversations.py` owns bike-scoped threads, message append, rolling-summary refresh, explicit
 bike-switch context boundaries, and conversation deletion. Owner checks use BikeRepository.
 Future assistant tools must call this same ConversationService rather than writing SQL.
+
+`compact_context.py` assembles the always-load assistant context pack from bike identity/hours/
+powertrain plus recent turns and rolling summary. Mods/maintenance/ride slices stay deferred
+stubs until those domains exist. On-demand manuals call through to RetrievalService.

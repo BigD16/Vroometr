@@ -5,9 +5,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.deps import get_conversation_service, get_current_user
+from app.deps import get_compact_context_service, get_conversation_service, get_current_user
 from app.errors import AppError
 from app.models.user import User
+from app.services.compact_context import CompactContextService
 from app.services.conversations import (
     ConversationNotFound,
     ConversationService,
@@ -72,6 +73,76 @@ class ConversationDetailResponse(BaseModel):
     boundaries: list[BoundaryResponse]
 
 
+class RecentTurnResponse(BaseModel):
+    id: UUID
+    role: str
+    content: str
+    bike_context_id: UUID
+    created_at: datetime
+
+
+class LatestBikeSwitchResponse(BaseModel):
+    from_bike_id: UUID
+    to_bike_id: UUID
+    message_id: UUID | None
+    created_at: datetime
+
+
+class BikeContextResponse(BaseModel):
+    bike_id: UUID
+    nickname: str
+    make: str
+    model: str
+    year: int
+    bike_type: str
+    status: str
+    powertrain_type: str
+    displacement: int | None
+    stroke_type: str | None
+    current_engine_hours: float | None
+    current_engine_hours_is_estimated: bool
+    unit_preference: str
+
+
+class ConversationContextResponse(BaseModel):
+    conversation_id: UUID
+    initial_bike_id: UUID
+    current_bike_id: UUID
+    status: str
+    rolling_summary: str | None
+    summary_model_version: str | None
+    recent_turns: list[RecentTurnResponse]
+    boundary_count: int
+    latest_bike_switch: LatestBikeSwitchResponse | None
+
+
+class DeferredDomainResponse(BaseModel):
+    available: bool
+    items: list[dict]
+    reason: str | None
+
+
+class ContextBudgetResponse(BaseModel):
+    recent_turn_limit: int
+    recent_char_budget: int
+    recent_chars_used: int
+    summary_chars: int
+    recent_turns_included: int
+    recent_turns_omitted: int
+
+
+class CompactContextResponse(BaseModel):
+    version: str
+    conversation_id: UUID
+    bike_id: UUID
+    bike: BikeContextResponse
+    conversation: ConversationContextResponse
+    modifications: DeferredDomainResponse
+    maintenance: DeferredDomainResponse
+    ride: DeferredDomainResponse
+    budget: ContextBudgetResponse
+
+
 def raise_conversation_error(exc: Exception) -> NoReturn:
     if isinstance(exc, ConversationNotFound):
         raise AppError("not_found", "Conversation or bike not found", status_code=404) from exc
@@ -123,6 +194,19 @@ def get_conversation(
         messages=[MessageResponse.model_validate(item) for item in detail.messages],
         boundaries=[BoundaryResponse.model_validate(item) for item in detail.boundaries],
     )
+
+
+@router.get("/{conversation_id}/context")
+def get_compact_context(
+    conversation_id: UUID,
+    user: Annotated[User, Depends(get_current_user)],
+    context: Annotated[CompactContextService, Depends(get_compact_context_service)],
+) -> CompactContextResponse:
+    try:
+        pack = context.build(user, conversation_id)
+    except _ERRORS as exc:
+        raise_conversation_error(exc)
+    return CompactContextResponse.model_validate(pack.as_dict())
 
 
 @router.post("/{conversation_id}/messages", status_code=201)

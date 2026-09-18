@@ -154,3 +154,13 @@ def get_conversation_service(session: Session = Depends(get_db)):
     from app.services.conversations import ConversationService
 
     return ConversationService(ConversationRepository(session), BikeRepository(session))
+
+
+def get_compact_context_service(session: Session = Depends(get_db)):
+    from app.repositories.conversations import ConversationRepository
+    from app.services.compact_context import CompactContextService, build_retrieval_service
+    from app.services.conversations import ConversationService
+
+    bikes = BikeRepository(session)
+    conversations = ConversationService(ConversationRepository(session), bikes)
+    return CompactContextService(conversations, bikes, build_retrieval_service(session))
