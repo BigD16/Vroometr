@@ -1,7 +1,11 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useActiveBike } from "@/components/ActiveBikeProvider";
+import {
+  AssistantSources,
+  type AssistantCitation,
+} from "@/components/AssistantSources";
 import { readApiError } from "@/lib/api-errors";
 import type { Bike } from "@/lib/bikes";
 
@@ -21,6 +25,8 @@ type Message = {
   content: string;
   bike_context_id: string;
   created_at: string;
+  /** Present when a future agent answer includes citation payloads (5.5). */
+  citations?: AssistantCitation[];
 };
 
 type Boundary = {
@@ -125,6 +131,7 @@ function AssistantBikeWorkspace({
   const [error, setError] = useState<string | null>(null);
   const [revision, setRevision] = useState(0);
   const refresh = useCallback(() => setRevision((value) => value + 1), []);
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -176,6 +183,10 @@ function AssistantBikeWorkspace({
   const activeDetail =
     selectedId && detail?.conversation.id === selectedId ? detail : null;
   const activeContextPack = activeDetail ? contextPack : null;
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ block: "end" });
+  }, [activeDetail?.messages.length, selectedId]);
 
   async function action(operation: () => Promise<void>) {
     setBusy(true);
@@ -292,8 +303,8 @@ function AssistantBikeWorkspace({
 
         {!selectedId ? (
           <p className="placeholder-copy">
-            Create or open a thread. User messages are stored now; agent replies arrive in later
-            Phase 5 work.
+            Create or open a thread to ask about {activeBike.nickname}. Messages are saved now;
+            cited assistant replies arrive with the agent loop.
           </p>
         ) : null}
 
@@ -318,9 +329,6 @@ function AssistantBikeWorkspace({
                 Delete thread
               </button>
             </div>
-            <p className="assistant-note">
-              Messages are saved. There is no agent reply yet—only conversation storage.
-            </p>
             {activeContextPack ? (
               <details className="assistant-context-pack">
                 <summary>Always-loaded context</summary>
@@ -353,12 +361,15 @@ function AssistantBikeWorkspace({
             ) : null}
             <div className="chat" aria-live="polite">
               {activeDetail.messages.length === 0 ? (
-                <p className="placeholder-copy">No messages yet. Send one below.</p>
+                <p className="placeholder-copy">No messages yet. Ask something below.</p>
               ) : null}
               {activeDetail.messages.map((message) => (
                 <article key={message.id} className={`chat-message role-${message.role}`}>
                   <small>{message.role}</small>
                   <p>{message.content}</p>
+                  {message.citations && message.citations.length > 0 ? (
+                    <AssistantSources citations={message.citations} />
+                  ) : null}
                 </article>
               ))}
               {activeDetail.boundaries.length > 0 ? (
@@ -374,9 +385,10 @@ function AssistantBikeWorkspace({
                   <pre>{activeDetail.conversation.rolling_summary}</pre>
                 </details>
               ) : null}
+              <div ref={chatEndRef} />
             </div>
             <form className="composer" onSubmit={(event) => void sendMessage(event)}>
-              <button type="button" aria-label="Add" disabled>
+              <button type="button" aria-label="Add attachment" title="Attachments come later" disabled>
                 ＋
               </button>
               <input

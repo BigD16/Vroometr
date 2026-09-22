@@ -9,13 +9,17 @@ export function AssistantFab() {
   const machineName = activeBike?.nickname ?? "your machine";
 
   return (
-    <Link className="assistant-fab" href="/assistant">
-      <span>✦</span>
+    <Link
+      className="assistant-fab"
+      href="/assistant"
+      aria-label={`Open Vroometr Assistant for ${machineName}`}
+    >
+      <span aria-hidden="true">✦</span>
       <div>
         <small>VROOMETR ASSISTANT</small>
         <b>Ask about {machineName}…</b>
       </div>
-      <em>↑</em>
+      <em aria-hidden="true">↑</em>
     </Link>
   );
 }

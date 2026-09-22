@@ -1,6 +1,6 @@
 # Vroometr implementation guide
 
-Reviewed against the working tree on 2026-09-22, through roadmap task 5.6 hierarchical memory.
+Reviewed against the working tree on 2026-09-22, through roadmap task 5.7 assistant UI polish.
 For the numbered V1 sequence, use the [roadmap](roadmap.md). For setup, use the
 [runbook](development-runbook.md). For per-task evidence and review steps, use
 [implementation progress](implementation-progress.md).
@@ -26,13 +26,13 @@ For the numbered V1 sequence, use the [roadmap](roadmap.md). For setup, use the
 | Write policy, 5.4 | Auto vs confirm classes, `FLAG_AI_WRITES`, confirmation/explicit-instruction gate | No durable write tools until Phase 6+ domains; no NLP classifier |
 | Citations/safety, 5.5 | Withhold unverified critical specs; citation payloads; risk-based escalation helpers | No answer generator / UI chips yet; agent must call these helpers |
 | Hierarchical memory, 5.6 | Search bike-scoped summaries then expand raw spans; memory tools | Summary embeddings / semantic ranking deferred; no Settings memory UI yet |
+| Assistant UI, 5.7 | Composer, role-styled messages, source chips, FAB, disclaimer | No agent replies yet; chips need citation payloads on messages |
 | AI foundation | Provider-neutral ports, OpenAI embedding/reranker adapters, feature flags, chunking/retrieval baseline evals | Chat/summary adapters and the ReasoningAgent remain unconfigured; mechanical-answer evals remain future work |
 
 A visible navigation page is not evidence that its backend domain exists. Maintenance,
 rides, modifications, issues, and settings contain presentation scaffolding; suspension is
-Coming Soon. Assistant persists conversations, exposes always-load compact context, has
-read-only tools (including hierarchical memory), gates future writes, and has citation/safety
-helpers (5.1–5.6), but does not answer yet. Do not report later Phase 5 workflows as complete.
+Coming Soon. Assistant persists conversations through hierarchical memory tools and a polished
+UI shell (5.1–5.7), but does not answer yet. Do not report the ReasoningAgent as complete.
 
 ## Runtime architecture
 
@@ -388,3 +388,10 @@ non-authoritative guidance only for lower-risk topics; escalate only for real ri
 raw-message span around matching turns. Ranking is deterministic token overlap until summary
 embeddings exist. Tools: `search_conversation_memory`, `expand_conversation_memory`. See
 [implementation progress](implementation-progress.md#hierarchical-memory-56--2026-09-22).
+
+## Assistant UI (5.7)
+
+`/assistant` uses role-styled messages, a sticky composer, expandable `AssistantSources` chips
+(when citation payloads exist), and a safety disclaimer. The shell `AssistantFab` is the quick
+entry from other garage pages. See
+[implementation progress](implementation-progress.md#assistant-ui-polish-57--2026-09-22).

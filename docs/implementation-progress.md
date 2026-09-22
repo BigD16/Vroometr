@@ -40,7 +40,10 @@ scope below was approved by Drake and supplements the original roadmap.
   escalation reasons). Withholds unverified safety-critical exact values; escalates sparingly.
 - **5.6 implemented:** hierarchical conversation memory — search bike-scoped rolling summaries,
   then expand bounded raw-message spans (`HierarchicalMemoryService` + memory tools). Lexical
-  ranking until summary embeddings are wired. **5.7 is next.**
+  ranking until summary embeddings are wired.
+- **5.7 implemented:** Assistant UI polish — role-styled messages, composer affordances,
+  expandable `AssistantSources` chips (5.5 citation shape), shell FAB a11y, page disclaimer.
+  Agent replies still deferred. **Phase 6 / ReasoningAgent is next.**
 - **Developer documentation established:** repository onboarding guide, setup/troubleshooting
   runbook, and required documentation updates after every task. Start at [docs index](README.md).
 
@@ -844,3 +847,31 @@ invoke search excluding the current id, expand the hit, confirm foreign bike/use
 Unresolved: semantic summary embeddings, ReasoningAgent loop, UI polish (5.7).
 
 Next numbered task is **5.7**.
+
+## Assistant UI polish (5.7) — 2026-09-22
+
+Status: **implemented** as presentation polish (still no ReasoningAgent replies).
+
+- Role-styled chat bubbles and auto-scroll in `AssistantWorkspace`
+- Composer attach control remains disabled (later attachments) with clearer labels
+- `AssistantSources` renders expandable source chips matching 5.5 citation payloads when a
+  message includes `citations`
+- Shell `AssistantFab` keeps quick entry off `/assistant` with an explicit aria-label
+- Page disclaimer notes cite/withhold behavior
+
+Files to read, in order:
+
+1. `apps/web/components/AssistantSources.tsx`
+2. `apps/web/components/AssistantWorkspace.tsx`
+3. `apps/web/components/AssistantFab.tsx`
+4. `apps/web/app/(shell)/assistant/page.tsx`
+5. `apps/web/app/globals.css` (assistant / composer / sources / FAB)
+
+Verification: `cd apps/web && npm run lint` — passed. Migrations/env/deps: none.
+
+Manual review: from a non-assistant page open the FAB → `/assistant`; send a user message;
+confirm disclaimer under the panel; note Sources only appear when citation payloads exist.
+
+Unresolved: agent loop that produces assistant messages + citations; attachment button.
+
+Next: **Phase 6** (maintenance/engine hours) unless ReasoningAgent is prioritized first.

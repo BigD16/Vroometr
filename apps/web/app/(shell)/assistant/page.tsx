@@ -12,7 +12,10 @@ export default function AssistantPage() {
         </div>
       </div>
       <AssistantWorkspace />
-      <p className="disclaimer">Verify critical specifications in your manual before servicing.</p>
+      <p className="disclaimer" role="note">
+        Verify critical specifications in your manual before servicing. Vroometr cites sources when
+        available and withholds unverified safety-critical numbers.
+      </p>
     </section>
   );
 }
