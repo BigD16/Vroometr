@@ -844,9 +844,7 @@ Verification:
 Migrations/env/deps: none. Manual review: create two threads on one bike with distinct topics,
 invoke search excluding the current id, expand the hit, confirm foreign bike/user denied.
 
-Unresolved: semantic summary embeddings, ReasoningAgent loop, UI polish (5.7).
-
-Next numbered task is **5.7**.
+Unresolved: semantic summary embeddings, ReasoningAgent loop (UI polish done in 5.7).
 
 ## Assistant UI polish (5.7) — 2026-09-22
 
