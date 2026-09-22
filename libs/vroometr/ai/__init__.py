@@ -8,7 +8,9 @@ from vroometr.ai.factory import (
     get_vision_model,
 )
 from vroometr.ai.ports import (
+    ChatCompletionTurn,
     ChatModel,
+    ChatToolCall,
     EmbeddingModel,
     ImageModel,
     Reranker,
@@ -18,7 +20,9 @@ from vroometr.ai.ports import (
 )
 
 __all__ = [
+    "ChatCompletionTurn",
     "ChatModel",
+    "ChatToolCall",
     "EmbeddingModel",
     "ImageModel",
     "Reranker",

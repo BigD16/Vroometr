@@ -5,9 +5,15 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.deps import get_compact_context_service, get_conversation_service, get_current_user
+from app.deps import (
+    get_assistant_turn_service,
+    get_compact_context_service,
+    get_conversation_service,
+    get_current_user,
+)
 from app.errors import AppError
 from app.models.user import User
+from app.services.assistant_turn import AssistantTurnService
 from app.services.compact_context import CompactContextService
 from app.services.conversations import (
     ConversationNotFound,
@@ -55,6 +61,27 @@ class MessageResponse(BaseModel):
     content: str
     bike_context_id: UUID
     created_at: datetime
+    citations: list[dict] | None = None
+
+
+def message_response(message) -> MessageResponse:
+    citations = message.citations_json if isinstance(message.citations_json, list) else None
+    return MessageResponse(
+        id=message.id,
+        conversation_id=message.conversation_id,
+        role=message.role,
+        content=message.content,
+        bike_context_id=message.bike_context_id,
+        created_at=message.created_at,
+        citations=citations,
+    )
+
+
+class MessageAppendResponse(BaseModel):
+    message: MessageResponse
+    assistant_message: MessageResponse | None = None
+    assistant_status: str | None = None
+    assistant_error: str | None = None
 
 
 class BoundaryResponse(BaseModel):
@@ -191,7 +218,7 @@ def get_conversation(
         raise_conversation_error(exc)
     return ConversationDetailResponse(
         conversation=ConversationResponse.model_validate(detail.conversation),
-        messages=[MessageResponse.model_validate(item) for item in detail.messages],
+        messages=[message_response(item) for item in detail.messages],
         boundaries=[BoundaryResponse.model_validate(item) for item in detail.boundaries],
     )
 
@@ -215,14 +242,25 @@ def append_message(
     body: AppendMessageBody,
     user: Annotated[User, Depends(get_current_user)],
     conversations: Annotated[ConversationService, Depends(get_conversation_service)],
-) -> MessageResponse:
+    turns: Annotated[AssistantTurnService, Depends(get_assistant_turn_service)],
+) -> MessageAppendResponse:
     try:
+        if body.role == "user":
+            result = turns.send_user_message(user, conversation_id, body.content)
+            return MessageAppendResponse(
+                message=message_response(result.user_message),
+                assistant_message=message_response(result.assistant_message)
+                if result.assistant_message is not None
+                else None,
+                assistant_status=result.reply.status,
+                assistant_error=result.reply.error,
+            )
         message = conversations.append_message(
             user, conversation_id, body.content, role=body.role
         )
     except _ERRORS as exc:
         raise_conversation_error(exc)
-    return MessageResponse.model_validate(message)
+    return MessageAppendResponse(message=message_response(message))
 
 
 @router.post("/{conversation_id}/bike")
@@ -238,7 +276,7 @@ def switch_bike(
         raise_conversation_error(exc)
     return ConversationDetailResponse(
         conversation=ConversationResponse.model_validate(detail.conversation),
-        messages=[MessageResponse.model_validate(item) for item in detail.messages],
+        messages=[message_response(item) for item in detail.messages],
         boundaries=[BoundaryResponse.model_validate(item) for item in detail.boundaries],
     )
 

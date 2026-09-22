@@ -1,12 +1,31 @@
 """Provider-neutral AI ports. Do not import vendor SDKs here."""
 
 from dataclasses import dataclass
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
+
+
+@dataclass(frozen=True)
+class ChatToolCall:
+    id: str
+    name: str
+    arguments_json: str
+
+
+@dataclass(frozen=True)
+class ChatCompletionTurn:
+    content: str | None
+    tool_calls: tuple[ChatToolCall, ...] = ()
 
 
 @runtime_checkable
 class ChatModel(Protocol):
     def complete(self, messages: list[dict[str, str]]) -> str: ...
+
+    def complete_turn(
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]] | None = None,
+    ) -> ChatCompletionTurn: ...
 
 
 @runtime_checkable

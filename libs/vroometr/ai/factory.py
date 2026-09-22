@@ -21,7 +21,21 @@ from vroometr.ai.unconfigured import (
 
 
 def get_chat_model() -> ChatModel:
-    return UnconfiguredChatModel()
+    from vroometr.ai.chat import OpenAIChatModel
+    from vroometr.settings import settings
+
+    if not (
+        settings.openai_api_key.get_secret_value()
+        and settings.openai_base_url
+        and settings.agent_model
+    ):
+        return UnconfiguredChatModel()
+    return OpenAIChatModel(
+        api_key=settings.openai_api_key.get_secret_value(),
+        base_url=settings.openai_base_url,
+        model=settings.agent_model,
+        timeout=settings.embedding_timeout_seconds,
+    )
 
 
 def get_embedding_model() -> EmbeddingModel:

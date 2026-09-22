@@ -1,6 +1,6 @@
 # Vroometr implementation guide
 
-Reviewed against the working tree on 2026-09-22, through roadmap task 5.7 assistant UI polish.
+Reviewed against the working tree on 2026-09-22, through the ReasoningAgent tool-calling loop.
 For the numbered V1 sequence, use the [roadmap](roadmap.md). For setup, use the
 [runbook](development-runbook.md). For per-task evidence and review steps, use
 [implementation progress](implementation-progress.md).
@@ -22,17 +22,18 @@ For the numbered V1 sequence, use the [roadmap](roadmap.md). For setup, use the
 | Retrieval, 4.4 | Owner-filtered vector + keyword search, RRF/dedup, reranking, bounded source excerpts, citations and search UI | First source-backed retrieval evals pass; broad full-manual benchmarks and generated answers remain future work |
 | Conversations, 5.1 | Bike-scoped threads, messages, deterministic rolling summary, bike-switch boundaries, owner HTTP API, minimal Assistant UI | No agent replies yet |
 | Compact context, 5.2 | Always-load bike/hours/powertrain + recent turns/summary pack, deferred domain stubs, context endpoint/panel | Mods/maintenance/rides await Phases 6–7; agent replies remain |
-| Assistant tools, 5.3 | Read-only registry over bike/context/manuals/conversation/memory services | ReasoningAgent / ChatModel tool-calling deferred |
+| Assistant tools, 5.3 | Read-only registry over bike/context/manuals/conversation/memory services | Mutating tools still deferred |
 | Write policy, 5.4 | Auto vs confirm classes, `FLAG_AI_WRITES`, confirmation/explicit-instruction gate | No durable write tools until Phase 6+ domains; no NLP classifier |
-| Citations/safety, 5.5 | Withhold unverified critical specs; citation payloads; risk-based escalation helpers | No answer generator / UI chips yet; agent must call these helpers |
+| Citations/safety, 5.5 | Withhold unverified critical specs; citation payloads; risk-based escalation helpers | Agent attaches citations from manual search; full claim rewriter deferred |
 | Hierarchical memory, 5.6 | Search bike-scoped summaries then expand raw spans; memory tools | Summary embeddings / semantic ranking deferred; no Settings memory UI yet |
-| Assistant UI, 5.7 | Composer, role-styled messages, source chips, FAB, disclaimer | No agent replies yet; chips need citation payloads on messages |
-| AI foundation | Provider-neutral ports, OpenAI embedding/reranker adapters, feature flags, chunking/retrieval baseline evals | Chat/summary adapters and the ReasoningAgent remain unconfigured; mechanical-answer evals remain future work |
+| Assistant UI, 5.7 | Composer, role-styled messages, source chips, FAB, disclaimer | Attachment button still disabled |
+| ReasoningAgent | Tool-calling loop; OpenAI chat when `AGENT_MODEL` set; turn persists assistant + citations | Escalation model, streaming, answer evals deferred |
+| AI foundation | Provider-neutral ports, OpenAI embedding/reranker/chat adapters, feature flags | Summary/vision/voice adapters remain unconfigured |
 
 A visible navigation page is not evidence that its backend domain exists. Maintenance,
 rides, modifications, issues, and settings contain presentation scaffolding; suspension is
-Coming Soon. Assistant persists conversations through hierarchical memory tools and a polished
-UI shell (5.1–5.7), but does not answer yet. Do not report the ReasoningAgent as complete.
+Coming Soon. Assistant can reply when `AGENT_MODEL` and OpenAI settings are configured; without
+them user messages still save and the UI reports awaiting configuration.
 
 ## Runtime architecture
 
@@ -395,3 +396,10 @@ embeddings exist. Tools: `search_conversation_memory`, `expand_conversation_memo
 (when citation payloads exist), and a safety disclaimer. The shell `AssistantFab` is the quick
 entry from other garage pages. See
 [implementation progress](implementation-progress.md#assistant-ui-polish-57--2026-09-22).
+
+## ReasoningAgent
+
+`ReasoningAgent` runs after each user message: compact context → chat model with tools →
+registry invoke → optional citations from `search_manuals` → persisted assistant message.
+Configure `AGENT_MODEL` plus existing OpenAI settings. See
+[implementation progress](implementation-progress.md#reasoningagent-loop--2026-09-22).

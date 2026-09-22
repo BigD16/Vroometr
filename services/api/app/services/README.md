@@ -57,5 +57,9 @@ stubs until those domains exist. On-demand manuals call through to RetrievalServ
 rolling summaries first, then expand bounded raw-message spans. V1 ranking is token overlap;
 semantic summary embeddings stay deferred but should reuse this service.
 
-Read-only assistant tools live in `app/assistant_tools/` and wrap these services for the future
-agent. Do not add SQL or a second authorization path inside tools.
+`reasoning_agent.py` owns the tool-calling assistant loop. `assistant_turn.py` appends the user
+message, runs the agent, and persists an assistant reply with citation JSON when the model is
+configured.
+
+Read-only assistant tools live in `app/assistant_tools/` and wrap these services for the agent.
+Do not add SQL or a second authorization path inside tools.

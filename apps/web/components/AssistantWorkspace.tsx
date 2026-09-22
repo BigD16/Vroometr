@@ -26,7 +26,7 @@ type Message = {
   bike_context_id: string;
   created_at: string;
   /** Present when a future agent answer includes citation payloads (5.5). */
-  citations?: AssistantCitation[];
+  citations?: AssistantCitation[] | null;
 };
 
 type Boundary = {
@@ -222,14 +222,25 @@ function AssistantBikeWorkspace({
     if (!selectedId || !draft.trim()) return;
     const content = draft.trim();
     await action(async () => {
-      await checked(
+      const response = await checked(
         await fetch(`/api/conversations/${selectedId}/messages`, {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ content, role: "user" }),
         }),
       );
+      const payload = (await response.json()) as {
+        assistant_status?: string | null;
+        assistant_error?: string | null;
+      };
       setDraft("");
+      if (payload.assistant_status === "awaiting_configuration") {
+        setError(
+          "Assistant model is not configured yet. Your message was saved; set AGENT_MODEL and OpenAI settings to enable replies.",
+        );
+      } else if (payload.assistant_status === "failed") {
+        setError(payload.assistant_error || "Assistant could not complete a reply.");
+      }
     });
   }
 

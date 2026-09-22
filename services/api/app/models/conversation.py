@@ -1,9 +1,11 @@
 from datetime import UTC, datetime
 from enum import StrEnum
+from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.types import JSON
 
 from app.db import Base
 
@@ -68,6 +70,7 @@ class ConversationMessage(Base):
     )
     role: Mapped[str] = mapped_column(String(32))
     content: Mapped[str] = mapped_column(Text)
+    citations_json: Mapped[Any | None] = mapped_column(JSON)
     bike_context_id: Mapped[UUID] = mapped_column(
         Uuid, ForeignKey("bikes.id", ondelete="CASCADE"), index=True
     )

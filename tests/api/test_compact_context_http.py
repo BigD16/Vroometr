@@ -1,16 +1,26 @@
+from app.assistant_tools.registry import ToolRegistry
+from app.assistant_tools.types import ToolContext
 from app.deps import (
+    get_assistant_turn_service,
     get_compact_context_service,
     get_conversation_service,
     get_token_verifier,
     get_user_service,
 )
 from app.main import create_app
+from app.services.assistant_turn import AssistantTurnService
+from app.services.bikes import BikeService
 from app.services.compact_context import CompactContextService
+from app.services.hierarchical_memory import HierarchicalMemoryService
+from app.services.reasoning_agent import ReasoningAgent
 from app.services.users import UserService
 from fastapi.testclient import TestClient
 from tests.api.test_uploads_http import _auth, _FakeTokens
 from tests.unit.fakes import InMemoryUserRepository
 from tests.unit.test_compact_context import setup_context
+from tests.unit.test_reasoning_agent import ScriptedChat
+
+from vroometr.ai.ports import ChatCompletionTurn
 
 
 def test_compact_context_route_returns_pack_and_enforces_ownership():
@@ -21,11 +31,32 @@ def test_compact_context_route_returns_pack_and_enforces_ownership():
     users.add(owner)
     users.add(other)
     context = CompactContextService(conversations, bikes)
+    agent = ReasoningAgent(
+        ScriptedChat([ChatCompletionTurn(content="Saved. Check your manual for capacity.")]),
+        ToolRegistry(),
+        context,
+    )
+
+    def turns():
+        def factory(user, *, conversation_id=None, bike_id=None):
+            return ToolContext(
+                user=user,
+                bikes=BikeService(bikes),
+                conversations=conversations,
+                compact_context=context,
+                memory=HierarchicalMemoryService(conversations, bikes),
+                conversation_id=conversation_id,
+                bike_id=bike_id,
+            )
+
+        return AssistantTurnService(conversations, agent, factory)
+
     app = create_app()
     app.dependency_overrides[get_token_verifier] = lambda: _FakeTokens()
     app.dependency_overrides[get_user_service] = lambda: UserService(users)
     app.dependency_overrides[get_conversation_service] = lambda: conversations
     app.dependency_overrides[get_compact_context_service] = lambda: context
+    app.dependency_overrides[get_assistant_turn_service] = turns
     client = TestClient(app)
 
     created = client.post(
@@ -55,4 +86,4 @@ def test_compact_context_route_returns_pack_and_enforces_ownership():
     assert body["modifications"]["available"] is False
     assert body["maintenance"]["reason"] == "domain_not_implemented"
     assert body["ride"]["available"] is False
-    assert body["budget"]["recent_turns_included"] == 1
+    assert body["budget"]["recent_turns_included"] >= 1

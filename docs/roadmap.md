@@ -4,7 +4,7 @@ This is the repository-owned V1 build sequence. Status here is authoritative for
 Detailed verification evidence lives in [implementation progress](implementation-progress.md).
 LOCKED product and architecture decisions live in local `docs/design/` (not committed).
 
-Last reviewed: 2026-09-22. Current position: **through 5.7 assistant UI polish**; next is **Phase 6** (or agent loop follow-up within Phase 5 if prioritized).
+Last reviewed: 2026-09-22. Current position: **through ReasoningAgent loop (Phase 5 follow-up)**; next numbered phase task is **Phase 6**.
 
 ## Status at a glance
 
@@ -15,7 +15,7 @@ Last reviewed: 2026-09-22. Current position: **through 5.7 assistant UI polish**
 | 2 | Bikes, garage, dashboard | Complete |
 | 3 | Uploads and attachments | Complete (real malware scanning deferred; see follow-up) |
 | 4 | Documents, ingestion, RAG | **4.5 first retrieval evals implemented**; OCR/vision and answer-safety follow-ups remain |
-| 5 | Text assistant | **5.7 UI polish implemented**; ReasoningAgent / chat replies still deferred |
+| 5 | Text assistant | **5.7 UI + ReasoningAgent loop**; live replies need `AGENT_MODEL` + OpenAI config |
 | 6 | Maintenance and engine hours | Not started |
 | 7 | Modifications, rides, issues | Not started |
 | 8 | Notifications, demo, Stripe | Not started |
@@ -202,7 +202,7 @@ Review: upload a short PDF, see chunks, run one eval, open the pipeline module.
 
 ## Phase 5 — Text assistant
 
-Status: **in progress through 5.7**; **ReasoningAgent / chat replies and Phase 6** are next.
+Status: **through 5.7 + ReasoningAgent**; **Phase 6** is next.
 
 Look like the mock assistant; one tool-calling agent. No Mem0, no second vector DB, no multi-agent.
 
@@ -226,6 +226,9 @@ Look like the mock assistant; one tool-calling agent. No Mem0, no second vector 
   embeddings are wired
 - **5.7** UI — **implemented:** polished composer/messages, expandable source chips, shell FAB,
   safety disclaimer; still no agent replies (chips render when citation payloads are present)
+- **ReasoningAgent (follow-up)** — **implemented:** OpenAI tool-calling chat adapter when
+  `AGENT_MODEL` + OpenAI env are set; `ReasoningAgent` loops tools via the registry; user
+  message POST runs a turn and persists assistant replies + citation JSON
 
 Review: one real question against an uploaded manual; confirm casual oil-change talk does not write.
 

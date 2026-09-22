@@ -1,5 +1,9 @@
+from __future__ import annotations
+
+import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID
 
 from app.models.conversation import (
@@ -93,6 +97,7 @@ class ConversationService:
         content: str,
         *,
         role: str = MessageRole.USER.value,
+        citations_json: str | list[Any] | dict[str, Any] | None = None,
     ) -> ConversationMessage:
         conversation = self._require(user, conversation_id)
         text = content.strip() if isinstance(content, str) else ""
@@ -103,11 +108,18 @@ class ConversationService:
         except ValueError:
             allowed = ", ".join(item.value for item in MessageRole)
             raise InvalidConversation(f"invalid role: expected {allowed}") from None
+        citations = citations_json
+        if isinstance(citations_json, str):
+            try:
+                citations = json.loads(citations_json)
+            except json.JSONDecodeError as exc:
+                raise InvalidConversation("citations_json must be valid JSON") from exc
         now = datetime.now(UTC)
         message = ConversationMessage(
             conversation_id=conversation.id,
             role=message_role.value,
             content=text,
+            citations_json=citations,
             bike_context_id=conversation.current_bike_id,
             created_at=now,
         )

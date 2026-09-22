@@ -21,6 +21,9 @@ class UnconfiguredChatModel:
     def complete(self, messages: list[dict[str, str]]) -> str:
         _reject("ChatModel")
 
+    def complete_turn(self, messages, tools=None):
+        _reject("ChatModel")
+
 
 class UnconfiguredEmbeddingModel:
     def embed(self, texts: list[str]) -> list[list[float]]:

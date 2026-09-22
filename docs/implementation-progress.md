@@ -43,7 +43,10 @@ scope below was approved by Drake and supplements the original roadmap.
   ranking until summary embeddings are wired.
 - **5.7 implemented:** Assistant UI polish — role-styled messages, composer affordances,
   expandable `AssistantSources` chips (5.5 citation shape), shell FAB a11y, page disclaimer.
-  Agent replies still deferred. **Phase 6 / ReasoningAgent is next.**
+- **ReasoningAgent implemented:** tool-calling loop over the 5.3 registry; OpenAI chat adapter
+  when configured; user message turns persist assistant replies and citation JSON
+  (`0015_message_citations`). Unconfigured models save the user message and report
+  `awaiting_configuration`. **Phase 6 is next.**
 - **Developer documentation established:** repository onboarding guide, setup/troubleshooting
   runbook, and required documentation updates after every task. Start at [docs index](README.md).
 
@@ -873,3 +876,40 @@ confirm disclaimer under the panel; note Sources only appear when citation paylo
 Unresolved: agent loop that produces assistant messages + citations; attachment button.
 
 Next: **Phase 6** (maintenance/engine hours) unless ReasoningAgent is prioritized first.
+
+## ReasoningAgent loop — 2026-09-22
+
+Status: **implemented**. User message POST runs `AssistantTurnService` → `ReasoningAgent`
+(tool-calling chat ↔ `ToolRegistry` ↔ same domain services). Assistant text and citation
+payloads persist on `conversation_messages.citations_json`.
+
+Architecture:
+
+1. Compact context packs recent turns + bike slice into the prompt
+2. Chat model may emit tool calls (max 6 rounds)
+3. Tools invoke through write-policy-gated registry
+4. Manual search results become Sources citations via `citations_from_retrieval_passages`
+5. Final text is stored as an assistant message
+
+Files to read, in order:
+
+1. `services/api/app/services/reasoning_agent.py`
+2. `services/api/app/services/assistant_turn.py`
+3. `libs/vroometr/ai/chat.py` + `ports.py` / `factory.py`
+4. `services/api/app/routes/conversations.py` (`MessageAppendResponse`)
+5. `tests/unit/test_reasoning_agent.py`
+
+Config: `AGENT_MODEL`, `OPENAI_API_KEY`, `OPENAI_BASE_URL` (reuses embedding HTTP timeout).
+Migration `0015_message_citations` applied locally.
+
+Verification:
+`.venv/bin/python -m pytest tests/unit/test_reasoning_agent.py tests/unit/test_ai_ports.py tests/api/test_conversations_http.py -q`
+— passed; ruff + `apps/web` lint passed.
+
+Manual review: with model configured, ask a manual-backed question and confirm an assistant
+reply + Sources chips; with model empty, confirm user message saves and UI shows configuration
+guidance.
+
+Unresolved: escalation model routing, streaming, SUMMARY_MODEL refresh, mechanical answer evals.
+
+Next numbered phase task is **Phase 6**.

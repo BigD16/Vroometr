@@ -38,4 +38,5 @@ manuals call-through. Write-policy tests (`test_write_policy.py`) cover auto/con
 flag kill-switch, and confirmation gates. Citation/safety tests
 (`test_citations_safety.py`) cover withhold/cite/escalate decisions. Hierarchical memory tests
 (`test_hierarchical_memory.py`) cover summary ranking, span expand, bike hard-filter, and
-owner isolation.
+owner isolation. ReasoningAgent tests (`test_reasoning_agent.py`) cover tool rounds, citation
+capture, awaiting_configuration, and turn persistence.

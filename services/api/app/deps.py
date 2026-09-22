@@ -172,6 +172,31 @@ def get_assistant_tool_registry():
     return build_default_registry()
 
 
+def get_assistant_turn_service(session: Session = Depends(get_db)):
+    from app.repositories.conversations import ConversationRepository
+    from app.services.assistant_turn import AssistantTurnService
+    from app.services.compact_context import CompactContextService, build_retrieval_service
+    from app.services.conversations import ConversationService
+    from app.services.reasoning_agent import build_reasoning_agent
+
+    bikes_repo = BikeRepository(session)
+    conversations = ConversationService(ConversationRepository(session), bikes_repo)
+    compact_context = CompactContextService(
+        conversations, bikes_repo, build_retrieval_service(session)
+    )
+
+    def tool_context_factory(user, *, conversation_id=None, bike_id=None):
+        return build_assistant_tool_context(
+            user, session, conversation_id=conversation_id, bike_id=bike_id
+        )
+
+    return AssistantTurnService(
+        conversations,
+        build_reasoning_agent(compact_context=compact_context),
+        tool_context_factory,
+    )
+
+
 def build_assistant_tool_context(
     user: User,
     session: Session,
