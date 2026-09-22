@@ -36,7 +36,9 @@ scope below was approved by Drake and supplements the original roadmap.
   and the ReasoningAgent loop remain deferred.
 - **5.4 implemented:** write-policy gate (`auto` vs `confirm`, `FLAG_AI_WRITES`, confirmation /
   explicit-instruction on `ToolContext`). Default registry still has no durable write tools.
-  **5.5 is next.**
+- **5.5 implemented:** citation/safety helpers (`evaluate_claim_answer`, `decide_from_retrieval`,
+  escalation reasons). Withholds unverified safety-critical exact values; escalates sparingly.
+  **5.6 is next.**
 - **Developer documentation established:** repository onboarding guide, setup/troubleshooting
   runbook, and required documentation updates after every task. Start at [docs index](README.md).
 
@@ -778,3 +780,34 @@ Unresolved: real mutating tools, confirmation UI, utterance classification NLP, 
 agent loop, hierarchical memory (5.6), polished UI (5.7).
 
 Next numbered task is **5.5**.
+
+## Citations and safety (5.5) — 2026-09-17
+
+Status: **implemented** as answer-policy helpers (no answer generator). `citations.py` shapes
+layered Sources citations from retrieval passages and decides:
+
+- authoritative source found → provide exact value with citation
+- no source + safety/engine-critical → withhold exact number (+ escalate as unverifiable critical)
+- no source + lower risk → labeled non-authoritative guidance only
+- mechanic escalation only for locked risk reasons (not difficulty alone)
+
+Files to read, in order:
+
+1. `services/api/app/assistant_tools/citations.py`
+2. `tests/unit/test_citations_safety.py`
+3. DESIGN §7 / §13 (local) for the LOCKED rules this encodes
+
+Verification: `python -m pytest tests/unit/test_citations_safety.py -q` — 5 passed; ruff passed.
+Migrations/env/deps: none. Unresolved: ReasoningAgent that calls these helpers, UI source chips
+(5.7), hierarchical memory (5.6).
+
+Next numbered task is **5.6**.
+
+## AssistantWorkspace CI lint fix — 2026-09-17
+
+Status: **fixed**. Website CI failed on `react-hooks/set-state-in-effect` in
+`AssistantWorkspace.tsx` (sync clears when `!activeBike` / `!selectedId`). The workspace now
+splits empty-bike UI from a bike-keyed `AssistantBikeWorkspace`, derives inactive detail from
+`selectedId`, and only fetches when a bike/thread is present (same pattern as DocumentLibrary).
+
+Verification: `cd apps/web && npm run lint` — passed.

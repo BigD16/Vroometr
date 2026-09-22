@@ -3,6 +3,7 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useActiveBike } from "@/components/ActiveBikeProvider";
 import { readApiError } from "@/lib/api-errors";
+import type { Bike } from "@/lib/bikes";
 
 type Conversation = {
   id: string;
@@ -82,6 +83,38 @@ function threadLabel(conversation: Conversation, index: number): string {
 
 export function AssistantWorkspace() {
   const { activeBike, bikes, state, error: bikeError, reload } = useActiveBike();
+
+  if (state === "loading") {
+    return <p className="placeholder-copy" role="status">Loading bike context…</p>;
+  }
+
+  if (!activeBike) {
+    return (
+      <div className="assistant-empty">
+        <p className="placeholder-copy">
+          Select an active bike to start a conversation. Threads are bike-scoped by default.
+        </p>
+        {bikeError ? (
+          <button type="button" onClick={() => void reload()}>
+            Retry bike load
+          </button>
+        ) : null}
+      </div>
+    );
+  }
+
+  return (
+    <AssistantBikeWorkspace key={activeBike.id} activeBike={activeBike} bikes={bikes} />
+  );
+}
+
+function AssistantBikeWorkspace({
+  activeBike,
+  bikes,
+}: {
+  activeBike: Bike;
+  bikes: Bike[];
+}) {
   const [threads, setThreads] = useState<Conversation[]>([]);
   const [detail, setDetail] = useState<Detail | null>(null);
   const [contextPack, setContextPack] = useState<CompactContext | null>(null);
@@ -94,16 +127,7 @@ export function AssistantWorkspace() {
   const refresh = useCallback(() => setRevision((value) => value + 1), []);
 
   useEffect(() => {
-    if (!activeBike) {
-      setThreads([]);
-      setDetail(null);
-      setSelectedId(null);
-      setLoading(false);
-      return;
-    }
     const controller = new AbortController();
-    setLoading(true);
-    setError(null);
     const query = new URLSearchParams({ bike_id: activeBike.id });
     fetch(`/api/conversations?${query}`, { signal: controller.signal })
       .then(checked)
@@ -112,10 +136,9 @@ export function AssistantWorkspace() {
         if (controller.signal.aborted) return;
         setThreads(items);
         setLoading(false);
-        if (selectedId && !items.some((item) => item.id === selectedId)) {
-          setSelectedId(null);
-          setDetail(null);
-        }
+        setSelectedId((current) =>
+          current && !items.some((item) => item.id === current) ? null : current,
+        );
       })
       .catch((caught: Error) => {
         if (!controller.signal.aborted) {
@@ -124,20 +147,17 @@ export function AssistantWorkspace() {
         }
       });
     return () => controller.abort();
-  }, [activeBike, revision, selectedId]);
+  }, [activeBike.id, revision]);
 
   useEffect(() => {
-    if (!selectedId) {
-      setDetail(null);
-      setContextPack(null);
-      return;
-    }
+    if (!selectedId) return;
     const controller = new AbortController();
+    const conversationId = selectedId;
     Promise.all([
-      fetch(`/api/conversations/${selectedId}`, { signal: controller.signal })
+      fetch(`/api/conversations/${conversationId}`, { signal: controller.signal })
         .then(checked)
         .then((response) => response.json()),
-      fetch(`/api/conversations/${selectedId}/context`, { signal: controller.signal })
+      fetch(`/api/conversations/${conversationId}/context`, { signal: controller.signal })
         .then(checked)
         .then((response) => response.json()),
     ])
@@ -153,6 +173,10 @@ export function AssistantWorkspace() {
     return () => controller.abort();
   }, [selectedId, revision]);
 
+  const activeDetail =
+    selectedId && detail?.conversation.id === selectedId ? detail : null;
+  const activeContextPack = activeDetail ? contextPack : null;
+
   async function action(operation: () => Promise<void>) {
     setBusy(true);
     setError(null);
@@ -167,7 +191,6 @@ export function AssistantWorkspace() {
   }
 
   async function createThread() {
-    if (!activeBike) return;
     await action(async () => {
       const response = await checked(
         await fetch("/api/conversations", {
@@ -178,6 +201,8 @@ export function AssistantWorkspace() {
       );
       const created = (await response.json()) as Conversation;
       setSelectedId(created.id);
+      setDetail(null);
+      setContextPack(null);
     });
   }
 
@@ -221,23 +246,10 @@ export function AssistantWorkspace() {
     });
   }
 
-  if (state === "loading") {
-    return <p className="placeholder-copy" role="status">Loading bike context…</p>;
-  }
-
-  if (!activeBike) {
-    return (
-      <div className="assistant-empty">
-        <p className="placeholder-copy">
-          Select an active bike to start a conversation. Threads are bike-scoped by default.
-        </p>
-        {bikeError ? (
-          <button type="button" onClick={() => void reload()}>
-            Retry bike load
-          </button>
-        ) : null}
-      </div>
-    );
+  function selectThread(threadId: string) {
+    setSelectedId(threadId);
+    setDetail(null);
+    setContextPack(null);
   }
 
   return (
@@ -259,7 +271,7 @@ export function AssistantWorkspace() {
               <button
                 type="button"
                 className={thread.id === selectedId ? "is-active" : undefined}
-                onClick={() => setSelectedId(thread.id)}
+                onClick={() => selectThread(thread.id)}
               >
                 {threadLabel(thread, index)}
               </button>
@@ -285,13 +297,13 @@ export function AssistantWorkspace() {
           </p>
         ) : null}
 
-        {detail ? (
+        {activeDetail ? (
           <>
             <div className="assistant-thread-controls">
               <label>
                 Bike context
                 <select
-                  value={detail.conversation.current_bike_id}
+                  value={activeDetail.conversation.current_bike_id}
                   disabled={busy}
                   onChange={(event) => void switchBike(event.target.value)}
                 >
@@ -309,54 +321,57 @@ export function AssistantWorkspace() {
             <p className="assistant-note">
               Messages are saved. There is no agent reply yet—only conversation storage.
             </p>
-            {contextPack ? (
+            {activeContextPack ? (
               <details className="assistant-context-pack">
                 <summary>Always-loaded context</summary>
                 <p>
-                  {contextPack.bike.year} {contextPack.bike.make} {contextPack.bike.model} (
-                  {contextPack.bike.nickname}) · {contextPack.bike.powertrain_type}
-                  {contextPack.bike.stroke_type ? ` · ${contextPack.bike.stroke_type}` : ""}
-                  {contextPack.bike.current_engine_hours != null
-                    ? ` · ${contextPack.bike.current_engine_hours}h${
-                        contextPack.bike.current_engine_hours_is_estimated ? " est." : ""
+                  {activeContextPack.bike.year} {activeContextPack.bike.make}{" "}
+                  {activeContextPack.bike.model} ({activeContextPack.bike.nickname}) ·{" "}
+                  {activeContextPack.bike.powertrain_type}
+                  {activeContextPack.bike.stroke_type
+                    ? ` · ${activeContextPack.bike.stroke_type}`
+                    : ""}
+                  {activeContextPack.bike.current_engine_hours != null
+                    ? ` · ${activeContextPack.bike.current_engine_hours}h${
+                        activeContextPack.bike.current_engine_hours_is_estimated ? " est." : ""
                       }`
                     : ""}
                 </p>
                 <p>
-                  Recent turns: {contextPack.budget.recent_turns_included} included
-                  {contextPack.budget.recent_turns_omitted > 0
-                    ? `, ${contextPack.budget.recent_turns_omitted} omitted`
+                  Recent turns: {activeContextPack.budget.recent_turns_included} included
+                  {activeContextPack.budget.recent_turns_omitted > 0
+                    ? `, ${activeContextPack.budget.recent_turns_omitted} omitted`
                     : ""}{" "}
-                  · {contextPack.budget.recent_chars_used} chars · summary{" "}
-                  {contextPack.budget.summary_chars} chars
+                  · {activeContextPack.budget.recent_chars_used} chars · summary{" "}
+                  {activeContextPack.budget.summary_chars} chars
                 </p>
                 <p>
                   Mods/maintenance/rides: not available yet (
-                  {contextPack.modifications.reason ?? "domain_not_implemented"}).
+                  {activeContextPack.modifications.reason ?? "domain_not_implemented"}).
                 </p>
               </details>
             ) : null}
             <div className="chat" aria-live="polite">
-              {detail.messages.length === 0 ? (
+              {activeDetail.messages.length === 0 ? (
                 <p className="placeholder-copy">No messages yet. Send one below.</p>
               ) : null}
-              {detail.messages.map((message) => (
+              {activeDetail.messages.map((message) => (
                 <article key={message.id} className={`chat-message role-${message.role}`}>
                   <small>{message.role}</small>
                   <p>{message.content}</p>
                 </article>
               ))}
-              {detail.boundaries.length > 0 ? (
+              {activeDetail.boundaries.length > 0 ? (
                 <p className="assistant-boundaries">
-                  {detail.boundaries.length} bike-context{" "}
-                  {detail.boundaries.length === 1 ? "boundary" : "boundaries"} recorded in this
+                  {activeDetail.boundaries.length} bike-context{" "}
+                  {activeDetail.boundaries.length === 1 ? "boundary" : "boundaries"} recorded in this
                   thread.
                 </p>
               ) : null}
-              {detail.conversation.rolling_summary ? (
+              {activeDetail.conversation.rolling_summary ? (
                 <details className="assistant-summary">
                   <summary>Rolling summary</summary>
-                  <pre>{detail.conversation.rolling_summary}</pre>
+                  <pre>{activeDetail.conversation.rolling_summary}</pre>
                 </details>
               ) : null}
             </div>

@@ -35,4 +35,5 @@ Compact-context tests (`test_compact_context.py`, `test_compact_context_http.py`
 shape, turn budgets, deferred domain stubs, and owner isolation.
 Assistant tool tests (`test_assistant_tools.py`) cover the read-only registry, ownership, and
 manuals call-through. Write-policy tests (`test_write_policy.py`) cover auto/confirm decisions,
-flag kill-switch, and confirmation gates.
+flag kill-switch, and confirmation gates. Citation/safety tests
+(`test_citations_safety.py`) cover withhold/cite/escalate decisions.
