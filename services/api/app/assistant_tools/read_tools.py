@@ -141,6 +141,91 @@ def execute_search_manuals(
         return _map_error(exc)
 
 
+SEARCH_CONVERSATION_MEMORY = ToolSpec(
+    name="search_conversation_memory",
+    description=(
+        "Search other bike-scoped conversation rolling summaries for relevant history. "
+        "Use before expanding raw message spans. Active bike is a hard filter."
+    ),
+    parameters_schema={
+        "type": "object",
+        "properties": {
+            "bike_id": {"type": "string", "format": "uuid"},
+            "query": {"type": "string", "minLength": 1, "maxLength": 1200},
+            "exclude_conversation_id": {"type": "string", "format": "uuid"},
+            "limit": {"type": "integer", "minimum": 1, "maximum": 20, "default": 5},
+        },
+        "required": ["bike_id", "query"],
+        "additionalProperties": False,
+    },
+)
+
+
+def execute_search_conversation_memory(
+    context: ToolContext, arguments: Mapping[str, Any]
+) -> ToolResult:
+    try:
+        bike_id = _uuid(arguments.get("bike_id", context.bike_id), "bike_id")
+        query = arguments.get("query")
+        if not isinstance(query, str):
+            raise InvalidConversation("query is required")
+        exclude_raw = arguments.get("exclude_conversation_id", context.conversation_id)
+        exclude_id = _uuid(exclude_raw, "exclude_conversation_id") if exclude_raw else None
+        limit = arguments.get("limit", 5)
+        if type(limit) is not int or limit < 1 or limit > 20:
+            raise InvalidConversation("limit must be an integer from 1 to 20")
+        payload = context.memory.search_summaries(
+            context.user,
+            bike_id,
+            query,
+            exclude_conversation_id=exclude_id,
+            limit=limit,
+        )
+        return ToolResult.success({"memory": payload})
+    except Exception as exc:  # noqa: BLE001
+        return _map_error(exc)
+
+
+EXPAND_CONVERSATION_MEMORY = ToolSpec(
+    name="expand_conversation_memory",
+    description=(
+        "Expand raw message spans from a conversation hit after searching summaries. "
+        "Returns a bounded contiguous window around the best-matching turns."
+    ),
+    parameters_schema={
+        "type": "object",
+        "properties": {
+            "conversation_id": {"type": "string", "format": "uuid"},
+            "query": {"type": "string", "minLength": 1, "maxLength": 1200},
+            "around_message_id": {"type": "string", "format": "uuid"},
+        },
+        "required": ["conversation_id", "query"],
+        "additionalProperties": False,
+    },
+)
+
+
+def execute_expand_conversation_memory(
+    context: ToolContext, arguments: Mapping[str, Any]
+) -> ToolResult:
+    try:
+        conversation_id = _uuid(arguments.get("conversation_id"), "conversation_id")
+        query = arguments.get("query")
+        if not isinstance(query, str):
+            raise InvalidConversation("query is required")
+        around_raw = arguments.get("around_message_id")
+        around_id = _uuid(around_raw, "around_message_id") if around_raw else None
+        payload = context.memory.expand_span(
+            context.user,
+            conversation_id,
+            query,
+            around_message_id=around_id,
+        )
+        return ToolResult.success({"memory": payload})
+    except Exception as exc:  # noqa: BLE001
+        return _map_error(exc)
+
+
 GET_CONVERSATION = ToolSpec(
     name="get_conversation",
     description="Load an owned conversation with messages and bike-context boundaries.",

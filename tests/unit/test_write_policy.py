@@ -7,6 +7,7 @@ from app.assistant_tools.write_policy import (
     evaluate_write_policy,
 )
 from app.services.bikes import BikeService
+from app.services.hierarchical_memory import HierarchicalMemoryService
 from tests.unit.test_compact_context import setup_context
 
 
@@ -17,6 +18,7 @@ def _ctx(**kwargs):
         bikes=BikeService(bikes),
         conversations=conversations,
         compact_context=context,
+        memory=HierarchicalMemoryService(conversations, bikes),
         **kwargs,
     )
 

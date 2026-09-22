@@ -12,6 +12,7 @@ from app.models.user import User
 from app.services.bikes import BikeService
 from app.services.compact_context import CompactContextService
 from app.services.conversations import ConversationService
+from app.services.hierarchical_memory import HierarchicalMemoryService
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +48,7 @@ class ToolContext:
     bikes: BikeService
     conversations: ConversationService
     compact_context: CompactContextService
+    memory: HierarchicalMemoryService
     conversation_id: UUID | None = None
     bike_id: UUID | None = None
     confirmed: bool = False

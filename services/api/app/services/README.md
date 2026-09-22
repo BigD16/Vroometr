@@ -53,5 +53,9 @@ Future assistant tools must call this same ConversationService rather than writi
 powertrain plus recent turns and rolling summary. Mods/maintenance/ride slices stay deferred
 stubs until those domains exist. On-demand manuals call through to RetrievalService.
 
+`hierarchical_memory.py` owns selective long-term conversation memory: search bike-scoped
+rolling summaries first, then expand bounded raw-message spans. V1 ranking is token overlap;
+semantic summary embeddings stay deferred but should reuse this service.
+
 Read-only assistant tools live in `app/assistant_tools/` and wrap these services for the future
 agent. Do not add SQL or a second authorization path inside tools.

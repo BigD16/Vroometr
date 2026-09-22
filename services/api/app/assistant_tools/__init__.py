@@ -1,8 +1,9 @@
 """Thin assistant tools that call the same domain services as HTTP.
 
-Read-only tools ship in 5.3. Write policy (5.4) gates any future mutating tools.
-Citations/safety (5.5) decide withhold vs cite vs escalate for claims.
-The ReasoningAgent loop and ChatModel tool-calling are later Phase 5 work.
+Read-only tools ship in 5.3 (+ hierarchical memory tools in 5.6). Write policy (5.4)
+gates any future mutating tools. Citations/safety (5.5) decide withhold vs cite vs
+escalate for claims. The ReasoningAgent loop and ChatModel tool-calling are later
+Phase 5 work.
 """
 
 from app.assistant_tools.citations import (

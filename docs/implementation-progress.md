@@ -1,6 +1,6 @@
 # Implementation progress
 
-Last reviewed: 2026-09-16. The repository [V1 roadmap](roadmap.md) owns the numbered sequence
+Last reviewed: 2026-09-22. The repository [V1 roadmap](roadmap.md) owns the numbered sequence
 and phase status. This file records verification evidence and handoffs. The expanded 3.3
 scope below was approved by Drake and supplements the original roadmap.
 
@@ -38,7 +38,9 @@ scope below was approved by Drake and supplements the original roadmap.
   explicit-instruction on `ToolContext`). Default registry still has no durable write tools.
 - **5.5 implemented:** citation/safety helpers (`evaluate_claim_answer`, `decide_from_retrieval`,
   escalation reasons). Withholds unverified safety-critical exact values; escalates sparingly.
-  **5.6 is next.**
+- **5.6 implemented:** hierarchical conversation memory — search bike-scoped rolling summaries,
+  then expand bounded raw-message spans (`HierarchicalMemoryService` + memory tools). Lexical
+  ranking until summary embeddings are wired. **5.7 is next.**
 - **Developer documentation established:** repository onboarding guide, setup/troubleshooting
   runbook, and required documentation updates after every task. Start at [docs index](README.md).
 
@@ -811,3 +813,34 @@ splits empty-bike UI from a bike-keyed `AssistantBikeWorkspace`, derives inactiv
 `selectedId`, and only fetches when a bike/thread is present (same pattern as DocumentLibrary).
 
 Verification: `cd apps/web && npm run lint` — passed.
+
+## Hierarchical memory (5.6) — 2026-09-22
+
+Status: **implemented** as selective long-term conversation memory (no agent loop).
+
+`HierarchicalMemoryService` searches rolling summaries for an owned bike (hard filter), ranks
+hits with deterministic token overlap (`token_overlap_v1`), optionally excludes the current
+thread, then expands a contiguous raw-message window around the best-matching turns (count +
+char budgets). Tools `search_conversation_memory` and `expand_conversation_memory` wrap the
+same service. Durable bike facts still live in structured tables, not opaque AI memory.
+
+Files to read, in order:
+
+1. `services/api/app/services/hierarchical_memory.py` — ranking, expand, ownership
+2. `services/api/app/assistant_tools/read_tools.py` — memory tool adapters
+3. `tests/unit/test_hierarchical_memory.py` and `tests/unit/test_assistant_tools.py`
+4. DESIGN §5 (local) for LOCKED short-term vs long-term rules
+
+Rules: bike hard filter; owner isolation via `ConversationService`; empty/invalid queries fail;
+summary embeddings / semantic ranking deferred (service remains the entry point).
+
+Verification:
+` .venv/bin/python -m pytest tests/unit/test_hierarchical_memory.py tests/unit/test_assistant_tools.py tests/unit/test_write_policy.py -q`
+— 14 passed; ruff clean on touched files.
+
+Migrations/env/deps: none. Manual review: create two threads on one bike with distinct topics,
+invoke search excluding the current id, expand the hit, confirm foreign bike/user denied.
+
+Unresolved: semantic summary embeddings, ReasoningAgent loop, UI polish (5.7).
+
+Next numbered task is **5.7**.

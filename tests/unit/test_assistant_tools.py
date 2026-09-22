@@ -3,6 +3,7 @@ from app.assistant_tools import build_default_registry
 from app.assistant_tools.registry import ToolRegistry
 from app.assistant_tools.types import ToolContext, ToolResult, ToolSpec
 from app.services.bikes import BikeService
+from app.services.hierarchical_memory import HierarchicalMemoryService
 from tests.unit.test_compact_context import setup_context
 
 
@@ -12,6 +13,7 @@ def _tool_context(owner, bikes, conversations, compact_context, **kwargs):
         bikes=BikeService(bikes),
         conversations=conversations,
         compact_context=compact_context,
+        memory=HierarchicalMemoryService(conversations, bikes),
         **kwargs,
     )
 
@@ -23,6 +25,8 @@ def test_default_registry_is_read_only():
         "get_bike",
         "get_compact_context",
         "search_manuals",
+        "search_conversation_memory",
+        "expand_conversation_memory",
         "get_conversation",
     }
     assert all(not spec.mutates for spec in registry.list_specs())
@@ -85,3 +89,48 @@ def test_read_tools_enforce_ownership_and_return_payloads():
     )
     assert conversation.ok is True
     assert conversation.data["messages"][0]["content"] == "oil capacity?"
+
+
+def test_memory_tools_search_then_expand_with_ownership():
+    owner, other, bike, _, foreign, conversations, context, _, bikes = setup_context()
+    registry = build_default_registry()
+    tool_ctx = _tool_context(owner, bikes, conversations, context)
+    prior = conversations.create(owner, bike.id)
+    conversations.append_message(owner, prior.id, "valve clearance last month")
+    current = conversations.create(owner, bike.id)
+    conversations.append_message(owner, current.id, "asking again about valves")
+
+    search = registry.invoke(
+        "search_conversation_memory",
+        {
+            "bike_id": str(bike.id),
+            "query": "valve clearance",
+            "exclude_conversation_id": str(current.id),
+        },
+        tool_ctx,
+    )
+    assert search.ok is True
+    hits = search.data["memory"]["hits"]
+    assert any(hit["conversation_id"] == str(prior.id) for hit in hits)
+
+    expand = registry.invoke(
+        "expand_conversation_memory",
+        {"conversation_id": str(prior.id), "query": "valve clearance"},
+        tool_ctx,
+    )
+    assert expand.ok is True
+    assert expand.data["memory"]["span"]["messages"]
+
+    denied = registry.invoke(
+        "expand_conversation_memory",
+        {"conversation_id": str(prior.id), "query": "valve"},
+        _tool_context(other, bikes, conversations, context),
+    )
+    assert denied.ok is False and denied.code == "not_found"
+
+    foreign_search = registry.invoke(
+        "search_conversation_memory",
+        {"bike_id": str(foreign.id), "query": "valve"},
+        tool_ctx,
+    )
+    assert foreign_search.ok is False and foreign_search.code == "not_found"

@@ -2,12 +2,12 @@
 
 Start here when joining Vroometr or resuming work without the previous conversation.
 
-1. [V1 roadmap](roadmap.md): numbered phase/task sequence and current status. Next task is 5.1.
+1. [V1 roadmap](roadmap.md): numbered phase/task sequence and current status. Next task is 5.7.
 2. [Developer guide](developer-guide.md): what exists, how requests move through the system,
    important rules, data relationships, and where to make changes.
 3. [Development runbook](development-runbook.md): setup, migrations, verification, and troubleshooting.
 4. [Implementation progress](implementation-progress.md): feature handoffs, verification history,
-   and outstanding work for completed tasks. Current implementation is through 5.5 citations + safety.
+   and outstanding work for completed tasks. Current implementation is through 5.6 hierarchical memory.
 5. [Documentation standard](documentation-standard.md): required updates before finishing a task.
 6. [Architecture decision records](adr/README.md): explanations of approved design changes.
 

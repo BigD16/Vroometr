@@ -183,6 +183,7 @@ def build_assistant_tool_context(
     from app.repositories.conversations import ConversationRepository
     from app.services.compact_context import CompactContextService, build_retrieval_service
     from app.services.conversations import ConversationService
+    from app.services.hierarchical_memory import HierarchicalMemoryService
 
     bikes_repo = BikeRepository(session)
     conversations = ConversationService(ConversationRepository(session), bikes_repo)
@@ -193,6 +194,7 @@ def build_assistant_tool_context(
         compact_context=CompactContextService(
             conversations, bikes_repo, build_retrieval_service(session)
         ),
+        memory=HierarchicalMemoryService(conversations, bikes_repo),
         conversation_id=conversation_id,
         bike_id=bike_id,
     )
