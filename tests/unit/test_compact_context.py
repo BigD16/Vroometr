@@ -120,3 +120,36 @@ def test_search_manuals_delegates_to_retrieval_with_ownership():
         context.search_manuals(owner, foreign.id, "torque")
     with pytest.raises(ConversationNotFound):
         context.search_manuals(other, bike.id, "torque")
+
+
+def test_maintenance_slice_available_when_records_exist():
+    owner, _, bike, _, _, conversations, _, calls, bikes = setup_context()
+
+    class Maintenance:
+        def recent_for_context(self, user, bike_id, *, limit=5):
+            assert user.id == owner.id
+            assert bike_id == bike.id
+            return [
+                {
+                    "id": str(uuid4()),
+                    "service_date": "2026-09-01",
+                    "system": "engine",
+                    "component": "engine_oil",
+                    "action": "replace",
+                    "engine_hours": 12.5,
+                }
+            ]
+
+    class Retrieval:
+        def search(self, user_id, bike_id, query, include_reference_editions=False):
+            calls.append((user_id, bike_id, query, include_reference_editions))
+            return {"status": "ok", "passages": []}
+
+    context = CompactContextService(
+        conversations, bikes, retrieval=Retrieval(), maintenance=Maintenance()
+    )
+    thread = conversations.create(owner, bike.id)
+    pack = context.build(owner, thread.id)
+    assert pack.maintenance.available is True
+    assert pack.maintenance.reason is None
+    assert pack.maintenance.items[0]["component"] == "engine_oil"

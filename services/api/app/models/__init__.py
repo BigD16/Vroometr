@@ -12,6 +12,7 @@ from app.models.conversation import (
 from app.models.document import Document
 from app.models.document_index import DocumentChunk, DocumentIndex, DocumentSection
 from app.models.document_ingestion import DocumentIngestion, DocumentPage
+from app.models.maintenance import MaintenanceRecord, MaintenanceRule, TaxonomyGapEvent
 from app.models.parental_consent import ConsentStatus, ParentalConsent
 from app.models.user import Entitlement, Role, User
 
@@ -35,11 +36,14 @@ __all__ = [
     "DocumentSection",
     "DocumentIngestion",
     "DocumentPage",
+    "MaintenanceRecord",
+    "MaintenanceRule",
     "MessageRole",
     "ParentalConsent",
     "Role",
     "RetentionClass",
     "StrokeType",
+    "TaxonomyGapEvent",
     "UnitPreference",
     "User",
 ]

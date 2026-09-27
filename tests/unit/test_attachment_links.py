@@ -136,7 +136,6 @@ def test_pending_upload_cannot_be_linked(link_setup):
 @pytest.mark.parametrize(
     "overrides",
     [
-        {"entity_type": "maintenance_record"},
         {"entity_type": "unknown"},
         {"relationship_type": "  "},
         {"relationship_type": "x" * 33},
@@ -147,6 +146,50 @@ def test_unsupported_targets_and_invalid_relationships_fail_closed(link_setup, o
     with pytest.raises(InvalidAttachmentLink):
         create(service, owner, bike, attachment, **overrides)
     assert not links.items
+
+
+def test_maintenance_record_target_requires_owned_record(link_setup):
+    service, owner, _, bike, _, _, attachment, links = link_setup
+    with pytest.raises(InvalidAttachmentLink):
+        create(
+            service,
+            owner,
+            bike,
+            attachment,
+            entity_type="maintenance_record",
+            entity_id=uuid4(),
+        )
+
+    class Maintenance:
+        def __init__(self):
+            self.record_id = uuid4()
+
+        def get_owned(self, record_id, user_id):
+            if record_id == self.record_id and user_id == owner.id:
+                return object()
+            return None
+
+    maintenance = Maintenance()
+    wired = AttachmentLinkService(links, Attachments(attachment), service._bikes, maintenance)
+    with pytest.raises(AttachmentTargetNotFound):
+        create(
+            wired,
+            owner,
+            bike,
+            attachment,
+            entity_type="maintenance_record",
+            entity_id=uuid4(),
+        )
+    link = create(
+        wired,
+        owner,
+        bike,
+        attachment,
+        entity_type="maintenance_record",
+        entity_id=maintenance.record_id,
+        relationship_type="evidence",
+    )
+    assert link.entity_type == "maintenance_record"
 
 
 @pytest.fixture

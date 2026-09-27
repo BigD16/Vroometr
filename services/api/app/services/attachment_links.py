@@ -7,6 +7,7 @@ from app.models.user import User
 from app.repositories.attachment_links import AttachmentLinkStore
 from app.repositories.attachments import AttachmentStore
 from app.repositories.bikes import BikeStore
+from app.repositories.maintenance import MaintenanceStore
 from app.services.uploads import AttachmentNotFound, UploadNotComplete
 
 
@@ -28,17 +29,26 @@ class AttachmentLinkService:
         links: AttachmentLinkStore,
         attachments: AttachmentStore,
         bikes: BikeStore,
+        maintenance: MaintenanceStore | None = None,
     ) -> None:
         self._links = links
         self._attachments = attachments
         self._bikes = bikes
+        self._maintenance = maintenance
 
     def _require_target(self, user: User, entity_type: str, entity_id: UUID) -> None:
         # Add each new domain here only alongside its owner-scoped repository check.
-        if entity_type != "bike":
-            raise InvalidAttachmentLink("unsupported attachment target")
-        if self._bikes.get(entity_id, user.id) is None:
-            raise AttachmentTargetNotFound
+        if entity_type == "bike":
+            if self._bikes.get(entity_id, user.id) is None:
+                raise AttachmentTargetNotFound
+            return
+        if entity_type == "maintenance_record":
+            if self._maintenance is None:
+                raise InvalidAttachmentLink("unsupported attachment target")
+            if self._maintenance.get_owned(entity_id, user.id) is None:
+                raise AttachmentTargetNotFound
+            return
+        raise InvalidAttachmentLink("unsupported attachment target")
 
     def create(
         self,

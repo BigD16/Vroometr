@@ -31,6 +31,12 @@ class RetrievalPort(Protocol):
     ) -> dict: ...
 
 
+class MaintenancePort(Protocol):
+    def recent_for_context(
+        self, user: User, bike_id: UUID, *, limit: int = 5
+    ) -> list[dict]: ...
+
+
 @dataclass(frozen=True, slots=True)
 class RecentTurn:
     id: UUID
@@ -203,10 +209,12 @@ class CompactContextService:
         conversations: ConversationService,
         bikes: BikeStore,
         retrieval: RetrievalPort | None = None,
+        maintenance: MaintenancePort | None = None,
     ) -> None:
         self._conversations = conversations
         self._bikes = bikes
         self._retrieval = retrieval
+        self._maintenance = maintenance
 
     def build(self, user: User, conversation_id: UUID) -> CompactContextPack:
         detail = self._conversations.get(user, conversation_id)
@@ -233,7 +241,7 @@ class CompactContextService:
                 latest_bike_switch=_latest_switch(detail.boundaries),
             ),
             modifications=_deferred(),
-            maintenance=_deferred(),
+            maintenance=self._maintenance_slice(user, bike.id),
             ride=_deferred(),
             budget=ContextBudget(
                 recent_turn_limit=RECENT_TURN_LIMIT,
@@ -244,6 +252,12 @@ class CompactContextService:
                 recent_turns_omitted=omitted,
             ),
         )
+
+    def _maintenance_slice(self, user: User, bike_id: UUID) -> DeferredDomainSlice:
+        if self._maintenance is None:
+            return _deferred()
+        items = self._maintenance.recent_for_context(user, bike_id, limit=5)
+        return DeferredDomainSlice(available=True, items=items, reason=None)
 
     def search_manuals(
         self,

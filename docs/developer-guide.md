@@ -1,6 +1,6 @@
 # Vroometr implementation guide
 
-Reviewed against the working tree on 2026-09-22, through the ReasoningAgent tool-calling loop.
+Reviewed against the working tree on 2026-09-27, through maintenance records (6.1).
 For the numbered V1 sequence, use the [roadmap](roadmap.md). For setup, use the
 [runbook](development-runbook.md). For per-task evidence and review steps, use
 [implementation progress](implementation-progress.md).
@@ -13,27 +13,28 @@ For the numbered V1 sequence, use the [roadmap](roadmap.md). For setup, use the
 | Identity | Clerk session verification, signed webhooks, local users and role/entitlement fields | Billing and comprehensive entitlement gates are future work |
 | Age eligibility | Date of birth, eligibility calculation, versioned consent records and APIs | No complete guardian verification/onboarding flow or global eligibility enforcement |
 | Garage | Owner-scoped bike create/list/detail/update, archive/restore, combustion/electric validation | Generated personalized garage scenes are not implemented |
-| Active context/dashboard | Persisted active bike; real identity, powertrain, and hours in the shell/dashboard | Maintenance, ride, and other domain cards remain empty or placeholder UI |
-| Files, 3.1–3.3 | Private uploads, verification, quota, bike links, previews/downloads, unlink/relink, confirmed deletion | Only bike attachment targets are supported today |
+| Active context/dashboard | Persisted active bike; real identity, powertrain, and hours in the shell/dashboard | Due-state and other domain cards remain empty or placeholder UI |
+| Files, 3.1–3.3 | Private uploads, verification, quota, bike links, previews/downloads, unlink/relink, confirmed deletion | Bike and maintenance_record attachment targets supported |
 | Background checks, 3.4 | Durable attempts, Celery dispatch, retry, scan status UI | Scanner is unconfigured; no actual malware scan |
 | Document records, 4.1 | PDF preflight/hash, drafts, metadata confirmation, editions, primary manual, duplicate warnings | AI metadata proposals are not implemented |
 | Ingestion, 4.2 | Async native text, page scores/classes, provenance, partial failure/retry and review UI | Cheap OCR: native-sufficient + optional `VISION_MODEL`; diagram understanding deferred |
 | Sections/chunks, 4.3 | Hierarchy, exact text spans, pgvector vectors, embedding adapter, retries, review UI | Live synthetic-text embedding check passed; full UI/worker/provider flow remains manual |
 | Retrieval, 4.4 | Owner-filtered vector + keyword search, RRF/dedup, reranking, bounded source excerpts, citations and search UI | First source-backed retrieval evals pass; broad full-manual benchmarks and generated answers remain future work |
 | Conversations, 5.1 | Bike-scoped threads, messages, deterministic rolling summary, bike-switch boundaries, owner HTTP API, minimal Assistant UI | No agent replies yet |
-| Compact context, 5.2 | Always-load bike/hours/powertrain + recent turns/summary pack, deferred domain stubs, context endpoint/panel | Mods/maintenance/rides await Phases 6–7; agent replies remain |
+| Compact context, 5.2 | Always-load bike/hours/powertrain + recent turns/summary; maintenance recent slice when records exist; mods/rides still deferred | Due state and mods/rides await later phases |
 | Assistant tools, 5.3 | Read-only registry over bike/context/manuals/conversation/memory services | Mutating tools still deferred |
-| Write policy, 5.4 | Auto vs confirm classes, `FLAG_AI_WRITES`, confirmation/explicit-instruction gate | No durable write tools until Phase 6+ domains; no NLP classifier |
+| Write policy, 5.4 | Auto vs confirm classes, `FLAG_AI_WRITES`, confirmation/explicit-instruction gate | No durable write tools until later domains; no NLP classifier |
 | Citations/safety, 5.5 | Withhold unverified critical specs; citation payloads; risk-based escalation helpers | Agent attaches citations from manual search; full claim rewriter deferred |
 | Hierarchical memory, 5.6 | Search bike-scoped summaries then expand raw spans; memory tools | Summary embeddings / semantic ranking deferred; no Settings memory UI yet |
 | Assistant UI, 5.7 | Composer, role-styled messages, source chips, FAB, disclaimer | Attachment button still disabled |
 | ReasoningAgent | Tool-calling loop; OpenAI chat when `AGENT_MODEL` set; turn persists assistant + citations | Escalation model, streaming, answer evals deferred |
+| Maintenance, 6.1 | Taxonomy catalog, service records CRUD, taxonomy gaps, Service Bay UI, evidence attachment target | Derived due state (6.2), rules (6.3), AI logging tools deferred |
 | AI foundation | Provider-neutral ports, OpenAI embedding/reranker/chat/vision-OCR adapters, feature flags | Summary/voice/image-gen adapters remain unconfigured |
 
-A visible navigation page is not evidence that its backend domain exists. Maintenance,
-rides, modifications, issues, and settings contain presentation scaffolding; suspension is
-Coming Soon. Assistant can reply when `AGENT_MODEL` and OpenAI settings are configured; without
-them user messages still save and the UI reports awaiting configuration.
+A visible navigation page is not evidence that its backend domain exists. Rides, modifications,
+issues, and settings still contain presentation scaffolding; suspension is Coming Soon.
+Maintenance now has live records. Assistant can reply when `AGENT_MODEL` and OpenAI settings
+are configured; without them user messages still save and the UI reports awaiting configuration.
 
 ## Runtime architecture
 

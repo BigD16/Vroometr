@@ -144,6 +144,8 @@ temporary files outside the repository; it is not a checked-in, reproducible bro
 7. Search a phrase in an indexed PDF. Verify exact text/page citations and View source PDF.
    Include reference editions explicitly; switch bikes and confirm results clear. Try absent
    information and unavailable providers. See the [retrieval review](document-retrieval.md#verification-and-manual-review).
+8. Open Maintenance, log a service (system/component/action), confirm it lists for the active
+   bike. Optionally link a receipt attachment with `entity_type=maintenance_record`.
 8. Try an encrypted PDF and confirm registration fails visibly. Switch bikes/accounts to check
    isolation. After the upload grant expires, review and confirm file deletion and quota cleanup.
 

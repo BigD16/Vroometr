@@ -49,7 +49,9 @@ scope below was approved by Drake and supplements the original roadmap.
   when configured; user message turns persist assistant replies and citation JSON
   (`0015_message_citations`). Citation bagging unwraps nested Retrieval `Match` payloads and
   labels Sources with 1-based PDF pages. Unconfigured models save the user message and report
-  `awaiting_configuration`. **Phase 6 is next.**
+  `awaiting_configuration`.
+- **6.1–6.2 implemented:** taxonomy + records + derived due state (`maintenance_rules`,
+  `derive_due_items`, `/due-state` + Up Next). **6.3 (rule extraction) is next.**
 - **Developer documentation established:** repository onboarding guide, setup/troubleshooting
   runbook, and required documentation updates after every task. Start at [docs index](README.md).
 
@@ -989,3 +991,46 @@ Manual review:
 Limits: not true diagram understanding; heuristic routing unchanged; vision cost applies only to
 sparse pages; large manuals still take wall-clock time on retry. Diagram-level vision evals and
 local Tesseract remain optional follow-ups.
+
+## Maintenance taxonomy + records (6.1) — 2026-09-27
+
+Status: **implemented**. Owners can log structured service history against a bike using the
+LOCKED system→component taxonomy. Due state is **not** stored.
+
+Architecture:
+
+1. `app/maintenance/taxonomy.py` — controlled catalogs (systems, components, actions, reasons,
+   performer, evidence)
+2. `models/maintenance.py` + migration `0016_maintenance_records`
+3. `MaintenanceService` / `MaintenanceRepository` — owner isolation via bike join
+4. `routes/maintenance.py` — taxonomy + CRUD
+5. `AttachmentLinkService` — `entity_type=maintenance_record` for evidence links
+6. `MaintenanceWorkspace` + Next `/api/maintenance*` proxies
+7. Compact context maintenance slice returns recent records when present
+
+Rules: `component=other` requires `component_detail` and bumps `taxonomy_gap_events`. No
+`next_due` column. Evidence types never imply Vroometr independently verified the work.
+
+Setup: apply `0016_maintenance_records` (`alembic upgrade head`). No new env keys or deps.
+Migration applied locally.
+
+Verification:
+`.venv/bin/python -m pytest tests/unit/test_maintenance.py tests/unit/test_attachment_links.py tests/unit/test_compact_context.py tests/api/test_maintenance_http.py -q`
+— 18 passed; ruff clean on touched files.
+
+Manual review: open `/maintenance`, log an oil change for the active bike, confirm it lists;
+open Assistant context and confirm maintenance items appear (not `domain_not_implemented`).
+
+Unresolved: derived due state (6.2), rules (6.3), AI write tools for logging service.
+
+## Derived due state (6.2) — 2026-09-27
+
+Status: **implemented**. Due is computed, never stored as authoritative `next_due`.
+
+- `maintenance_rules` (0017) + pure `app/maintenance/due_state.py`
+- APIs: `GET /maintenance/due-state`, `GET|POST /maintenance/rules`
+- UI: Service Bay due list + rule form; Up Next shows overdue/due_soon/never_serviced
+- Estimated hours → soft statuses only (no definitive overdue)
+
+Verify: `pytest tests/unit/test_due_state.py` (4 passed); alembic `0017` applied.
+Next: **6.3** rule extraction.

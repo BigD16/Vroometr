@@ -114,9 +114,21 @@ def get_current_user(
 
 
 def get_attachment_link_service(session: Session = Depends(get_db)) -> AttachmentLinkService:
+    from app.repositories.maintenance import MaintenanceRepository
+
     return AttachmentLinkService(
-        AttachmentLinkRepository(session), AttachmentRepository(session), BikeRepository(session),
+        AttachmentLinkRepository(session),
+        AttachmentRepository(session),
+        BikeRepository(session),
+        MaintenanceRepository(session),
     )
+
+
+def get_maintenance_service(session: Session = Depends(get_db)):
+    from app.repositories.maintenance import MaintenanceRepository
+    from app.services.maintenance import MaintenanceService
+
+    return MaintenanceService(MaintenanceRepository(session), BikeRepository(session))
 
 
 def get_attachment_service(
@@ -158,12 +170,17 @@ def get_conversation_service(session: Session = Depends(get_db)):
 
 def get_compact_context_service(session: Session = Depends(get_db)):
     from app.repositories.conversations import ConversationRepository
+    from app.repositories.maintenance import MaintenanceRepository
     from app.services.compact_context import CompactContextService, build_retrieval_service
     from app.services.conversations import ConversationService
+    from app.services.maintenance import MaintenanceService
 
     bikes = BikeRepository(session)
     conversations = ConversationService(ConversationRepository(session), bikes)
-    return CompactContextService(conversations, bikes, build_retrieval_service(session))
+    maintenance = MaintenanceService(MaintenanceRepository(session), bikes)
+    return CompactContextService(
+        conversations, bikes, build_retrieval_service(session), maintenance=maintenance
+    )
 
 
 def get_assistant_tool_registry():
@@ -174,15 +191,21 @@ def get_assistant_tool_registry():
 
 def get_assistant_turn_service(session: Session = Depends(get_db)):
     from app.repositories.conversations import ConversationRepository
+    from app.repositories.maintenance import MaintenanceRepository
     from app.services.assistant_turn import AssistantTurnService
     from app.services.compact_context import CompactContextService, build_retrieval_service
     from app.services.conversations import ConversationService
+    from app.services.maintenance import MaintenanceService
     from app.services.reasoning_agent import build_reasoning_agent
 
     bikes_repo = BikeRepository(session)
     conversations = ConversationService(ConversationRepository(session), bikes_repo)
+    maintenance = MaintenanceService(MaintenanceRepository(session), bikes_repo)
     compact_context = CompactContextService(
-        conversations, bikes_repo, build_retrieval_service(session)
+        conversations,
+        bikes_repo,
+        build_retrieval_service(session),
+        maintenance=maintenance,
     )
 
     def tool_context_factory(user, *, conversation_id=None, bike_id=None):
@@ -206,18 +229,24 @@ def build_assistant_tool_context(
 ):
     from app.assistant_tools.types import ToolContext
     from app.repositories.conversations import ConversationRepository
+    from app.repositories.maintenance import MaintenanceRepository
     from app.services.compact_context import CompactContextService, build_retrieval_service
     from app.services.conversations import ConversationService
     from app.services.hierarchical_memory import HierarchicalMemoryService
+    from app.services.maintenance import MaintenanceService
 
     bikes_repo = BikeRepository(session)
     conversations = ConversationService(ConversationRepository(session), bikes_repo)
+    maintenance = MaintenanceService(MaintenanceRepository(session), bikes_repo)
     return ToolContext(
         user=user,
         bikes=BikeService(bikes_repo),
         conversations=conversations,
         compact_context=CompactContextService(
-            conversations, bikes_repo, build_retrieval_service(session)
+            conversations,
+            bikes_repo,
+            build_retrieval_service(session),
+            maintenance=maintenance,
         ),
         memory=HierarchicalMemoryService(conversations, bikes_repo),
         conversation_id=conversation_id,

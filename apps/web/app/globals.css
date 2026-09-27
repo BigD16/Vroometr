@@ -2392,6 +2392,141 @@ a.profile {
 }
 
 .documents-workspace { display: grid; gap: 1.5rem; }
+
+.dashboard-due-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.dashboard-due-list li {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.dashboard-due-list span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.maintenance-workspace {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.maintenance-form-card h3,
+.maintenance-list-card h3 {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+}
+
+.maintenance-lede {
+  margin: 0 0 1rem;
+  color: var(--muted);
+}
+
+.maintenance-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem 1rem;
+}
+
+.maintenance-form label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.maintenance-form-wide {
+  grid-column: 1 / -1;
+}
+
+.maintenance-form input,
+.maintenance-form select,
+.maintenance-form textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--white);
+  padding: 0.55rem 0.65rem;
+}
+
+.maintenance-form button[type="submit"] {
+  grid-column: 1 / -1;
+  justify-self: start;
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+  background: rgba(239, 82, 56, 0.18);
+  padding: 0.65rem 1rem;
+}
+
+.maintenance-error {
+  color: var(--red);
+  margin: 0.75rem 0 0;
+}
+
+.maintenance-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.maintenance-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  border-top: 1px solid var(--line);
+  padding-top: 0.85rem;
+}
+
+.maintenance-list li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.maintenance-list strong,
+.maintenance-list span,
+.maintenance-list p {
+  display: block;
+}
+
+.maintenance-list span,
+.maintenance-list p {
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
+.maintenance-delete {
+  border: 1px solid var(--line);
+  border-radius: 0.35rem;
+  background: transparent;
+  padding: 0.35rem 0.65rem;
+  color: var(--muted);
+}
+
+.maintenance-empty {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (max-width: 720px) {
+  .maintenance-form {
+    grid-template-columns: 1fr;
+  }
+
+  .maintenance-form button[type="submit"],
+  .maintenance-form-wide {
+    grid-column: 1;
+  }
+}
 .document-library, .document-preview { padding: 1.5rem; min-width: 0; }
 .document-library h3, .document-preview h3 { font-size: 1.35rem; overflow-wrap: anywhere; }
 .document-library p, .document-preview p { margin: .6rem 0; }
