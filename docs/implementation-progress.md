@@ -18,7 +18,9 @@ scope below was approved by Drake and supplements the original roadmap.
 - **4.1 implemented:** PDF document records, explicit metadata confirmation, version groups,
   primary manual selection, and duplicate warnings.
 - **4.2 implemented (approved scope):** async native-text extraction, visual routing, page
-  provenance, partial failure/retry, and review UI. OCR/vision providers remain deferred.
+  provenance, partial failure/retry, and review UI. Cheap page OCR is wired:
+  native-sufficient completion for usable text; OpenAI vision OCR for sparse pages when
+  `VISION_MODEL` is set.
 - **4.3 implemented:** sections, exact chunk provenance, pgvector embeddings via the model
   port, durable retry/reuse, and review UI. Live synthetic-text provider verification passed.
 - **4.4 implemented:** authorized hybrid retrieval, scored reranking, bounded cited passages,
@@ -45,7 +47,8 @@ scope below was approved by Drake and supplements the original roadmap.
   expandable `AssistantSources` chips (5.5 citation shape), shell FAB a11y, page disclaimer.
 - **ReasoningAgent implemented:** tool-calling loop over the 5.3 registry; OpenAI chat adapter
   when configured; user message turns persist assistant replies and citation JSON
-  (`0015_message_citations`). Unconfigured models save the user message and report
+  (`0015_message_citations`). Citation bagging unwraps nested Retrieval `Match` payloads and
+  labels Sources with 1-based PDF pages. Unconfigured models save the user message and report
   `awaiting_configuration`. **Phase 6 is next.**
 - **Developer documentation established:** repository onboarding guide, setup/troubleshooting
   runbook, and required documentation updates after every task. Start at [docs index](README.md).
@@ -913,3 +916,76 @@ guidance.
 Unresolved: escalation model routing, streaming, SUMMARY_MODEL refresh, mechanical answer evals.
 
 Next numbered phase task is **Phase 6**.
+
+## Citation Match unwrap + page labels — 2026-09-22
+
+Status: **fixed**. Embeddings and `search_manuals` were already working. Sources chips showed
+“page unknown” / empty citation fields because `RetrievalService` returns nested `Match`
+dicts (`{"passage": {...}, "confidence": ...}`) and the agent citation path treated the outer
+object as a flat passage. `citations.py` now unwraps via `extract_retrieval_passages` /
+`_coerce_passage`, Sources labels use **1-based** PDF pages (`page_start + 1`), and
+`search_manuals` returns readable flat passages (with 1-based `page`) plus the raw `retrieval`
+payload for citation bagging.
+
+Files to read, in order:
+
+1. `services/api/app/assistant_tools/citations.py` — unwrap + label rules
+2. `services/api/app/services/reasoning_agent.py` — `_CitationBag` uses `extract_retrieval_passages`
+3. `services/api/app/assistant_tools/read_tools.py` — flat tool passages for the model
+4. `tests/unit/test_citations_safety.py`
+
+Verification:
+`.venv/bin/python -m pytest tests/unit/test_citations_safety.py tests/unit/test_assistant_tools.py tests/unit/test_reasoning_agent.py -q`
+— 13 passed; ruff clean on touched files.
+
+Migrations/env/deps: none. Restart not required if `api-dev` auto-reloads; otherwise restart
+the API process so the agent picks up the unwrap.
+
+Manual review: ask a manual-backed question (e.g. oil capacity). Expect Sources chips with real
+`p. N` labels from the indexed PDF, not “page unknown”.
+
+Guide/README updates: `docs/developer-guide.md` (citations note),
+`services/api/app/assistant_tools/README.md` (unwrap note). Roadmap unchanged (still 5.x done).
+
+## Cheap page OCR (native-sufficient + vision) — 2026-09-22
+
+Status: **implemented**. Pending OCR/vision pages no longer stay stuck forever when usable
+native text already exists, and sparse pages can call a cheap OpenAI vision model.
+
+Behavior:
+
+1. Native extract still routes pages to `text_only` / `ocr_enhanced` / `ocr_vision`.
+2. `enhance_page` runs after extract in `document_pipeline.process`.
+3. If pending and native text ≥ 120 chars → `completed` with `ocr_version=native-sufficient-v1`
+   (no API call). This unlocks most Yamaha-manual “oil capacity” pages that already had text.
+4. If pending and text is sparse → render PNG (~1.5×) and call `VisionModel.describe` with an
+   OCR prompt (`detail=low`). On success: `ocr_version=openai-vision-ocr-v1`,
+   `vision_version=<VISION_MODEL>`.
+5. If vision is unconfigured and text is sparse → remain `pending_provider`.
+
+Architecture / reading order:
+
+1. `services/api/app/documents/ocr.py` — enhance rules
+2. `libs/vroometr/ai/vision.py` — OpenAI vision OCR adapter
+3. `libs/vroometr/ai/factory.py` — `get_vision_model()` when `VISION_MODEL` + `OPENAI_*` set
+4. `pipelines/document_pipeline.py` — calls enhance after extract
+5. `tests/unit/test_document_ocr.py`, `tests/unit/test_vision_ocr.py`
+
+Config (root `.env`): `VISION_MODEL` (cheap choice: `gpt-4o-mini`), `VISION_TIMEOUT_SECONDS`.
+Reuses `OPENAI_API_KEY` / `OPENAI_BASE_URL`. No new dependencies or migrations.
+
+Verification:
+`.venv/bin/python -m pytest tests/unit/test_document_ocr.py tests/unit/test_vision_ocr.py tests/unit/test_ai_ports.py tests/unit/test_document_ingestion.py -q`
+— 20 passed; ruff clean on touched files.
+
+Manual review:
+
+1. Restart **worker** (and API if needed) so `.env` / new code load.
+2. Documents → Retry incomplete pages (or re-extract) on the YZ250 manual.
+3. Confirm page count completed rises well above 31; oil pages (e.g. mixing oil / transmission)
+   show as completed.
+4. Rebuild sections & embeddings, then ask the assistant for engine oil / premix again.
+
+Limits: not true diagram understanding; heuristic routing unchanged; vision cost applies only to
+sparse pages; large manuals still take wall-clock time on retry. Diagram-level vision evals and
+local Tesseract remain optional follow-ups.

@@ -51,7 +51,9 @@ class OpenAIChatModel:
             payload["tools"] = tools
             payload["tool_choice"] = "auto"
         try:
-            with httpx.Client(timeout=self.timeout, transport=self.transport) as client:
+            with httpx.Client(
+                timeout=self.timeout, transport=self.transport, trust_env=False
+            ) as client:
                 response = client.post(
                     self.base_url.rstrip("/") + "/chat/completions",
                     headers={"Authorization": f"Bearer {self.api_key}"},
@@ -82,6 +84,8 @@ class OpenAIChatModel:
                 content=content,
                 tool_calls=tuple(tool_calls),
             )
+        except httpx.ProxyError as exc:
+            raise ChatFailed("Chat provider request failed (proxy)") from exc
         except (
             httpx.HTTPError,
             ValueError,

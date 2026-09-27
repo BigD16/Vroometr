@@ -46,7 +46,9 @@ class OpenAIEmbeddingModel:
         if len(texts) > 16 or any(not t.strip() or len(t) > 1200 for t in texts):
             raise EmbeddingFailed("Embedding input exceeds the supported batch bounds")
         try:
-            with httpx.Client(timeout=self.timeout, transport=self.transport) as client:
+            with httpx.Client(
+                timeout=self.timeout, transport=self.transport, trust_env=False
+            ) as client:
                 response = client.post(
                     self.base_url.rstrip("/") + "/embeddings",
                     headers={"Authorization": f"Bearer {self.api_key}"},
@@ -70,6 +72,11 @@ class OpenAIEmbeddingModel:
             return validate_vectors(
                 [row["embedding"] for row in sorted(rows, key=lambda r: r["index"])], len(texts)
             )
+        except httpx.HTTPStatusError as exc:
+            # Status only — never include provider bodies or credentials.
+            raise EmbeddingFailed(
+                f"Embedding provider request failed ({exc.response.status_code})"
+            ) from exc
         except (httpx.HTTPError, ValueError, KeyError, TypeError, AttributeError) as exc:
             # Never include provider response bodies, input text, or credential-bearing URLs.
             raise EmbeddingFailed("Embedding provider request failed") from exc

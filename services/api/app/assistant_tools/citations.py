@@ -86,16 +86,26 @@ def is_authoritative_manual_passage(passage: Mapping[str, Any]) -> bool:
 def citations_from_retrieval_passages(
     passages: Sequence[Mapping[str, Any]],
 ) -> list[Citation]:
-    """Build expandable Sources entries from retrieval passage dicts."""
+    """Build expandable Sources entries from retrieval passage dicts.
+
+    Accepts either flat Passage dicts or RetrievalService Match dicts
+    (`{"passage": {...}, "confidence": ...}`).
+    """
     citations: list[Citation] = []
-    for passage in passages:
+    for raw in passages:
+        passage = _coerce_passage(raw)
+        if passage is None:
+            continue
         page_start = passage.get("page_start")
         page_end = passage.get("page_end")
+        # Chunk page indexes are 0-based; Sources labels use 1-based PDF pages.
+        label_start = page_start + 1 if isinstance(page_start, int) else None
+        label_end = page_end + 1 if isinstance(page_end, int) else None
         section = passage.get("section_title") or "Section"
-        if page_start is not None and page_end is not None and page_start != page_end:
-            pages = f"pp. {page_start}-{page_end}"
-        elif page_start is not None:
-            pages = f"p. {page_start}"
+        if label_start is not None and label_end is not None and label_start != label_end:
+            pages = f"pp. {label_start}-{label_end}"
+        elif label_start is not None:
+            pages = f"p. {label_start}"
         else:
             pages = "page unknown"
         label = f"{section} · {pages}"
@@ -210,7 +220,7 @@ def decide_from_retrieval(
     persistent_uncertainty: bool = False,
 ) -> ClaimAnswerDecision:
     """Convenience: build citations from a RetrievalService-style payload and decide."""
-    passages = _extract_passages(retrieval)
+    passages = extract_retrieval_passages(retrieval)
     citations = citations_from_retrieval_passages(passages)
     authoritative = any(is_authoritative_manual_passage(item) for item in passages)
     escalation = evaluate_escalation(
@@ -243,16 +253,25 @@ def decide_from_retrieval(
     )
 
 
-def _extract_passages(retrieval: Mapping[str, Any]) -> list[dict[str, Any]]:
+def extract_retrieval_passages(retrieval: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """Normalize RetrievalService Match payloads into flat passage dicts."""
     passages: list[dict[str, Any]] = []
     for item in retrieval.get("passages") or []:
-        if not isinstance(item, Mapping):
-            continue
-        if "passage" in item and isinstance(item["passage"], Mapping):
-            passages.append(dict(item["passage"]))
-        else:
-            passages.append(dict(item))
+        passage = _coerce_passage(item)
+        if passage is not None:
+            passages.append(passage)
     return passages
+
+
+def _coerce_passage(item: Mapping[str, Any] | Any) -> dict[str, Any] | None:
+    if not isinstance(item, Mapping):
+        return None
+    if "passage" in item and isinstance(item["passage"], Mapping):
+        return dict(item["passage"])
+    # Flat passage dicts already have text / page_start; Match wrappers do not.
+    if "page_start" in item or "text" in item or "section_title" in item:
+        return dict(item)
+    return None
 
 
 def _escalation_message(reasons: Sequence[EscalationReason]) -> str:

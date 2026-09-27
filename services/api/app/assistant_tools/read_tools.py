@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from typing import Any
 from uuid import UUID
 
+from app.assistant_tools.citations import extract_retrieval_passages
 from app.assistant_tools.types import ToolContext, ToolResult, ToolSpec
 from app.services.bikes import BikeNotFound
 from app.services.conversations import ConversationNotFound, InvalidConversation
@@ -136,7 +137,28 @@ def execute_search_manuals(
             query.strip(),
             include_reference_editions=include_refs,
         )
-        return ToolResult.success({"retrieval": result})
+        flat = extract_retrieval_passages(result if isinstance(result, dict) else {})
+        readable = []
+        for passage in flat:
+            page_start = passage.get("page_start")
+            readable.append(
+                {
+                    "section_title": passage.get("section_title"),
+                    "page": page_start + 1 if isinstance(page_start, int) else None,
+                    "file_name": passage.get("file_name"),
+                    "document_type": passage.get("document_type"),
+                    "is_primary": passage.get("is_primary"),
+                    "incomplete": passage.get("incomplete", False),
+                    "text": passage.get("text"),
+                }
+            )
+        return ToolResult.success(
+            {
+                "status": result.get("status") if isinstance(result, dict) else None,
+                "passages": readable,
+                "retrieval": result,
+            }
+        )
     except Exception as exc:  # noqa: BLE001
         return _map_error(exc)
 

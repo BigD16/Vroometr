@@ -50,9 +50,10 @@ The initial metadata is copied from the bike profile, not inferred from the PDF.
 refresh the record section. Server rules live in `app/services/documents.py` under the API.
 
 `DocumentIngestion.tsx` adds Extract pages, durable status polling, incomplete-page retries,
-and escaped page-text excerpts to confirmed document records. OCR/vision routes are explicitly
-provider-pending. API errors clear previously displayed text on refresh. See the
-[4.2 handoff](../../docs/implementation-progress.md#page-ingestion-42--2026-09-11).
+and escaped page-text excerpts to confirmed document records. Usable native text on visual
+routes completes via native-sufficient; sparse pages use `VISION_MODEL` OCR when configured.
+API errors clear previously displayed text on refresh. See the
+[OCR handoff](../../docs/implementation-progress.md#cheap-page-ocr-native-sufficient--vision--2026-09-22).
 
 `DocumentIndex.tsx` adds Build sections & embeddings and paginated chunk review, including
 section parents, physical pages, source offsets, and pending/configuration/stale labels.

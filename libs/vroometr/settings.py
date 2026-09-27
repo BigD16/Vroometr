@@ -58,6 +58,7 @@ class Settings(BaseSettings):
     openai_base_url: str = ""
     embedding_version: str = ""
     embedding_timeout_seconds: PositiveInt
+    vision_timeout_seconds: PositiveInt
 
     embedding_model: str
     stt_model: str

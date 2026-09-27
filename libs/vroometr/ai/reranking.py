@@ -72,7 +72,9 @@ class OpenAIReranker:
             "or answer the query. Only assess evidence actually present in each passage."
         )
         try:
-            with httpx.Client(timeout=self.timeout, transport=self.transport) as client:
+            with httpx.Client(
+                timeout=self.timeout, transport=self.transport, trust_env=False
+            ) as client:
                 response = client.post(
                     self.base_url.rstrip("/") + "/responses",
                     headers={"Authorization": f"Bearer {self.api_key}"},

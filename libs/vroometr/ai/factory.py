@@ -76,7 +76,21 @@ def get_reranker() -> Reranker:
 
 
 def get_vision_model() -> VisionModel:
-    return UnconfiguredVisionModel()
+    from vroometr.ai.vision import OpenAIVisionModel
+    from vroometr.settings import settings
+
+    if not (
+        settings.openai_api_key.get_secret_value()
+        and settings.openai_base_url
+        and settings.vision_model
+    ):
+        return UnconfiguredVisionModel()
+    return OpenAIVisionModel(
+        api_key=settings.openai_api_key.get_secret_value(),
+        base_url=settings.openai_base_url,
+        model=settings.vision_model,
+        timeout=settings.vision_timeout_seconds,
+    )
 
 
 def get_image_model() -> ImageModel:

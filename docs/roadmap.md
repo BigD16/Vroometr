@@ -14,7 +14,7 @@ Last reviewed: 2026-09-22. Current position: **through ReasoningAgent loop (Phas
 | 1 | Auth and app shell | Complete |
 | 2 | Bikes, garage, dashboard | Complete |
 | 3 | Uploads and attachments | Complete (real malware scanning deferred; see follow-up) |
-| 4 | Documents, ingestion, RAG | **4.5 first retrieval evals implemented**; OCR/vision and answer-safety follow-ups remain |
+| 4 | Documents, ingestion, RAG | **4.5 first retrieval evals implemented**; cheap page OCR wired; diagram vision + malware scan remain follow-ups |
 | 5 | Text assistant | **5.7 UI + ReasoningAgent loop**; live replies need `AGENT_MODEL` + OpenAI config |
 | 6 | Maintenance and engine hours | Not started |
 | 7 | Modifications, rides, issues | Not started |
@@ -193,8 +193,9 @@ Manufacturer-spec source of truth.
   Real PostgreSQL plus recorded/live providers; generated-answer safety and visual understanding
   must be evaluated when those capabilities exist.
 
-Open follow-up: benchmark and integrate OCR/vision providers, then retry pending pages.
-Heuristic routing is not benchmark-validated; no OCR or vision output is claimed yet.
+Open follow-up: heuristic routing is not benchmark-validated; diagram/vision understanding
+beyond page OCR remains open. Cheap page OCR (`VISION_MODEL` + native-sufficient) is wired —
+retry pending pages and rebuild the index after configuring.
 
 Review: upload a short PDF, see chunks, run one eval, open the pipeline module.
 

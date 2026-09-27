@@ -19,7 +19,8 @@ cp .env.example .env
 
 Edit `.env` using the key catalog and the project's development configuration. Copy only when
 creating a new file; preserve an existing `.env`. Python dependencies include PyMuPDF for PDF
-preflight. OpenAI embeddings and reranking are implemented; other model adapters remain unconfigured. See
+preflight. OpenAI embeddings and reranking are implemented; page OCR uses `VISION_MODEL` when set.
+Other model adapters remain unconfigured. See
 [embedding setup](document-indexing.md#configuration) and [search setup](document-retrieval.md#configuration-and-migration).
 Search also requires `RERANKER_MODEL` and the required `RERANKER_TIMEOUT_SECONDS` in root `.env`.
 
@@ -34,6 +35,7 @@ Configuration groups:
 | Clerk verification and web session | `CLERK_*`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` |
 | Feature flags | `FLAGS_PROVIDER`, `UNLEASH_*` |
 | Embeddings | `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `EMBEDDING_MODEL`, `EMBEDDING_VERSION`, `EMBEDDING_TIMEOUT_SECONDS` |
+| Page OCR (cheap vision) | `VISION_MODEL`, `VISION_TIMEOUT_SECONDS` (reuses `OPENAI_*`; empty model skips API OCR) |
 | Future model adapters | Remaining model keys listed in `.env.example` |
 
 Use `.env.example` for the complete current list. Values, including hosts, ports, buckets, and
@@ -133,8 +135,9 @@ temporary files outside the repository; it is not a checked-in, reproducible bro
 4. Register the PDF, correct metadata, and confirm. Upload another copy to exercise duplicate
    warnings; select an edition predecessor and confirm. Check archiving and primary override.
 5. On a confirmed document, choose Extract pages with the worker running. Review the original
-   page numbers and text; visual pages should say provider pending. Retry incomplete pages.
-   Native text pages already completed should remain available.
+   page numbers and text. Pages with usable native text should complete (`native-sufficient`);
+   sparse visual pages need `VISION_MODEL` or stay provider-pending. Retry incomplete pages.
+   Already-completed pages are retained across retries.
 6. Choose Build sections & embeddings. Review hierarchy, chunk source pages/offsets, and
    embedding status. Without credentials, sections should persist with an explicit configuration
    message. Re-extract pages and confirm the old index is marked stale.

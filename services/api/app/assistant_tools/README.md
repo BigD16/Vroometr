@@ -4,7 +4,8 @@ Read tools live in `read_tools.py`. Mutating tools must declare `write_class`
 (`auto` or `confirm`). `registry.py` checks `FLAG_AI_WRITES` and confirmation
 flags via `write_policy.py` before running a mutating handler.
 `citations.py` decides whether exact critical values may be stated, how Sources
-chips are shaped, and when to escalate to a mechanic.
+chips are shaped, and when to escalate to a mechanic. It unwraps nested
+Retrieval `Match` payloads before reading `page_start` / section fields.
 Hierarchical memory tools call `HierarchicalMemoryService` (search summaries,
 then expand raw spans).
 

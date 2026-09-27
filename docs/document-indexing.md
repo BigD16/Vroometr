@@ -88,7 +88,8 @@ The UI displays physical page index + 1, not printed page labels.
 Every chunk also stores document/section IDs, source SHA-256, content hash, chunking version,
 and embedding model/version. Table/diagram words tag `table_candidate`/`diagram_candidate`;
 these are not verified table cells, diagram interpretation, or mechanical specifications.
-Only completed page text is indexed. Failed and provider-pending OCR/vision pages stay excluded.
+Only completed page text is indexed. Failed pages stay excluded. Pending provider pages are
+excluded until OCR enhancement completes them (native-sufficient or vision OCR).
 Text is untrusted source data and is rendered as escaped text; it grants no tool permissions.
 
 ## Retries, stale work, and failures

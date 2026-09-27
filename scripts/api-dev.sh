@@ -6,6 +6,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 # shellcheck disable=SC1091
 source ./scripts/load-env.sh
+# IDE/local HTTP proxies (e.g. Cursor) break outbound OpenAI calls with 403.
+unset HTTP_PROXY HTTPS_PROXY ALL_PROXY http_proxy https_proxy all_proxy
 # The API publisher imports the root-level workers package after committing uploads.
 export PYTHONPATH="${ROOT}/libs:${ROOT}/services/api:${ROOT}:${PYTHONPATH:-}"
 cd services/api

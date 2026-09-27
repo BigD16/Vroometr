@@ -16,7 +16,10 @@ from vroometr.ai.ports import ChatModel
 from vroometr.ai.unconfigured import UnconfiguredError
 
 
-def test_chat_model_port_is_unconfigured() -> None:
+def test_chat_model_port_is_unconfigured(monkeypatch) -> None:
+    from vroometr.settings import settings
+
+    monkeypatch.setattr(settings, "agent_model", "")
     model = get_chat_model()
     assert isinstance(model, ChatModel)
     with pytest.raises(UnconfiguredError):
@@ -44,6 +47,7 @@ def test_other_ports_are_unconfigured(
 
     monkeypatch.setattr(settings, "embedding_model", "")
     monkeypatch.setattr(settings, "reranker_model", "")
+    monkeypatch.setattr(settings, "vision_model", "")
     port = factory()
     with pytest.raises(UnconfiguredError):
         getattr(port, method)(*args)

@@ -76,6 +76,7 @@ jobs:
       VISION_MODEL: ""
       EMBEDDING_MODEL: ""
       EMBEDDING_TIMEOUT_SECONDS: "30"
+      VISION_TIMEOUT_SECONDS: "60"
       STT_MODEL: ""
       TTS_MODEL: ""
       IMAGE_MODEL: ""

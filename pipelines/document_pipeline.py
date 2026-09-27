@@ -7,9 +7,13 @@ from uuid import UUID
 import pymupdf
 from app.db import SessionLocal
 from app.documents.extraction import extract_page, failed_page
+from app.documents.ocr import enhance_page
 from app.documents.runtime import document_storage, ingestion_service
 from app.repositories.document_ingestion import IngestionMessage
 from app.services.attachments import AttachmentAccessBlocked
+
+from vroometr.ai import get_vision_model
+from vroometr.ai.unconfigured import UnconfiguredVisionModel
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +23,13 @@ class SourceChanged(ValueError):
 
 
 def process(
-    user_id: str, document_id: str, attempt_id: str, *, storage=None, extractor=None
+    user_id: str,
+    document_id: str,
+    attempt_id: str,
+    *,
+    storage=None,
+    extractor=None,
+    vision=None,
 ) -> dict[str, str]:
     message = IngestionMessage(UUID(user_id), UUID(document_id), UUID(attempt_id))
     claimed = False
@@ -45,6 +55,9 @@ def process(
             with SessionLocal.begin() as session:
                 if not ingestion_service(session).start_pages(message, pdf.page_count):
                     return {"status": "ignored"}
+            ocr = vision if vision is not None else get_vision_model()
+            if isinstance(ocr, UnconfiguredVisionModel):
+                ocr = None
             for index in range(pdf.page_count):
                 if index in claim.completed_pages:
                     continue
@@ -52,6 +65,7 @@ def process(
                     page = (extractor or extract_page)(
                         pdf, index, message.document_id, claim.file_hash
                     )
+                    page = enhance_page(page, pdf, index, ocr)
                 except Exception as exc:
                     logger.error("PDF page extraction failed (%s)", type(exc).__name__)
                     page = failed_page(index, message.document_id, claim.file_hash)

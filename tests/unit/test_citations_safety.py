@@ -34,7 +34,7 @@ def test_authoritative_source_allows_exact_value_with_citation():
     assert decision.action is AnswerAction.PROVIDE_WITH_CITATION
     assert decision.escalate is False
     assert decision.citations[0].label.startswith("yz250f.pdf")
-    assert "p. 42" in decision.citations[0].label
+    assert "p. 43" in decision.citations[0].label
 
 
 def test_safety_critical_without_source_withholds_and_escalates():
@@ -64,6 +64,30 @@ def test_difficulty_alone_does_not_escalate():
     )
 
 
+def test_citations_unwrap_match_payloads_and_use_one_based_pages():
+    citations = citations_from_retrieval_passages(
+        [
+            {
+                "passage": {
+                    "document_type": "manufacturer_manual",
+                    "is_primary": True,
+                    "section_title": "Transmission oil",
+                    "page_start": 11,
+                    "page_end": 11,
+                    "file_name": "yz250.pdf",
+                    "document_id": "11111111-1111-1111-1111-111111111111",
+                },
+                "confidence": 0.9,
+            }
+        ]
+    )
+    assert len(citations) == 1
+    assert citations[0].section_title == "Transmission oil"
+    assert citations[0].page_start == 11
+    assert "p. 12" in citations[0].label
+    assert citations[0].document_id == "11111111-1111-1111-1111-111111111111"
+
+
 def test_decide_from_retrieval_uses_manual_passages():
     retrieval = {
         "status": "ok",
@@ -82,6 +106,7 @@ def test_decide_from_retrieval_uses_manual_passages():
     }
     decision = decide_from_retrieval(risk=ClaimRisk.SAFETY_CRITICAL, retrieval=retrieval)
     assert decision.action is AnswerAction.PROVIDE_WITH_CITATION
+    assert "pp. 11-12" in decision.citations[0].label
     assert is_authoritative_manual_passage(retrieval["passages"][0]["passage"])
 
     empty = decide_from_retrieval(risk=ClaimRisk.SAFETY_CRITICAL, retrieval={"passages": []})

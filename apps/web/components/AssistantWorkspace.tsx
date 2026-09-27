@@ -239,7 +239,11 @@ function AssistantBikeWorkspace({
           "Assistant model is not configured yet. Your message was saved; set AGENT_MODEL and OpenAI settings to enable replies.",
         );
       } else if (payload.assistant_status === "failed") {
-        setError(payload.assistant_error || "Assistant could not complete a reply.");
+        setError(
+          payload.assistant_error
+            ? `Assistant reply failed: ${payload.assistant_error}`
+            : "Assistant could not complete a reply.",
+        );
       }
     });
   }

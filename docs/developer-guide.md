@@ -17,7 +17,7 @@ For the numbered V1 sequence, use the [roadmap](roadmap.md). For setup, use the
 | Files, 3.1–3.3 | Private uploads, verification, quota, bike links, previews/downloads, unlink/relink, confirmed deletion | Only bike attachment targets are supported today |
 | Background checks, 3.4 | Durable attempts, Celery dispatch, retry, scan status UI | Scanner is unconfigured; no actual malware scan |
 | Document records, 4.1 | PDF preflight/hash, drafts, metadata confirmation, editions, primary manual, duplicate warnings | AI metadata proposals are not implemented |
-| Ingestion, 4.2 | Async native text, page scores/classes, provenance, partial failure/retry and review UI | OCR/vision providers deferred; only completed native pages are searchable |
+| Ingestion, 4.2 | Async native text, page scores/classes, provenance, partial failure/retry and review UI | Cheap OCR: native-sufficient + optional `VISION_MODEL`; diagram understanding deferred |
 | Sections/chunks, 4.3 | Hierarchy, exact text spans, pgvector vectors, embedding adapter, retries, review UI | Live synthetic-text embedding check passed; full UI/worker/provider flow remains manual |
 | Retrieval, 4.4 | Owner-filtered vector + keyword search, RRF/dedup, reranking, bounded source excerpts, citations and search UI | First source-backed retrieval evals pass; broad full-manual benchmarks and generated answers remain future work |
 | Conversations, 5.1 | Bike-scoped threads, messages, deterministic rolling summary, bike-switch boundaries, owner HTTP API, minimal Assistant UI | No agent replies yet |
@@ -28,7 +28,7 @@ For the numbered V1 sequence, use the [roadmap](roadmap.md). For setup, use the
 | Hierarchical memory, 5.6 | Search bike-scoped summaries then expand raw spans; memory tools | Summary embeddings / semantic ranking deferred; no Settings memory UI yet |
 | Assistant UI, 5.7 | Composer, role-styled messages, source chips, FAB, disclaimer | Attachment button still disabled |
 | ReasoningAgent | Tool-calling loop; OpenAI chat when `AGENT_MODEL` set; turn persists assistant + citations | Escalation model, streaming, answer evals deferred |
-| AI foundation | Provider-neutral ports, OpenAI embedding/reranker/chat adapters, feature flags | Summary/vision/voice adapters remain unconfigured |
+| AI foundation | Provider-neutral ports, OpenAI embedding/reranker/chat/vision-OCR adapters, feature flags | Summary/voice/image-gen adapters remain unconfigured |
 
 A visible navigation page is not evidence that its backend domain exists. Maintenance,
 rides, modifications, issues, and settings contain presentation scaffolding; suspension is
@@ -225,17 +225,18 @@ point, not a measured classifier. Classes are `text_only`, `ocr_enhanced`, and `
 A failed classification uses a fallback class with explicit failed state/reason; never interpret
 its score as a successful classification. Blank native pages can complete with empty text.
 
-Drake approved native-text extraction/routing now and providers later. Visual pages retain
-available native text but remain `pending_provider`, making the overall result `partial`.
-OCR and vision versions stay null. Repeated retries cannot supply missing providers. OCR/vision
-benchmarking and AI metadata proposals remain future work. Sections/chunks and embeddings
-are now implemented separately in 4.3.
+Drake approved native-text extraction/routing first. Visual pages are enhanced by
+`app/documents/ocr.py`: usable native text (≥120 chars) completes as `native-sufficient-v1`
+with no API call; sparse pages call the cheap OpenAI vision OCR adapter when `VISION_MODEL`
+is set. Without a vision model, sparse pages stay `pending_provider`. Set
+`VISION_MODEL` (e.g. gpt-4o-mini) and `VISION_TIMEOUT_SECONDS`, then restart the worker and
+Retry incomplete pages / re-extract, then rebuild sections & embeddings. See the OCR handoff
+in [implementation progress](implementation-progress.md).
 
 `DocumentIngestion.tsx` polls persisted status, supports manual refresh and incomplete-page
 retry, and renders escaped text excerpts (up to 4,000 characters per page). Full native text is
-saved in Postgres; pagination and large-document UI optimization remain future work. No new
-infrastructure, dependencies, or environment keys were introduced. Restart API/worker after
-applying migration 0011. See the [4.2 handoff](implementation-progress.md#page-ingestion-42--2026-09-11).
+saved in Postgres; pagination and large-document UI optimization remain future work. Restart
+API/worker after configuration changes.
 
 ## Sections, chunks, and embeddings (4.3)
 
@@ -380,8 +381,10 @@ cannot write without those flags. No durable write tools ship in the default reg
 `citations.py` encodes LOCKED claim rules: cite when an authoritative manual source exists;
 withhold exact safety/engine-critical numbers when it does not; allow clearly labeled
 non-authoritative guidance only for lower-risk topics; escalate only for real risk reasons.
-`decide_from_retrieval` builds Sources payloads from retrieval passages. See
-[implementation progress](implementation-progress.md#citations-and-safety-55--2026-09-17).
+`extract_retrieval_passages` / `decide_from_retrieval` unwrap nested Retrieval `Match`
+payloads before building Sources labels (**1-based** PDF pages). See
+[implementation progress](implementation-progress.md#citations-and-safety-55--2026-09-17)
+and the Match-unwrap fix entry.
 
 ## Hierarchical memory (5.6)
 
