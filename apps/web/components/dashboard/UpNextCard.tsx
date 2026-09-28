@@ -72,7 +72,7 @@ export function UpNextCard({ bike }: { bike: Bike | null }) {
               </b>
               <span>
                 {item.status.replaceAll("_", " ")}
-                {!item.definitive ? " (est.)" : ""}
+                {!item.definitive ? " · advisory (est. hours)" : ""}
                 {item.hours_remaining != null
                   ? ` · ${item.hours_remaining.toFixed(1)} h`
                   : ""}

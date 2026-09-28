@@ -250,17 +250,37 @@ export function BikeForm({ bike }: { bike?: Bike }) {
                 placeholder="Optional"
               />
             </label>
-            <label className="bike-check-field">
-              <input
-                name="current_engine_hours_is_estimated"
-                type="checkbox"
-                defaultChecked={bike?.current_engine_hours_is_estimated ?? true}
-              />
-              <span>
-                <strong>Estimated reading</strong>
-                <small>Turn off when this came from a confirmed meter reading.</small>
-              </span>
-            </label>
+            <fieldset className="bike-field">
+              <legend>Hours reading type</legend>
+              <label className="bike-check-field">
+                <input
+                  type="radio"
+                  name="current_engine_hours_is_estimated"
+                  value="on"
+                  defaultChecked={bike?.current_engine_hours_is_estimated ?? true}
+                />
+                <span>
+                  <strong>Estimated</strong>
+                  <small>
+                    Usable for advisory due warnings. Never treated as definitive overdue alone.
+                  </small>
+                </span>
+              </label>
+              <label className="bike-check-field">
+                <input
+                  type="radio"
+                  name="current_engine_hours_is_estimated"
+                  value="off"
+                  defaultChecked={
+                    bike != null ? bike.current_engine_hours_is_estimated === false : false
+                  }
+                />
+                <span>
+                  <strong>Confirmed meter</strong>
+                  <small>Authoritative reading. Supersedes any prior estimate.</small>
+                </span>
+              </label>
+            </fieldset>
           </div>
         </section>
 

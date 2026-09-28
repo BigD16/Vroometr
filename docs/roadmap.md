@@ -4,8 +4,8 @@ This is the repository-owned V1 build sequence. Status here is authoritative for
 Detailed verification evidence lives in [implementation progress](implementation-progress.md).
 LOCKED product and architecture decisions live in local `docs/design/` (not committed).
 
-Last reviewed: 2026-09-27. Current position: **through 6.4 recommendation layers**; next
-numbered task is **6.5** (hours discipline polish).
+Last reviewed: 2026-09-27. Current position: **Phase 6 complete (through 6.5)**; next
+numbered task is **7.1** (modifications).
 
 ## Status at a glance
 
@@ -17,7 +17,7 @@ numbered task is **6.5** (hours discipline polish).
 | 3 | Uploads and attachments | Complete (real malware scanning deferred; see follow-up) |
 | 4 | Documents, ingestion, RAG | **4.5 first retrieval evals implemented**; cheap page OCR wired; diagram vision + malware scan remain follow-ups |
 | 5 | Text assistant | **5.7 UI + ReasoningAgent loop**; live replies need `AGENT_MODEL` + OpenAI config |
-| 6 | Maintenance and engine hours | **6.1–6.4 done**; **6.5** hours discipline polish next |
+| 6 | Maintenance and engine hours | **Complete (6.1–6.5)** |
 | 7 | Modifications, rides, issues | Not started |
 | 8 | Notifications, demo, Stripe | Not started |
 | 9 | Garage generation (flagged) | Not started |
@@ -238,36 +238,27 @@ Review: one real question against an uploaded manual; confirm casual oil-change 
 
 ## Phase 6 — Maintenance and engine hours
 
-Status: **6.1–6.4 implemented**; **6.5** is next.
+Status: **complete (6.1–6.5)**.
 
 Product intent (LOCKED): the maintenance **plan comes from the bike’s manufacturer manual**,
 not from pasted text or free-form AI memory. Due dates are always **derived** (rules + history
 + hours) — never stored as authoritative `next_due`. Only independently validated rules may
 become active; new versions supersede old ones.
 
-- **6.1** Taxonomy + records — **implemented:** controlled system→component catalog; owner
-  service-history CRUD; taxonomy gaps; Service Bay log UI; evidence attachment target;
-  compact-context recent slice. No `next_due` column.
-- **6.2** Derived due state — **implemented:** active `maintenance_rules` + pure
-  `derive_due_items`; Up Next / Service Bay due list; estimated hours → advisory statuses only
-  (no definitive overdue on estimates alone).
-- **6.3** Automatic rule extraction — **implemented:** after an active manufacturer manual’s
-  pages finish extraction, a worker proposes interval rules from the manual text → independent
-  validation (taxonomy, span-in-source, intervals) → auto-activate with versioning/supersede.
-  Service Bay shows the plan (with source page/span) and **Rebuild plan from manual**; no paste
-  box. Skips re-extract unless forced; needs `AGENT_MODEL` for live runs.
-- **6.4** Two recommendation layers — **implemented:** deterministic baseline from due state +
-  manufacturer intervals; contextual layer (condition tags ± optional AI) may urge earlier
-  action but **cannot rewrite** intervals (`manufacturer_intervals_unchanged`).
-- **6.5** Hours discipline — estimated vs confirmed meter readings remain distinct; confirmed
-  supersedes estimate; tighten any remaining UI/copy so uncertain estimates never read as hard
-  overdue. (Core soft-status behavior already landed in 6.2.)
+- **6.1** Taxonomy + records — **implemented**
+- **6.2** Derived due state — **implemented** (estimated hours → soft/advisory statuses)
+- **6.3** Automatic rule extraction — **implemented** (plan-from-manual after page extraction)
+- **6.4** Two recommendation layers — **implemented** (baseline + contextual; intervals locked)
+- **6.5** Hours discipline — **implemented:** estimated vs confirmed remain distinct;
+  `confirm_engine_hours` / `set_estimated_engine_hours` + `POST /bikes/{id}/engine-hours`;
+  confirmed requires a reading and supersedes estimate; due/Up Next copy marks advisory when
+  hours are estimated; Service Bay can sync log hours to the bike.
 
-Still deferred in this phase: push/notify on material rule changes; extraction from supporting
-docs; AI write tools that log service from chat; ride/mod-driven tags once Phase 7 lands.
+Still deferred beyond Phase 6: push/notify on material rule changes; supporting-doc extraction;
+AI write tools that log service from chat; ride/mod-driven tags (Phase 7).
 
-Review: open `/maintenance` → baseline recommendations from the plan; toggle dust/mud → context
-advice says consider earlier without changing hour intervals.
+Review: set confirmed meter hours on a bike → overdue can be definitive; switch to estimated →
+hour-only overdue becomes advisory due_soon, never hard overdue from estimates alone.
 
 ---
 

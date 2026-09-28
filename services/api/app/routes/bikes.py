@@ -178,3 +178,30 @@ def update_bike(
     except (InvalidBike, BikeNotFound) as exc:
         _raise_bike(exc)
     return _to_response(bike)
+
+
+class EngineHoursBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    hours: float
+    mode: str = "estimated"  # estimated | confirmed
+
+
+@router.post("/v1/bikes/{bike_id}/engine-hours")
+def set_engine_hours(
+    bike_id: UUID,
+    body: EngineHoursBody,
+    user: Annotated[User, Depends(get_current_user)],
+    bikes: Annotated[BikeService, Depends(get_bike_service)],
+) -> BikeResponse:
+    """Set estimated or confirmed meter hours. Confirmed supersedes estimate."""
+    mode = body.mode.strip().lower()
+    try:
+        if mode == "confirmed":
+            bike = bikes.confirm_engine_hours(user, bike_id, body.hours)
+        elif mode == "estimated":
+            bike = bikes.set_estimated_engine_hours(user, bike_id, body.hours)
+        else:
+            raise InvalidBike("mode must be estimated or confirmed")
+    except (InvalidBike, BikeNotFound) as exc:
+        _raise_bike(exc)
+    return _to_response(bike)

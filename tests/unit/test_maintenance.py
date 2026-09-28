@@ -196,3 +196,24 @@ def test_recent_for_context_shape():
     rows = service.recent_for_context(owner, bike.id)
     assert rows[0]["system"] == "brakes"
     assert rows[0]["action"] == "replace"
+
+
+def test_create_can_sync_confirmed_hours_to_bike():
+    owner, _, bike, service, _ = setup_maintenance()
+    bike.current_engine_hours = Decimal("10.0")
+    bike.current_engine_hours_is_estimated = True
+    service.create(
+        owner,
+        bike_id=bike.id,
+        service_date=date(2026, 9, 3),
+        system="engine",
+        component="engine_oil",
+        action="replace",
+        reason="scheduled",
+        performer_type="owner",
+        engine_hours=15.0,
+        engine_hours_is_estimated=False,
+        sync_bike_hours=True,
+    )
+    assert bike.current_engine_hours == Decimal("15.0")
+    assert bike.current_engine_hours_is_estimated is False

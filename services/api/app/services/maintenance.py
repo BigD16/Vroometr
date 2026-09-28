@@ -93,6 +93,7 @@ class MaintenanceService:
         source: str | None = None,
         linked_conversation_id: UUID | None = None,
         details: str | None = None,
+        sync_bike_hours: bool = False,
     ) -> MaintenanceRecord:
         self._require_bike(user, bike_id)
         detail = _optional_text(component_detail, 500)
@@ -142,6 +143,10 @@ class MaintenanceService:
                 submitted_term=detail,
                 bike_id=bike_id,
                 mapped_system=system,
+            )
+        if sync_bike_hours and hours is not None:
+            self._sync_bike_hours(
+                user, bike_id, hours=hours, estimated=bool(engine_hours_is_estimated)
             )
         return saved
 
@@ -463,6 +468,16 @@ class MaintenanceService:
         if rule.validation_status == "active" and rule.active:
             return rule
         return self._activate(rule)
+
+    def _sync_bike_hours(
+        self, user: User, bike_id: UUID, *, hours: Decimal, estimated: bool
+    ) -> None:
+        """Push service-log hours onto the bike. Confirmed supersedes estimate."""
+        bike = self._require_bike(user, bike_id)
+        bike.current_engine_hours = hours
+        bike.current_engine_hours_is_estimated = bool(estimated)
+        bike.updated_at = datetime.now(UTC)
+        self._bikes.save(bike)
 
     def _activate(self, rule: MaintenanceRule) -> MaintenanceRule:
         now = datetime.now(UTC)

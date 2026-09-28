@@ -207,3 +207,52 @@ def test_powertrain_configuration_rejects_mixed_fields() -> None:
         _create_yz(bikes, owner, displacement=None)
     with pytest.raises(InvalidBike, match="combustion bikes require stroke type"):
         _create_yz(bikes, owner, stroke_type=None)
+
+
+def test_confirm_engine_hours_supersedes_estimate() -> None:
+    users, bikes = _services()
+    owner = users.create("user_clerk_hours")
+    bike = _create_yz(
+        bikes,
+        owner,
+        current_engine_hours=40.0,
+        current_engine_hours_is_estimated=True,
+    )
+    confirmed = bikes.confirm_engine_hours(owner, bike.id, 41.5)
+    assert confirmed.current_engine_hours == Decimal("41.5")
+    assert confirmed.current_engine_hours_is_estimated is False
+
+
+def test_set_estimated_engine_hours_marks_estimated() -> None:
+    users, bikes = _services()
+    owner = users.create("user_clerk_est")
+    bike = _create_yz(
+        bikes,
+        owner,
+        current_engine_hours=40.0,
+        current_engine_hours_is_estimated=False,
+    )
+    estimated = bikes.set_estimated_engine_hours(owner, bike.id, 42.0)
+    assert estimated.current_engine_hours == Decimal("42.0")
+    assert estimated.current_engine_hours_is_estimated is True
+
+
+def test_confirmed_hours_require_a_reading() -> None:
+    users, bikes = _services()
+    owner = users.create("user_clerk_bad")
+    with pytest.raises(InvalidBike, match="Confirmed engine hours"):
+        _create_yz(
+            bikes,
+            owner,
+            current_engine_hours=None,
+            current_engine_hours_is_estimated=False,
+        )
+    bike = _create_yz(
+        bikes, owner, current_engine_hours=10.0, current_engine_hours_is_estimated=True
+    )
+    with pytest.raises(InvalidBike, match="Confirmed engine hours"):
+        bikes.update(
+            owner,
+            bike.id,
+            BikePatch(current_engine_hours=None, current_engine_hours_is_estimated=False),
+        )

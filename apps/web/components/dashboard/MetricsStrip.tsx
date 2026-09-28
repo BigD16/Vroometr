@@ -23,8 +23,8 @@ export function MetricsStrip({ bike }: { bike: Bike | null }) {
           <em>
             {hasHours
               ? bike?.current_engine_hours_is_estimated
-                ? "EST. HRS"
-                : "HRS"
+                ? "EST. HRS · ADVISORY"
+                : "CONFIRMED HRS"
               : "NOT SET"}
           </em>
         </b>

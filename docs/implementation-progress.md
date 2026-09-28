@@ -50,8 +50,8 @@ scope below was approved by Drake and supplements the original roadmap.
   (`0015_message_citations`). Citation bagging unwraps nested Retrieval `Match` payloads and
   labels Sources with 1-based PDF pages. Unconfigured models save the user message and report
   `awaiting_configuration`.
-- **6.1–6.4 implemented:** taxonomy + records + derived due + auto plan-from-manual +
-  two recommendation layers (baseline / contextual, intervals locked). **6.5 next.**
+- **Phase 6 complete (6.1–6.5):** taxonomy/records, derived due, auto plan-from-manual,
+  recommendation layers, estimated vs confirmed hours. **Next: 7.1 modifications.**
 - **Developer documentation established:** repository onboarding guide, setup/troubleshooting
   runbook, and required documentation updates after every task. Start at [docs index](README.md).
 
@@ -1058,3 +1058,16 @@ cannot rewrite intervals.
 
 Verify: `pytest tests/unit/test_recommendations.py`
 Next: **6.5**.
+
+## Hours discipline (6.5) — 2026-09-27
+
+Status: **implemented**. Estimated and confirmed meter readings stay distinct; confirmed
+supersedes estimate; hour-only overdue from estimates is advisory.
+
+- `BikeService.confirm_engine_hours` / `set_estimated_engine_hours`
+- `POST /v1/bikes/{id}/engine-hours` (`mode=estimated|confirmed`)
+- Maintenance log can sync hours to the bike; UI labels EST vs CONFIRMED
+- Soft overdue from 6.2 unchanged
+
+Verify: `pytest tests/unit/test_bikes.py tests/unit/test_due_state.py tests/unit/test_maintenance.py`
+Next: **7.1**.

@@ -175,6 +175,11 @@ class BikeService:
             created_at=now,
             updated_at=now,
         )
+        if (
+            bike.current_engine_hours_is_estimated is False
+            and bike.current_engine_hours is None
+        ):
+            raise InvalidBike("Confirmed engine hours require a meter reading.")
         return self._repository.add(bike)
 
     def update(self, user: User, bike_id: UUID, patch: BikePatch) -> Bike:
@@ -196,10 +201,50 @@ class BikeService:
                 displacement=displacement,
                 stroke_type=stroke_type,
             )
+        # LOCKED: confirmed readings stay distinct; confirming with null hours is invalid.
+        if normalized.get("current_engine_hours_is_estimated") is False:
+            if "current_engine_hours" in normalized:
+                hours = normalized["current_engine_hours"]
+            else:
+                hours = bike.current_engine_hours
+            if hours is None:
+                raise InvalidBike("Confirmed engine hours require a meter reading.")
         for field, value in normalized.items():
             setattr(bike, field, value)
         bike.updated_at = datetime.now(UTC)
         return self._repository.save(bike)
+
+    def set_estimated_engine_hours(
+        self, user: User, bike_id: UUID, hours: Decimal | float | int
+    ) -> Bike:
+        """Store a usable but clearly estimated current meter reading."""
+        value = self._normalize_field("current_engine_hours", hours)
+        if value is None:
+            raise InvalidBike("Estimated engine hours require a numeric reading.")
+        return self.update(
+            user,
+            bike_id,
+            BikePatch(
+                current_engine_hours=value,
+                current_engine_hours_is_estimated=True,
+            ),
+        )
+
+    def confirm_engine_hours(
+        self, user: User, bike_id: UUID, hours: Decimal | float | int
+    ) -> Bike:
+        """Confirmed meter reading supersedes any prior estimate."""
+        value = self._normalize_field("current_engine_hours", hours)
+        if value is None:
+            raise InvalidBike("Confirmed engine hours require a meter reading.")
+        return self.update(
+            user,
+            bike_id,
+            BikePatch(
+                current_engine_hours=value,
+                current_engine_hours_is_estimated=False,
+            ),
+        )
 
     def _normalize_field(self, field: str, value: object) -> object:
         if field in _TEXT_FIELDS:

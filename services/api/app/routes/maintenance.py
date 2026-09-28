@@ -42,6 +42,7 @@ class CreateMaintenanceBody(BaseModel):
     source: str | None = None
     linked_conversation_id: UUID | None = None
     details: str | None = None
+    sync_bike_hours: bool = False
 
 
 class UpdateMaintenanceBody(BaseModel):

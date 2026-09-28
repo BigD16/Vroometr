@@ -148,6 +148,8 @@ function MaintenanceBikeWorkspace({ activeBike }: { activeBike: ActiveBike }) {
     () => new Date().toISOString().slice(0, 10),
   );
   const [engineHours, setEngineHours] = useState("");
+  const [hoursEstimated, setHoursEstimated] = useState(true);
+  const [syncBikeHours, setSyncBikeHours] = useState(false);
   const [details, setDetails] = useState("");
   const [ruleHours, setRuleHours] = useState("10");
   const refresh = useCallback(() => setRevision((value) => value + 1), []);
@@ -236,7 +238,8 @@ function MaintenanceBikeWorkspace({ activeBike }: { activeBike: ActiveBike }) {
           performer_type: performerType,
           evidence_type: evidenceType,
           engine_hours: engineHours.trim() ? Number(engineHours) : null,
-          engine_hours_is_estimated: true,
+          engine_hours_is_estimated: hoursEstimated,
+          sync_bike_hours: syncBikeHours && Boolean(engineHours.trim()),
           details: details.trim() || null,
         }),
       });
@@ -592,6 +595,23 @@ function MaintenanceBikeWorkspace({ activeBike }: { activeBike: ActiveBike }) {
               onChange={(event) => setEngineHours(event.target.value)}
               placeholder="Optional"
             />
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={hoursEstimated}
+              onChange={(event) => setHoursEstimated(event.target.checked)}
+            />{" "}
+            Hours are estimated (unchecked = confirmed meter)
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={syncBikeHours}
+              onChange={(event) => setSyncBikeHours(event.target.checked)}
+              disabled={!engineHours.trim()}
+            />{" "}
+            Also update bike current hours
           </label>
           <label className="maintenance-form-wide">
             Notes

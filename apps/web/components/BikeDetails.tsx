@@ -136,7 +136,11 @@ export function BikeDetails({ bike }: { bike: Bike }) {
             </div>
             <div>
               <dt>Reading</dt>
-              <dd>{bike.current_engine_hours_is_estimated ? "Estimated" : "Confirmed"}</dd>
+              <dd>
+                {bike.current_engine_hours_is_estimated
+                  ? "Estimated — advisory for due warnings"
+                  : "Confirmed meter — supersedes estimates"}
+              </dd>
             </div>
           </dl>
         </article>
