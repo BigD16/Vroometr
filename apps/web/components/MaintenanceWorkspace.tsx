@@ -323,10 +323,17 @@ function MaintenanceBikeWorkspace({ activeBike }: { activeBike: ActiveBike }) {
         return;
       }
       const accepted = Array.isArray(body?.accepted) ? body.accepted.length : 0;
+      const rejected = Array.isArray(body?.rejected) ? body.rejected.length : 0;
       if (body?.skipped && body?.reason === "already_extracted") {
-        setLoadError(null);
+        setLoadError("Plan already built from this manual. Forced rebuild kept existing rules.");
       } else if (accepted === 0) {
-        setLoadError("No validated intervals found in the manual yet.");
+        setLoadError(
+          rejected > 0
+            ? `No rules passed validation (${rejected} rejected). Try Rebuild again.`
+            : "No validated intervals found in the manual yet.",
+        );
+      } else {
+        setLoadError(null);
       }
       refresh();
     } finally {

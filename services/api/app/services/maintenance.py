@@ -30,6 +30,7 @@ from app.models.user import User
 from app.repositories.bikes import BikeStore
 from app.repositories.maintenance import MaintenanceStore
 
+from vroometr.ai.chat import ChatFailed
 from vroometr.ai.ports import ChatModel
 from vroometr.ai.unconfigured import UnconfiguredError
 
@@ -408,6 +409,10 @@ class MaintenanceService:
         except UnconfiguredError as exc:
             raise InvalidMaintenance(
                 "Chat model is not configured for rule extraction."
+            ) from exc
+        except ChatFailed as exc:
+            raise InvalidMaintenance(
+                "Rule extraction model call failed. Try Rebuild again or check AGENT_MODEL."
             ) from exc
         source_text = "\n".join(p.text for p in passages if p.text)
         return self.accept_proposals(

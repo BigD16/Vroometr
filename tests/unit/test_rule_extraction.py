@@ -76,6 +76,18 @@ def test_select_maintenance_passages_prefers_interval_pages():
     assert selected[0].page == 6
 
 
+def test_select_maintenance_passages_caps_prompt_size():
+    huge = ("Replace oil every 10 hours. " * 400) + ("service maintenance schedule " * 200)
+    pages = [
+        SimpleNamespace(page_index=i, state="completed", text=huge) for i in range(30)
+    ]
+    selected = select_maintenance_passages(pages, document_id=str(uuid4()))
+    assert selected
+    assert len(selected) <= 12
+    assert sum(len(p.text) for p in selected) <= 36_000
+    assert all(len(p.text) <= 2500 for p in selected)
+
+
 def test_accept_and_activate_versions():
     owner, _, bike, service, _ = setup_maintenance()
     first = service.accept_proposals(
