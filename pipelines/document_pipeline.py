@@ -77,6 +77,8 @@ def process(
             applied = service.finish(message)
             job = service.jobs.get(message.document_id)
             state = job.state if applied else "ignored"
+            if applied and state in {"completed", "partial"}:
+                _queue_rule_extraction(session, message)
         return {"status": state}
     except Exception as exc:
         code = (
@@ -92,3 +94,29 @@ def process(
                 message, error_code=code, queued_failure=not claimed
             )
         return {"status": "failed" if applied else "ignored"}
+
+
+def _queue_rule_extraction(session, message: IngestionMessage) -> None:
+    """After pages land, auto-build the maintenance plan from manufacturer manuals."""
+    from app.maintenance.rule_dispatch import RuleExtractionMessage, publish
+    from app.repositories.documents import DocumentRepository
+
+    document = DocumentRepository(session).get(message.document_id, message.user_id)
+    if (
+        document is None
+        or document.document_type != "manufacturer_manual"
+        or document.status != "active"
+        or document.confirmed_at is None
+    ):
+        return
+    try:
+        publish(
+            RuleExtractionMessage(
+                user_id=message.user_id,
+                bike_id=document.bike_id,
+                document_id=document.id,
+                force=False,
+            )
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Could not queue rule extraction (%s)", type(exc).__name__)

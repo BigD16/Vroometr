@@ -50,8 +50,8 @@ scope below was approved by Drake and supplements the original roadmap.
   (`0015_message_citations`). Citation bagging unwraps nested Retrieval `Match` payloads and
   labels Sources with 1-based PDF pages. Unconfigured models save the user message and report
   `awaiting_configuration`.
-- **6.1–6.2 implemented:** taxonomy + records + derived due state (`maintenance_rules`,
-  `derive_due_items`, `/due-state` + Up Next). **6.3 (rule extraction) is next.**
+- **6.1–6.3 implemented:** taxonomy + records + derived due state + rule extraction
+  (propose → validate → versioned activate). **6.4 (recommendation layers) is next.**
 - **Developer documentation established:** repository onboarding guide, setup/troubleshooting
   runbook, and required documentation updates after every task. Start at [docs index](README.md).
 
@@ -1034,3 +1034,15 @@ Status: **implemented**. Due is computed, never stored as authoritative `next_du
 
 Verify: `pytest tests/unit/test_due_state.py` (4 passed); alembic `0017` applied.
 Next: **6.3** rule extraction.
+
+## Rule extraction (6.3) — 2026-09-27
+
+Status: **implemented** (auto from manual). Paste UI removed.
+
+- After primary/active manufacturer manual pages finish extraction, Celery
+  `vroometr.extract_maintenance_rules` runs propose → validate → activate
+- Keyword page filter + 40-page cap; skip if already extracted unless `force`
+- Service Bay: plan list + “Rebuild plan from manual”; due state from active rules
+
+Verify: `pytest tests/unit/test_rule_extraction.py`
+Next: **6.4**.

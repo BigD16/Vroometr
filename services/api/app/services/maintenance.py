@@ -4,9 +4,18 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from typing import Any
 from uuid import UUID, uuid4
 
 from app.maintenance.due_state import DueItem, derive_due_items
+from app.maintenance.rule_extraction import (
+    PIPELINE_VERSION,
+    SourcePassage,
+    propose_rules_from_passages,
+    select_maintenance_passages,
+    taxonomy_hint,
+)
+from app.maintenance.rule_validation import validate_proposed_rule
 from app.maintenance.taxonomy import (
     ACTIONS,
     COMPONENTS,
@@ -19,6 +28,9 @@ from app.models.maintenance import MaintenanceRecord, MaintenanceRule
 from app.models.user import User
 from app.repositories.bikes import BikeStore
 from app.repositories.maintenance import MaintenanceStore
+
+from vroometr.ai.ports import ChatModel
+from vroometr.ai.unconfigured import UnconfiguredError
 
 
 class MaintenanceNotFound(LookupError):
@@ -223,8 +235,12 @@ class MaintenanceService:
             for item in records
         ]
 
-    def list_rules(self, user: User, bike_id: UUID) -> list[MaintenanceRule]:
+    def list_rules(
+        self, user: User, bike_id: UUID, *, include_inactive: bool = False
+    ) -> list[MaintenanceRule]:
         self._require_bike(user, bike_id)
+        if include_inactive and hasattr(self._records, "list_rules"):
+            return self._records.list_rules(bike_id, include_inactive=True)
         return self._records.list_active_rules(bike_id)
 
     def create_rule(
@@ -266,6 +282,7 @@ class MaintenanceService:
             usage_condition_variant=(usage_condition_variant or "standard").strip()[:64],
             validation_status="active",
             rule_version=1,
+            pipeline_version="manual-v1",
             active=True,
             created_at=now,
             updated_at=now,
@@ -278,7 +295,9 @@ class MaintenanceService:
             raise MaintenanceNotFound("Maintenance rule not found")
         self._records.delete_rule(rule)
 
-    def due_state(self, user: User, bike_id: UUID, *, today: date | None = None) -> list[DueItem]:
+    def due_state(
+        self, user: User, bike_id: UUID, *, today: date | None = None
+    ) -> list[DueItem]:
         """Derived due items — never writes next_due."""
         bike = self._require_bike(user, bike_id)
         rules = self._records.list_active_rules(bike_id)
@@ -289,6 +308,202 @@ class MaintenanceService:
             current_hours=bike.current_engine_hours,
             hours_estimated=bool(bike.current_engine_hours_is_estimated),
             today=today or date.today(),
+        )
+
+    def accept_proposals(
+        self,
+        user: User,
+        *,
+        bike_id: UUID,
+        proposals: list[dict[str, Any]],
+        source_text: str | None = None,
+        document_id: UUID | None = None,
+        activate: bool = False,
+        pipeline_version: str = PIPELINE_VERSION,
+    ) -> dict[str, Any]:
+        """Independently validate AI proposals; persist validated; optionally activate."""
+        self._require_bike(user, bike_id)
+        accepted: list[MaintenanceRule] = []
+        rejected: list[dict[str, Any]] = []
+        for proposal in proposals:
+            result = validate_proposed_rule(
+                proposal, source_text=source_text, require_source=True
+            )
+            if not result.ok:
+                rejected.append({"proposal": proposal, "errors": result.errors})
+                continue
+            rule = self._rule_from_proposal(
+                bike_id=bike_id,
+                proposal=proposal,
+                document_id=document_id,
+                pipeline_version=pipeline_version,
+            )
+            saved = self._records.add_rule(rule)
+            if activate:
+                saved = self._activate(saved)
+            accepted.append(saved)
+        return {
+            "pipeline_version": pipeline_version,
+            "accepted": accepted,
+            "rejected": rejected,
+        }
+
+    def extract_from_passages(
+        self,
+        user: User,
+        *,
+        bike_id: UUID,
+        passages: list[SourcePassage],
+        chat: ChatModel,
+        document_id: UUID | None = None,
+        activate: bool = False,
+    ) -> dict[str, Any]:
+        """AI proposes from passages, then independent validation gates persistence."""
+        self._require_bike(user, bike_id)
+        try:
+            proposals = propose_rules_from_passages(
+                chat, passages, taxonomy_hint=taxonomy_hint()
+            )
+        except UnconfiguredError as exc:
+            raise InvalidMaintenance(
+                "Chat model is not configured for rule extraction."
+            ) from exc
+        source_text = "\n".join(p.text for p in passages if p.text)
+        return self.accept_proposals(
+            user,
+            bike_id=bike_id,
+            proposals=proposals,
+            source_text=source_text,
+            document_id=document_id,
+            activate=activate,
+        )
+
+    def extract_from_document(
+        self,
+        user: User,
+        *,
+        bike_id: UUID,
+        document_id: UUID,
+        pages: list[Any],
+        chat: ChatModel,
+        activate: bool = True,
+        force: bool = False,
+    ) -> dict[str, Any]:
+        """Build the maintenance plan from a manufacturer manual's completed pages."""
+        self._require_bike(user, bike_id)
+        if not force:
+            existing = [
+                rule
+                for rule in self._records.list_active_rules(bike_id)
+                if rule.source_document_id == document_id
+                and rule.pipeline_version == PIPELINE_VERSION
+            ]
+            if existing:
+                return {
+                    "pipeline_version": PIPELINE_VERSION,
+                    "accepted": existing,
+                    "rejected": [],
+                    "skipped": True,
+                    "reason": "already_extracted",
+                }
+        passages = select_maintenance_passages(pages, document_id=str(document_id))
+        if not passages:
+            raise InvalidMaintenance("No completed maintenance pages found in this manual.")
+        return self.extract_from_passages(
+            user,
+            bike_id=bike_id,
+            passages=passages,
+            chat=chat,
+            document_id=document_id,
+            activate=activate,
+        )
+
+    def activate_rule(self, user: User, rule_id: UUID) -> MaintenanceRule:
+        rule = self._records.get_owned_rule(rule_id, user.id)
+        if rule is None:
+            raise MaintenanceNotFound("Maintenance rule not found")
+        if rule.validation_status not in {"validated", "active"}:
+            raise InvalidMaintenance("Only independently validated rules can activate.")
+        if rule.validation_status == "active" and rule.active:
+            return rule
+        return self._activate(rule)
+
+    def _activate(self, rule: MaintenanceRule) -> MaintenanceRule:
+        now = datetime.now(UTC)
+        prior: list[MaintenanceRule] = []
+        if hasattr(self._records, "find_active_matching"):
+            prior = self._records.find_active_matching(
+                rule.bike_id,
+                system=rule.system,
+                component=rule.component,
+                action=rule.action,
+                usage_condition_variant=rule.usage_condition_variant,
+            )
+        max_version = rule.rule_version
+        for old in prior:
+            if old.id == rule.id:
+                continue
+            old.active = False
+            old.validation_status = "superseded"
+            old.updated_at = now
+            if hasattr(self._records, "save_rule"):
+                self._records.save_rule(old)
+            max_version = max(max_version, old.rule_version)
+            if rule.supersedes_rule_id is None:
+                rule.supersedes_rule_id = old.id
+        rule.active = True
+        rule.validation_status = "active"
+        rule.rule_version = max_version + 1 if prior else max(rule.rule_version, 1)
+        rule.updated_at = now
+        if hasattr(self._records, "save_rule"):
+            return self._records.save_rule(rule)
+        return rule
+
+    def _rule_from_proposal(
+        self,
+        *,
+        bike_id: UUID,
+        proposal: dict[str, Any],
+        document_id: UUID | None,
+        pipeline_version: str,
+    ) -> MaintenanceRule:
+        now = datetime.now(UTC)
+        page = proposal.get("source_page")
+        page_i = int(page) if page is not None else None
+        conf = proposal.get("extraction_confidence")
+        return MaintenanceRule(
+            id=uuid4(),
+            bike_id=bike_id,
+            system=str(proposal["system"]).strip(),
+            component=str(proposal["component"]).strip(),
+            action=str(proposal["action"]).strip(),
+            initial_interval_hours=_optional_hours(proposal.get("initial_interval_hours")),
+            recurring_interval_hours=_optional_hours(
+                proposal.get("recurring_interval_hours")
+            ),
+            calendar_interval_days=(
+                int(proposal["calendar_interval_days"])
+                if proposal.get("calendar_interval_days") is not None
+                else None
+            ),
+            whichever_comes_first=bool(proposal.get("whichever_comes_first", True)),
+            usage_condition_variant=(
+                str(proposal.get("usage_condition_variant") or "standard").strip()[:64]
+            ),
+            validation_status="validated",
+            rule_version=1,
+            pipeline_version=pipeline_version,
+            active=False,
+            source_document_id=document_id,
+            source_page=page_i,
+            source_span=str(proposal.get("source_span") or "").strip()[:4000] or None,
+            extraction_confidence=(
+                Decimal(str(conf)).quantize(Decimal("0.001"))
+                if conf is not None
+                else None
+            ),
+            created_at=now,
+            updated_at=now,
         )
 
 

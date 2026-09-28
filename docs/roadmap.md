@@ -4,8 +4,8 @@ This is the repository-owned V1 build sequence. Status here is authoritative for
 Detailed verification evidence lives in [implementation progress](implementation-progress.md).
 LOCKED product and architecture decisions live in local `docs/design/` (not committed).
 
-Last reviewed: 2026-09-27. Current position: **through 6.2 derived due state**; next numbered
-task is **6.3** (rule extraction).
+Last reviewed: 2026-09-27. Current position: **through 6.3 rule extraction**; next numbered
+task is **6.4** (two recommendation layers).
 
 ## Status at a glance
 
@@ -17,7 +17,7 @@ task is **6.3** (rule extraction).
 | 3 | Uploads and attachments | Complete (real malware scanning deferred; see follow-up) |
 | 4 | Documents, ingestion, RAG | **4.5 first retrieval evals implemented**; cheap page OCR wired; diagram vision + malware scan remain follow-ups |
 | 5 | Text assistant | **5.7 UI + ReasoningAgent loop**; live replies need `AGENT_MODEL` + OpenAI config |
-| 6 | Maintenance and engine hours | **6.1–6.2 implemented**; 6.3 rule extraction next |
+| 6 | Maintenance and engine hours | **6.1–6.3 implemented**; 6.4 recommendation layers next |
 | 7 | Modifications, rides, issues | Not started |
 | 8 | Notifications, demo, Stripe | Not started |
 | 9 | Garage generation (flagged) | Not started |
@@ -238,17 +238,19 @@ Review: one real question against an uploaded manual; confirm casual oil-change 
 
 ## Phase 6 — Maintenance and engine hours
 
-Status: **6.1–6.2 implemented**; **6.3** is next.
+Status: **6.1–6.3 implemented**; **6.4** is next.
 
 - **6.1** Taxonomy + records — **implemented** (no `next_due` column).
 - **6.2** Derived due state — **implemented:** `maintenance_rules` + pure `derive_due_items`;
   no persisted `next_due`; estimated hours → soft statuses only.
-- **6.3** Rule extraction — AI proposes → independent validation → versioned activation
+- **6.3** Rule extraction — **implemented:** after manufacturer-manual page extraction,
+  AI proposes → independent validation → auto-activate (versioned). Paste UI removed;
+  Service Bay shows plan + Rebuild.
 - **6.4** Two recommendation layers — deterministic baseline, then AI context without rewriting
   manufacturer intervals
 - **6.5** Hours — estimated vs confirmed; never claim definitive overdue on uncertain estimates only
 
-Review: add a rule + record on `/maintenance`; Up Next shows overdue/due_soon.
+Review: extract from pasted manual text on `/maintenance`, activate pending rule; Up Next updates.
 
 ---
 

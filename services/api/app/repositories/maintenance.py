@@ -30,9 +30,25 @@ class MaintenanceStore(Protocol):
 
     def list_active_rules(self, bike_id: UUID) -> list[MaintenanceRule]: ...
 
+    def list_rules(
+        self, bike_id: UUID, *, include_inactive: bool = False
+    ) -> list[MaintenanceRule]: ...
+
     def add_rule(self, rule: MaintenanceRule) -> MaintenanceRule: ...
 
+    def save_rule(self, rule: MaintenanceRule) -> MaintenanceRule: ...
+
     def get_owned_rule(self, rule_id: UUID, user_id: UUID) -> MaintenanceRule | None: ...
+
+    def find_active_matching(
+        self,
+        bike_id: UUID,
+        *,
+        system: str,
+        component: str,
+        action: str,
+        usage_condition_variant: str,
+    ) -> list[MaintenanceRule]: ...
 
     def delete_rule(self, rule: MaintenanceRule) -> None: ...
 
@@ -132,7 +148,28 @@ class MaintenanceRepository:
         )
         return list(self._session.scalars(statement).all())
 
+    def list_rules(
+        self, bike_id: UUID, *, include_inactive: bool = False
+    ) -> list[MaintenanceRule]:
+        statement = select(MaintenanceRule).where(MaintenanceRule.bike_id == bike_id)
+        if not include_inactive:
+            statement = statement.where(
+                MaintenanceRule.active.is_(True),
+                MaintenanceRule.validation_status.in_(("active", "validated")),
+            )
+        statement = statement.order_by(
+            MaintenanceRule.system,
+            MaintenanceRule.component,
+            MaintenanceRule.rule_version.desc(),
+        )
+        return list(self._session.scalars(statement).all())
+
     def add_rule(self, rule: MaintenanceRule) -> MaintenanceRule:
+        self._session.add(rule)
+        self._session.flush()
+        return rule
+
+    def save_rule(self, rule: MaintenanceRule) -> MaintenanceRule:
         self._session.add(rule)
         self._session.flush()
         return rule
@@ -146,6 +183,26 @@ class MaintenanceRepository:
             .where(MaintenanceRule.id == rule_id, Bike.user_id == user_id)
         )
         return self._session.scalars(statement).first()
+
+    def find_active_matching(
+        self,
+        bike_id: UUID,
+        *,
+        system: str,
+        component: str,
+        action: str,
+        usage_condition_variant: str,
+    ) -> list[MaintenanceRule]:
+        statement = select(MaintenanceRule).where(
+            MaintenanceRule.bike_id == bike_id,
+            MaintenanceRule.system == system,
+            MaintenanceRule.component == component,
+            MaintenanceRule.action == action,
+            MaintenanceRule.usage_condition_variant == usage_condition_variant,
+            MaintenanceRule.active.is_(True),
+            MaintenanceRule.validation_status == "active",
+        )
+        return list(self._session.scalars(statement).all())
 
     def delete_rule(self, rule: MaintenanceRule) -> None:
         self._session.delete(rule)

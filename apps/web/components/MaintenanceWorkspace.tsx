@@ -41,6 +41,19 @@ type DueItem = {
   note: string | null;
 };
 
+type RuleRow = {
+  id: string;
+  system: string;
+  component: string;
+  action: string;
+  validation_status: string;
+  active: boolean;
+  rule_version: number;
+  recurring_interval_hours: number | null;
+  source_span: string | null;
+  source_page: number | null;
+};
+
 type ActiveBike = {
   id: string;
   nickname: string;
@@ -78,6 +91,7 @@ function MaintenanceBikeWorkspace({ activeBike }: { activeBike: ActiveBike }) {
   const [taxonomy, setTaxonomy] = useState<Taxonomy | null>(null);
   const [records, setRecords] = useState<MaintenanceRecord[]>([]);
   const [dueItems, setDueItems] = useState<DueItem[]>([]);
+  const [planRules, setPlanRules] = useState<RuleRow[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [revision, setRevision] = useState(0);
@@ -122,12 +136,17 @@ function MaintenanceBikeWorkspace({ activeBike }: { activeBike: ActiveBike }) {
         `/api/maintenance/due-state?bike_id=${encodeURIComponent(activeBike.id)}`,
         { signal: controller.signal },
       ).then((response) => (response.ok ? response.json() : [])),
+      fetch(
+        `/api/maintenance/rules?bike_id=${encodeURIComponent(activeBike.id)}&include_inactive=true`,
+        { signal: controller.signal },
+      ).then((response) => (response.ok ? response.json() : [])),
     ])
-      .then(([tax, list, due]: [Taxonomy, MaintenanceRecord[], DueItem[]]) => {
+      .then(([tax, list, due, rules]: [Taxonomy, MaintenanceRecord[], DueItem[], RuleRow[]]) => {
         if (controller.signal.aborted) return;
         setTaxonomy(tax);
         setRecords(list);
         setDueItems(due);
+        setPlanRules(rules.filter((row) => row.active));
         setLoadError(null);
       })
       .catch((caught: Error) => {
@@ -220,15 +239,80 @@ function MaintenanceBikeWorkspace({ activeBike }: { activeBike: ActiveBike }) {
     }
   }
 
+  async function onRebuildPlan() {
+    if (busy) return;
+    setBusy(true);
+    setLoadError(null);
+    try {
+      const response = await fetch("/api/maintenance/rules/extract", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          bike_id: activeBike.id,
+          force: true,
+        }),
+      });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) {
+        setLoadError(
+          body?.error?.message ??
+            "Could not build the plan. Confirm a manufacturer manual first.",
+        );
+        return;
+      }
+      const accepted = Array.isArray(body?.accepted) ? body.accepted.length : 0;
+      if (body?.skipped && body?.reason === "already_extracted") {
+        setLoadError(null);
+      } else if (accepted === 0) {
+        setLoadError("No validated intervals found in the manual yet.");
+      }
+      refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="maintenance-workspace">
       <section className="glass-card maintenance-list-card">
-        <h3>Due state</h3>
+        <h3>Maintenance plan</h3>
         <p className="maintenance-lede">
-          Derived from rules + history. Nothing stores a next-due date.
+          Built automatically from your manufacturer manual after pages are extracted.
+          Due dates are derived — nothing stores a next-due date.
         </p>
+        {planRules.length === 0 ? (
+          <p>
+            No plan yet. Confirm and extract a manufacturer manual in Documents, or rebuild
+            below once pages are ready.
+          </p>
+        ) : (
+          <ul className="maintenance-list">
+            {planRules.map((rule) => (
+              <li key={rule.id}>
+                <div>
+                  <strong>
+                    {rule.action} {rule.component.replaceAll("_", " ")}
+                  </strong>
+                  <span>
+                    {rule.system}
+                    {rule.recurring_interval_hours != null
+                      ? ` · every ${rule.recurring_interval_hours} h`
+                      : ""}
+                    {rule.source_page != null ? ` · p.${rule.source_page}` : ""}
+                  </span>
+                  {rule.source_span ? <p>{rule.source_span}</p> : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        <button type="button" disabled={busy} onClick={() => void onRebuildPlan()}>
+          Rebuild plan from manual
+        </button>
+
+        <h3>Due state</h3>
         {dueItems.length === 0 ? (
-          <p>No active rules yet. Add an interval below.</p>
+          <p>Nothing due until the plan has active rules and service history.</p>
         ) : (
           <ul className="maintenance-list">
             {dueItems.map((item) => (
@@ -253,7 +337,7 @@ function MaintenanceBikeWorkspace({ activeBike }: { activeBike: ActiveBike }) {
         )}
         <form className="maintenance-form" onSubmit={onAddRule}>
           <label>
-            Recurring hours
+            Manual override · recurring hours
             <input
               type="number"
               min="0.1"

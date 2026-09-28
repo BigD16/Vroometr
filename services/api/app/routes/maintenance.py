@@ -5,8 +5,9 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, ConfigDict
+from sqlalchemy.orm import Session
 
-from app.deps import get_current_user, get_maintenance_service
+from app.deps import get_current_user, get_db, get_maintenance_service
 from app.errors import AppError
 from app.maintenance.taxonomy import catalog
 from app.models.user import User
@@ -133,9 +134,26 @@ class RuleResponse(BaseModel):
     usage_condition_variant: str
     validation_status: str
     rule_version: int
+    pipeline_version: str | None = None
     active: bool
+    supersedes_rule_id: UUID | None = None
+    source_document_id: UUID | None = None
+    source_page: int | None = None
+    source_span: str | None = None
+    extraction_confidence: Decimal | None = None
     created_at: datetime
     updated_at: datetime
+
+
+class ExtractRulesBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    bike_id: UUID
+    document_id: UUID | None = None
+    force: bool = False
+    # Test/dev hooks — production UI uses document_id / primary manual only.
+    passages: list[dict] | None = None
+    proposals: list[dict] | None = None
+    activate: bool = True
 
 
 @router.get("/due-state")
@@ -156,9 +174,10 @@ def list_rules(
     user: Annotated[User, Depends(get_current_user)],
     service: Annotated[MaintenanceService, Depends(get_maintenance_service)],
     bike_id: UUID = Query(...),
+    include_inactive: bool = Query(False),
 ):
     try:
-        rows = service.list_rules(user, bike_id)
+        rows = service.list_rules(user, bike_id, include_inactive=include_inactive)
     except MaintenanceNotFound as exc:
         _raise(exc)
     return [RuleResponse.model_validate(row) for row in rows]
@@ -177,6 +196,80 @@ def create_rule(
     return RuleResponse.model_validate(row)
 
 
+@router.post("/rules/extract")
+def extract_rules(
+    body: ExtractRulesBody,
+    user: Annotated[User, Depends(get_current_user)],
+    service: Annotated[MaintenanceService, Depends(get_maintenance_service)],
+    session: Annotated[Session, Depends(get_db)],
+):
+    """Build or rebuild the maintenance plan from the bike's manufacturer manual."""
+    try:
+        if body.proposals is not None:
+            source_text = None
+            if body.passages:
+                source_text = "\n".join(
+                    str(p.get("text") or "")
+                    for p in body.passages
+                    if isinstance(p, dict)
+                )
+            result = service.accept_proposals(
+                user,
+                bike_id=body.bike_id,
+                proposals=body.proposals,
+                source_text=source_text,
+                document_id=body.document_id,
+                activate=body.activate,
+            )
+        elif body.passages is not None:
+            passages = _passages_from_body(body)
+            from vroometr.ai.factory import get_chat_model
+
+            result = service.extract_from_passages(
+                user,
+                bike_id=body.bike_id,
+                passages=passages,
+                chat=get_chat_model(),
+                document_id=body.document_id,
+                activate=body.activate,
+            )
+        else:
+            document_id, pages = _manual_pages(user, body.bike_id, body.document_id, session)
+            from vroometr.ai.factory import get_chat_model
+
+            result = service.extract_from_document(
+                user,
+                bike_id=body.bike_id,
+                document_id=document_id,
+                pages=pages,
+                chat=get_chat_model(),
+                activate=True,
+                force=body.force,
+            )
+    except (MaintenanceNotFound, InvalidMaintenance) as exc:
+        _raise(exc)
+    return {
+        "pipeline_version": result["pipeline_version"],
+        "accepted": [RuleResponse.model_validate(row) for row in result["accepted"]],
+        "rejected": result["rejected"],
+        "skipped": bool(result.get("skipped")),
+        "reason": result.get("reason"),
+    }
+
+
+@router.post("/rules/{rule_id}/activate")
+def activate_rule(
+    rule_id: UUID,
+    user: Annotated[User, Depends(get_current_user)],
+    service: Annotated[MaintenanceService, Depends(get_maintenance_service)],
+):
+    try:
+        row = service.activate_rule(user, rule_id)
+    except (MaintenanceNotFound, InvalidMaintenance) as exc:
+        _raise(exc)
+    return RuleResponse.model_validate(row)
+
+
 @router.delete("/rules/{rule_id}", status_code=204)
 def delete_rule(
     rule_id: UUID,
@@ -187,6 +280,64 @@ def delete_rule(
         service.delete_rule(user, rule_id)
     except MaintenanceNotFound as exc:
         _raise(exc)
+
+
+def _passages_from_body(body: ExtractRulesBody):
+    from app.maintenance.rule_extraction import SourcePassage
+
+    out = []
+    for item in body.passages or []:
+        if not isinstance(item, dict):
+            continue
+        text = str(item.get("text") or "").strip()
+        if not text:
+            continue
+        page = int(item.get("page") or 1)
+        doc_id = str(body.document_id) if body.document_id else None
+        out.append(SourcePassage(page=page, text=text, document_id=doc_id))
+    if not out:
+        raise InvalidMaintenance("Passages are empty.")
+    return out
+
+
+def _manual_pages(
+    user: User, bike_id: UUID, document_id: UUID | None, session: Session
+):
+    from app.repositories.document_ingestion import DocumentIngestionRepository
+    from app.repositories.documents import DocumentRepository
+
+    docs = DocumentRepository(session)
+    if document_id is not None:
+        document = docs.get(document_id, user.id)
+    else:
+        document = next(
+            (
+                row
+                for row in docs.list_for_bike(bike_id, user.id)
+                if row.document_type == "manufacturer_manual"
+                and row.status == "active"
+                and row.confirmed_at is not None
+                and row.is_primary
+            ),
+            None,
+        )
+        if document is None:
+            document = next(
+                (
+                    row
+                    for row in docs.list_for_bike(bike_id, user.id)
+                    if row.document_type == "manufacturer_manual"
+                    and row.status == "active"
+                    and row.confirmed_at is not None
+                ),
+                None,
+            )
+    if document is None or document.bike_id != bike_id:
+        raise MaintenanceNotFound(
+            "Confirm a manufacturer manual for this bike to build the maintenance plan."
+        )
+    pages = DocumentIngestionRepository(session).pages(document.id)
+    return document.id, pages
 
 
 @router.get("")

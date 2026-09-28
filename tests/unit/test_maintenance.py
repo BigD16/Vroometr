@@ -51,9 +51,33 @@ class MemoryStore:
         return kwargs
 
     def list_active_rules(self, bike_id):
-        return [r for r in self.rules if r.bike_id == bike_id and r.active]
+        return [
+            r
+            for r in self.rules
+            if r.bike_id == bike_id
+            and r.active
+            and r.validation_status in ("active", "validated")
+        ]
+
+    def list_rules(self, bike_id, *, include_inactive=False):
+        rows = [r for r in self.rules if r.bike_id == bike_id]
+        if not include_inactive:
+            rows = [
+                r
+                for r in rows
+                if r.active and r.validation_status in ("active", "validated")
+            ]
+        return rows
 
     def add_rule(self, rule):
+        self.rules.append(rule)
+        return rule
+
+    def save_rule(self, rule):
+        for index, item in enumerate(self.rules):
+            if item.id == rule.id:
+                self.rules[index] = rule
+                return rule
         self.rules.append(rule)
         return rule
 
@@ -62,6 +86,21 @@ class MemoryStore:
             if rule.id == rule_id and self.bikes.get(rule.bike_id, user_id) is not None:
                 return rule
         return None
+
+    def find_active_matching(
+        self, bike_id, *, system, component, action, usage_condition_variant
+    ):
+        return [
+            r
+            for r in self.rules
+            if r.bike_id == bike_id
+            and r.system == system
+            and r.component == component
+            and r.action == action
+            and r.usage_condition_variant == usage_condition_variant
+            and r.active
+            and r.validation_status == "active"
+        ]
 
     def delete_rule(self, rule):
         self.rules = [item for item in self.rules if item.id != rule.id]
