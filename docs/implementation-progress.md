@@ -1021,7 +1021,7 @@ Verification:
 Manual review: open `/maintenance`, log an oil change for the active bike, confirm it lists;
 open Assistant context and confirm maintenance items appear (not `domain_not_implemented`).
 
-Unresolved: derived due state (6.2), rules (6.3), AI write tools for logging service.
+Unresolved: AI write tools for logging service from chat; material-change notify on rule updates.
 
 ## Derived due state (6.2) — 2026-09-27
 

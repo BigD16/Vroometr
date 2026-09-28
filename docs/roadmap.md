@@ -4,8 +4,8 @@ This is the repository-owned V1 build sequence. Status here is authoritative for
 Detailed verification evidence lives in [implementation progress](implementation-progress.md).
 LOCKED product and architecture decisions live in local `docs/design/` (not committed).
 
-Last reviewed: 2026-09-27. Current position: **through 6.3 rule extraction**; next numbered
-task is **6.4** (two recommendation layers).
+Last reviewed: 2026-09-27. Current position: **through 6.3 auto plan-from-manual**; next
+numbered task is **6.4** (two recommendation layers).
 
 ## Status at a glance
 
@@ -17,7 +17,7 @@ task is **6.4** (two recommendation layers).
 | 3 | Uploads and attachments | Complete (real malware scanning deferred; see follow-up) |
 | 4 | Documents, ingestion, RAG | **4.5 first retrieval evals implemented**; cheap page OCR wired; diagram vision + malware scan remain follow-ups |
 | 5 | Text assistant | **5.7 UI + ReasoningAgent loop**; live replies need `AGENT_MODEL` + OpenAI config |
-| 6 | Maintenance and engine hours | **6.1–6.3 implemented**; 6.4 recommendation layers next |
+| 6 | Maintenance and engine hours | **6.1–6.3 done** (records, derived due, auto plan from manual); **6.4** next |
 | 7 | Modifications, rides, issues | Not started |
 | 8 | Notifications, demo, Stripe | Not started |
 | 9 | Garage generation (flagged) | Not started |
@@ -240,17 +240,34 @@ Review: one real question against an uploaded manual; confirm casual oil-change 
 
 Status: **6.1–6.3 implemented**; **6.4** is next.
 
-- **6.1** Taxonomy + records — **implemented** (no `next_due` column).
-- **6.2** Derived due state — **implemented:** `maintenance_rules` + pure `derive_due_items`;
-  no persisted `next_due`; estimated hours → soft statuses only.
-- **6.3** Rule extraction — **implemented:** after manufacturer-manual page extraction,
-  AI proposes → independent validation → auto-activate (versioned). Paste UI removed;
-  Service Bay shows plan + Rebuild.
-- **6.4** Two recommendation layers — deterministic baseline, then AI context without rewriting
-  manufacturer intervals
-- **6.5** Hours — estimated vs confirmed; never claim definitive overdue on uncertain estimates only
+Product intent (LOCKED): the maintenance **plan comes from the bike’s manufacturer manual**,
+not from pasted text or free-form AI memory. Due dates are always **derived** (rules + history
++ hours) — never stored as authoritative `next_due`. Only independently validated rules may
+become active; new versions supersede old ones.
 
-Review: extract from pasted manual text on `/maintenance`, activate pending rule; Up Next updates.
+- **6.1** Taxonomy + records — **implemented:** controlled system→component catalog; owner
+  service-history CRUD; taxonomy gaps; Service Bay log UI; evidence attachment target;
+  compact-context recent slice. No `next_due` column.
+- **6.2** Derived due state — **implemented:** active `maintenance_rules` + pure
+  `derive_due_items`; Up Next / Service Bay due list; estimated hours → advisory statuses only
+  (no definitive overdue on estimates alone).
+- **6.3** Automatic rule extraction — **implemented:** after an active manufacturer manual’s
+  pages finish extraction, a worker proposes interval rules from the manual text → independent
+  validation (taxonomy, span-in-source, intervals) → auto-activate with versioning/supersede.
+  Service Bay shows the plan (with source page/span) and **Rebuild plan from manual**; no paste
+  box. Skips re-extract unless forced; needs `AGENT_MODEL` for live runs.
+- **6.4** Two recommendation layers — deterministic baseline from active rules/due state, then
+  AI contextual advice (conditions, rides, mods) that must **not** silently rewrite manufacturer
+  intervals.
+- **6.5** Hours discipline — estimated vs confirmed meter readings remain distinct; confirmed
+  supersedes estimate; tighten any remaining UI/copy so uncertain estimates never read as hard
+  overdue. (Core soft-status behavior already landed in 6.2.)
+
+Still deferred in this phase: push/notify on material rule changes; extraction from supporting
+docs; AI write tools that log service from chat.
+
+Review: confirm a manufacturer manual → wait for page extraction (or Rebuild on `/maintenance`)
+→ plan lists validated intervals → Up Next shows due items after logging service / hours.
 
 ---
 
