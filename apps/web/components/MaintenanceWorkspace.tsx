@@ -54,6 +54,44 @@ type RuleRow = {
   source_page: number | null;
 };
 
+type BaselineRec = {
+  rule_id: string;
+  system: string;
+  component: string;
+  action: string;
+  status: string;
+  priority: string;
+  summary: string;
+  manufacturer_recurring_interval_hours: number | null;
+  definitive: boolean;
+};
+
+type ContextualRec = {
+  rule_id: string;
+  advice: string;
+  consider_earlier: boolean;
+  source: string;
+  context_tags: string[];
+};
+
+type RecommendationBundle = {
+  baseline: BaselineRec[];
+  contextual: ContextualRec[];
+  manufacturer_intervals_unchanged: boolean;
+  note: string | null;
+};
+
+const CONTEXT_TAG_OPTIONS = [
+  "dust",
+  "sand",
+  "mud",
+  "wet",
+  "race",
+  "upcoming_ride",
+  "modification",
+  "symptom",
+] as const;
+
 type ActiveBike = {
   id: string;
   nickname: string;
@@ -92,6 +130,10 @@ function MaintenanceBikeWorkspace({ activeBike }: { activeBike: ActiveBike }) {
   const [records, setRecords] = useState<MaintenanceRecord[]>([]);
   const [dueItems, setDueItems] = useState<DueItem[]>([]);
   const [planRules, setPlanRules] = useState<RuleRow[]>([]);
+  const [recommendations, setRecommendations] = useState<RecommendationBundle | null>(
+    null,
+  );
+  const [contextTags, setContextTags] = useState<string[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [revision, setRevision] = useState(0);
@@ -121,6 +163,10 @@ function MaintenanceBikeWorkspace({ activeBike }: { activeBike: ActiveBike }) {
 
   useEffect(() => {
     const controller = new AbortController();
+    const tagQuery =
+      contextTags.length > 0
+        ? `&context_tags=${encodeURIComponent(contextTags.join(","))}`
+        : "";
     Promise.all([
       fetch("/api/maintenance/taxonomy", { signal: controller.signal }).then((response) => {
         if (!response.ok) throw new Error("Could not load taxonomy.");
@@ -140,22 +186,35 @@ function MaintenanceBikeWorkspace({ activeBike }: { activeBike: ActiveBike }) {
         `/api/maintenance/rules?bike_id=${encodeURIComponent(activeBike.id)}&include_inactive=true`,
         { signal: controller.signal },
       ).then((response) => (response.ok ? response.json() : [])),
+      fetch(
+        `/api/maintenance/recommendations?bike_id=${encodeURIComponent(activeBike.id)}${tagQuery}`,
+        { signal: controller.signal },
+      ).then((response) => (response.ok ? response.json() : null)),
     ])
-      .then(([tax, list, due, rules]: [Taxonomy, MaintenanceRecord[], DueItem[], RuleRow[]]) => {
-        if (controller.signal.aborted) return;
-        setTaxonomy(tax);
-        setRecords(list);
-        setDueItems(due);
-        setPlanRules(rules.filter((row) => row.active));
-        setLoadError(null);
-      })
+      .then(
+        ([tax, list, due, rules, recs]: [
+          Taxonomy,
+          MaintenanceRecord[],
+          DueItem[],
+          RuleRow[],
+          RecommendationBundle | null,
+        ]) => {
+          if (controller.signal.aborted) return;
+          setTaxonomy(tax);
+          setRecords(list);
+          setDueItems(due);
+          setPlanRules(rules.filter((row) => row.active));
+          setRecommendations(recs);
+          setLoadError(null);
+        },
+      )
       .catch((caught: Error) => {
         if (!controller.signal.aborted) {
           setLoadError(caught.message || "Could not load maintenance data.");
         }
       });
     return () => controller.abort();
-  }, [activeBike.id, revision]);
+  }, [activeBike.id, revision, contextTags]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -335,6 +394,64 @@ function MaintenanceBikeWorkspace({ activeBike }: { activeBike: ActiveBike }) {
             ))}
           </ul>
         )}
+
+        <h3>Recommendations</h3>
+        <p className="maintenance-lede">
+          Baseline follows manufacturer intervals. Context tags may urge earlier action —
+          they never rewrite those intervals.
+        </p>
+        <div className="maintenance-form">
+          {CONTEXT_TAG_OPTIONS.map((tag) => {
+            const checked = contextTags.includes(tag);
+            return (
+              <label key={tag}>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() =>
+                    setContextTags((current) =>
+                      checked
+                        ? current.filter((item) => item !== tag)
+                        : [...current, tag],
+                    )
+                  }
+                />{" "}
+                {tag.replaceAll("_", " ")}
+              </label>
+            );
+          })}
+        </div>
+        {recommendations?.note ? <p>{recommendations.note}</p> : null}
+        {recommendations && recommendations.baseline.length > 0 ? (
+          <ul className="maintenance-list">
+            {recommendations.baseline
+              .filter((item) => item.priority !== "monitor")
+              .map((item) => (
+                <li key={`base-${item.rule_id}`}>
+                  <div>
+                    <strong>
+                      Baseline · {item.priority.replaceAll("_", " ")} · {item.action}{" "}
+                      {item.component.replaceAll("_", " ")}
+                    </strong>
+                    <span>{item.summary}</span>
+                  </div>
+                </li>
+              ))}
+            {recommendations.contextual.map((item) => (
+              <li key={`ctx-${item.rule_id}-${item.source}`}>
+                <div>
+                  <strong>
+                    Context · {item.consider_earlier ? "consider earlier" : "note"}
+                  </strong>
+                  <span>{item.advice}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No recommendations until the plan has active rules.</p>
+        )}
+
         <form className="maintenance-form" onSubmit={onAddRule}>
           <label>
             Manual override · recurring hours

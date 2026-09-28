@@ -169,6 +169,31 @@ def get_due_state(
     return [item.as_dict() for item in items]
 
 
+@router.get("/recommendations")
+def get_recommendations(
+    user: Annotated[User, Depends(get_current_user)],
+    service: Annotated[MaintenanceService, Depends(get_maintenance_service)],
+    bike_id: UUID = Query(...),
+    context_tags: str | None = Query(
+        None,
+        description=(
+            "Comma-separated: dust,sand,mud,wet,race,upcoming_ride,"
+            "modification,symptom"
+        ),
+    ),
+    include_ai: bool = Query(False),
+):
+    """Deterministic baseline + optional contextual advice. Intervals are never rewritten."""
+    tags = [part.strip() for part in (context_tags or "").split(",") if part.strip()]
+    try:
+        bundle = service.recommendations(
+            user, bike_id, context_tags=tags, include_ai=include_ai
+        )
+    except MaintenanceNotFound as exc:
+        _raise(exc)
+    return bundle.as_dict()
+
+
 @router.get("/rules")
 def list_rules(
     user: Annotated[User, Depends(get_current_user)],

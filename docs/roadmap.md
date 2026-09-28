@@ -4,8 +4,8 @@ This is the repository-owned V1 build sequence. Status here is authoritative for
 Detailed verification evidence lives in [implementation progress](implementation-progress.md).
 LOCKED product and architecture decisions live in local `docs/design/` (not committed).
 
-Last reviewed: 2026-09-27. Current position: **through 6.3 auto plan-from-manual**; next
-numbered task is **6.4** (two recommendation layers).
+Last reviewed: 2026-09-27. Current position: **through 6.4 recommendation layers**; next
+numbered task is **6.5** (hours discipline polish).
 
 ## Status at a glance
 
@@ -17,7 +17,7 @@ numbered task is **6.4** (two recommendation layers).
 | 3 | Uploads and attachments | Complete (real malware scanning deferred; see follow-up) |
 | 4 | Documents, ingestion, RAG | **4.5 first retrieval evals implemented**; cheap page OCR wired; diagram vision + malware scan remain follow-ups |
 | 5 | Text assistant | **5.7 UI + ReasoningAgent loop**; live replies need `AGENT_MODEL` + OpenAI config |
-| 6 | Maintenance and engine hours | **6.1–6.3 done** (records, derived due, auto plan from manual); **6.4** next |
+| 6 | Maintenance and engine hours | **6.1–6.4 done**; **6.5** hours discipline polish next |
 | 7 | Modifications, rides, issues | Not started |
 | 8 | Notifications, demo, Stripe | Not started |
 | 9 | Garage generation (flagged) | Not started |
@@ -238,7 +238,7 @@ Review: one real question against an uploaded manual; confirm casual oil-change 
 
 ## Phase 6 — Maintenance and engine hours
 
-Status: **6.1–6.3 implemented**; **6.4** is next.
+Status: **6.1–6.4 implemented**; **6.5** is next.
 
 Product intent (LOCKED): the maintenance **plan comes from the bike’s manufacturer manual**,
 not from pasted text or free-form AI memory. Due dates are always **derived** (rules + history
@@ -256,18 +256,18 @@ become active; new versions supersede old ones.
   validation (taxonomy, span-in-source, intervals) → auto-activate with versioning/supersede.
   Service Bay shows the plan (with source page/span) and **Rebuild plan from manual**; no paste
   box. Skips re-extract unless forced; needs `AGENT_MODEL` for live runs.
-- **6.4** Two recommendation layers — deterministic baseline from active rules/due state, then
-  AI contextual advice (conditions, rides, mods) that must **not** silently rewrite manufacturer
-  intervals.
+- **6.4** Two recommendation layers — **implemented:** deterministic baseline from due state +
+  manufacturer intervals; contextual layer (condition tags ± optional AI) may urge earlier
+  action but **cannot rewrite** intervals (`manufacturer_intervals_unchanged`).
 - **6.5** Hours discipline — estimated vs confirmed meter readings remain distinct; confirmed
   supersedes estimate; tighten any remaining UI/copy so uncertain estimates never read as hard
   overdue. (Core soft-status behavior already landed in 6.2.)
 
 Still deferred in this phase: push/notify on material rule changes; extraction from supporting
-docs; AI write tools that log service from chat.
+docs; AI write tools that log service from chat; ride/mod-driven tags once Phase 7 lands.
 
-Review: confirm a manufacturer manual → wait for page extraction (or Rebuild on `/maintenance`)
-→ plan lists validated intervals → Up Next shows due items after logging service / hours.
+Review: open `/maintenance` → baseline recommendations from the plan; toggle dust/mud → context
+advice says consider earlier without changing hour intervals.
 
 ---
 

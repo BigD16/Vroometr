@@ -28,7 +28,7 @@ For the numbered V1 sequence, use the [roadmap](roadmap.md). For setup, use the
 | Hierarchical memory, 5.6 | Search bike-scoped summaries then expand raw spans; memory tools | Summary embeddings / semantic ranking deferred; no Settings memory UI yet |
 | Assistant UI, 5.7 | Composer, role-styled messages, source chips, FAB, disclaimer | Attachment button still disabled |
 | ReasoningAgent | Tool-calling loop; OpenAI chat when `AGENT_MODEL` set; turn persists assistant + citations | Escalation model, streaming, answer evals deferred |
-| Maintenance, 6.1–6.3 | Taxonomy + records; derived due; auto plan from manufacturer manual (validate → activate); Service Bay plan/rebuild | 6.4 recommendation layers; material-change notify; AI service-log tools |
+| Maintenance, 6.1–6.4 | Taxonomy + records; derived due; auto plan from manual; baseline + contextual recommendations (intervals locked) | 6.5 hours polish; material-change notify; AI service-log tools |
 | AI foundation | Provider-neutral ports, OpenAI embedding/reranker/chat/vision-OCR adapters, feature flags | Summary/voice/image-gen adapters remain unconfigured |
 
 A visible navigation page is not evidence that its backend domain exists. Rides, modifications,

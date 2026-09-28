@@ -50,8 +50,8 @@ scope below was approved by Drake and supplements the original roadmap.
   (`0015_message_citations`). Citation bagging unwraps nested Retrieval `Match` payloads and
   labels Sources with 1-based PDF pages. Unconfigured models save the user message and report
   `awaiting_configuration`.
-- **6.1–6.3 implemented:** taxonomy + records + derived due state + rule extraction
-  (propose → validate → versioned activate). **6.4 (recommendation layers) is next.**
+- **6.1–6.4 implemented:** taxonomy + records + derived due + auto plan-from-manual +
+  two recommendation layers (baseline / contextual, intervals locked). **6.5 next.**
 - **Developer documentation established:** repository onboarding guide, setup/troubleshooting
   runbook, and required documentation updates after every task. Start at [docs index](README.md).
 
@@ -1046,3 +1046,15 @@ Status: **implemented** (auto from manual). Paste UI removed.
 
 Verify: `pytest tests/unit/test_rule_extraction.py`
 Next: **6.4**.
+
+## Recommendation layers (6.4) — 2026-09-27
+
+Status: **implemented**. Baseline from due state + manufacturer intervals; contextual advice
+cannot rewrite intervals.
+
+- `app/maintenance/recommendations.py` + `GET /v1/maintenance/recommendations`
+- Condition tags (dust/sand/mud/…) urge earlier action deterministically; optional `include_ai`
+- Service Bay shows baseline + context; flag `manufacturer_intervals_unchanged`
+
+Verify: `pytest tests/unit/test_recommendations.py`
+Next: **6.5**.

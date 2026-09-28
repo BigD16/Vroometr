@@ -8,6 +8,7 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from app.maintenance.due_state import DueItem, derive_due_items
+from app.maintenance.recommendations import RecommendationBundle, build_recommendations
 from app.maintenance.rule_extraction import (
     PIPELINE_VERSION,
     SourcePassage,
@@ -308,6 +309,41 @@ class MaintenanceService:
             current_hours=bike.current_engine_hours,
             hours_estimated=bool(bike.current_engine_hours_is_estimated),
             today=today or date.today(),
+        )
+
+    def recommendations(
+        self,
+        user: User,
+        bike_id: UUID,
+        *,
+        context_tags: list[str] | None = None,
+        include_ai: bool = False,
+        chat: ChatModel | None = None,
+        today: date | None = None,
+    ) -> RecommendationBundle:
+        """Baseline from due/rules, then contextual advice that cannot rewrite intervals."""
+        bike = self._require_bike(user, bike_id)
+        rules = self._records.list_active_rules(bike_id)
+        due = derive_due_items(
+            rules=rules,
+            records=self._records.list_for_bike(bike_id, limit=500),
+            current_hours=bike.current_engine_hours,
+            hours_estimated=bool(bike.current_engine_hours_is_estimated),
+            today=today or date.today(),
+        )
+        model = None
+        if include_ai:
+            model = chat
+            if model is None:
+                from vroometr.ai.factory import get_chat_model
+
+                model = get_chat_model()
+        return build_recommendations(
+            due_items=due,
+            rules=rules,
+            context_tags=context_tags,
+            chat=model,
+            include_ai=include_ai,
         )
 
     def accept_proposals(
