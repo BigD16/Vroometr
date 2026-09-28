@@ -31,7 +31,7 @@ def test_dashboard_renders_live_bike_facts() -> None:
 def test_unbuilt_domains_are_honest_empty_states() -> None:
     assert "NOT CALCULATED" in _HEALTH
     assert "verified maintenance data" in _HEALTH
-    assert "No verified tasks yet" in _UP_NEXT
+    assert "No due tasks yet" in _UP_NEXT
     assert "Nothing scheduled" in _RIDE
     assert "NO HISTORY" in _METRICS
 
